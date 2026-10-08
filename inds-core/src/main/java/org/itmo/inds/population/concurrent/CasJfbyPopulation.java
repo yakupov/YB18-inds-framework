@@ -30,11 +30,30 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
     private class LevelRef {
         final long modificationTs;
         final JfbyNonDominationLevel<T> level;
+        /**
+         * Time taken after this version was published (fix of the time-stamping race, see
+         * docs/changes-from-cited-code.md): {@code modificationTs} is taken before the CAS that publishes the version,
+         * so it cannot tell whether a modification is older than an insertion. {@link Long#MAX_VALUE} until published.
+         */
+        volatile long publishedTs = Long.MAX_VALUE;
 
         LevelRef(long modificationTs, JfbyNonDominationLevel<T> level) {
             this.modificationTs = modificationTs;
             this.level = level;
         }
+
+        LevelRef published(long ts) {
+            publishedTs = ts;
+            return this;
+        }
+    }
+
+    private boolean casPublish(AtomicReference<LevelRef> ref, LevelRef expected, LevelRef update) {
+        if (ref.compareAndSet(expected, update)) {
+            update.published(time.incrementAndGet());
+            return true;
+        }
+        return false;
     }
 
     private final CopyOnWriteArrayList<AtomicReference<LevelRef>> nonDominationLevels;
@@ -59,7 +78,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                            boolean useOneByOneSorting) {
         this.nonDominationLevels = new CopyOnWriteArrayList<>();
         this.nonDominationLevels.addAll(nonDominationLevels.stream()
-                .map(ref -> new AtomicReference<>(new LevelRef(0, ref.get())))
+                .map(ref -> new AtomicReference<>(new LevelRef(0, ref.get()).published(0)))
                 .collect(Collectors.toList()));
 
         this.expectedPopulationSize = expectedPopulationSize;
@@ -136,8 +155,8 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
 
                     final JfbyNonDominationLevel<T> newLevel = removeIndividualFromLevel(lastLevel, removedIndividual, sorter);
 
-                    if (nonDominationLevels.get(lastLevelIndex)
-                            .compareAndSet(lastLevelRef, new LevelRef(time.incrementAndGet(), newLevel))) {
+                    if (casPublish(nonDominationLevels.get(lastLevelIndex),
+                            lastLevelRef, new LevelRef(time.incrementAndGet(), newLevel))) {
                         presentIndividuals.remove(removedIndividual);
                         return removedIndividual;
                     }
@@ -220,9 +239,9 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                         continue;
                     }
                     final JfbyNonDominationLevel<T> level = levelRef.level;
-                    if (ts > levelRef.modificationTs) {
+                    if (ts > levelRef.publishedTs) {
                         final NonDominationLevel.MemberAdditionResult<T, JfbyNonDominationLevel<T>> mar = level.addMembers(addends);
-                        if (nonDominationLevels.get(rank).compareAndSet(levelRef, new LevelRef(time.incrementAndGet(), mar.getModifiedLevel()))) {
+                        if (casPublish(nonDominationLevels.get(rank), levelRef, new LevelRef(time.incrementAndGet(), mar.getModifiedLevel()))) {
                             if (firstModifiedLevelRank == null) {
                                 firstModifiedLevelRank = rank;
                             }
@@ -262,7 +281,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                         );
 
                         final JfbyNonDominationLevel<T> newLevel = new JfbyNonDominationLevel<>(sorter, nso.getLexSortedPop(), nso);
-                        if (nonDominationLevels.get(rank).compareAndSet(levelRef, new LevelRef(time.incrementAndGet(), newLevel))) {
+                        if (casPublish(nonDominationLevels.get(rank), levelRef, new LevelRef(time.incrementAndGet(), newLevel))) {
                             if (firstModifiedLevelRank == null) {
                                 firstModifiedLevelRank = rank;
                             }
@@ -293,8 +312,9 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                     levels.get(ranks[i]).add(members[i]);
                 }
                 for (List<Individual<T>> level : levels) {
-                    nonDominationLevels.add(new AtomicReference<>(
-                            new LevelRef(time.incrementAndGet(), new JfbyNonDominationLevel<>(sorter, level))));
+                    final LevelRef levelRef = new LevelRef(time.incrementAndGet(), new JfbyNonDominationLevel<>(sorter, level));
+                    nonDominationLevels.add(new AtomicReference<>(levelRef));
+                    levelRef.published(time.incrementAndGet());
                 }
                 return true;
             }
@@ -358,7 +378,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                     );
 
                     final JfbyNonDominationLevel<T> newLevel = new JfbyNonDominationLevel<>(sorter, nso.getLexSortedPop(), nso);
-                    if (nonDominationLevels.get(rank).compareAndSet(levelRef, new LevelRef(time.incrementAndGet(), newLevel))) {
+                    if (casPublish(nonDominationLevels.get(rank), levelRef, new LevelRef(time.incrementAndGet(), newLevel))) {
                         if (firstModifiedLevelRank == null) {
                             firstModifiedLevelRank = rank;
                         }
