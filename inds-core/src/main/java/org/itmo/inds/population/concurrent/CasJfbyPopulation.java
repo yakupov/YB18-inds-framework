@@ -348,7 +348,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                     }
 
                     final List<Individual<T>> addendsList = new ArrayList<>(addendsSet.size());
-                    addendsList.addAll(addends);
+                    addendsList.addAll(addendsSet);
                     addendsList.sort(AscLexSortComparator.getInstance());
 
                     final SortedObjectives<Individual<T>, T> nso = levelRef.level.getSortedObjectives().update(
