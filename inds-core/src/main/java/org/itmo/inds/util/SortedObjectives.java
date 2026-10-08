@@ -1,6 +1,6 @@
 package org.itmo.inds.util;
 
-import org.itmo.inds.api.IIndividual;
+import org.itmo.inds.api.Individual;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -8,7 +8,7 @@ import java.util.function.BiFunction;
 
 import static org.itmo.inds.util.Utils.lexCompare;
 
-public class SortedObjectives<T extends IIndividual<P>, P> {
+public class SortedObjectives<T extends Individual<P>, P> {
     private final int dim;
 
     @Nonnull
@@ -30,11 +30,11 @@ public class SortedObjectives<T extends IIndividual<P>, P> {
         this.lexSortedPop = lexSortedPop;
     }
 
-    public static <T1 extends IIndividual<P1>, P1> SortedObjectives<T1, P1> empty(int dim) {
+    public static <T1 extends Individual<P1>, P1> SortedObjectives<T1, P1> empty(int dim) {
         return new SortedObjectives<>(dim, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     }
 
-    public static <T1 extends IIndividual<P1>, P1> SortedObjectives<T1, P1> create(final int dim,
+    public static <T1 extends Individual<P1>, P1> SortedObjectives<T1, P1> create(final int dim,
                                                                                    @Nonnull final List<T1> pop,
                                                                                    @Nonnull final BiFunction<T1, Double, T1> cdUpdater) {
         final SortedObjectives<T1, P1> empty = empty(dim);

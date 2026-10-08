@@ -1,9 +1,9 @@
 package org.itmo.inds.population.jfby;
 
-import org.itmo.inds.api.IIndividual;
-import org.itmo.inds.api.INonDominationLevel;
+import org.itmo.inds.api.Individual;
+import org.itmo.inds.api.NonDominationLevel;
 import org.itmo.inds.api.PopulationSnapshot;
-import org.itmo.inds.sorting.JFB2014;
+import org.itmo.inds.sorting.JfbSorter;
 import org.itmo.inds.util.RankedPopulation;
 
 import javax.annotation.Nonnull;
@@ -12,29 +12,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("unused")
-public class TotalSyncJFBYPopulation<T> extends JFBYPopulation<T> {
-    public TotalSyncJFBYPopulation(long expectedPopSize) {
+public class CoarseLockJfbyPopulation<T> extends JfbyPopulation<T> {
+    public CoarseLockJfbyPopulation(long expectedPopSize) {
         super(expectedPopSize);
     }
 
-    public TotalSyncJFBYPopulation(@Nonnull List<JFBYNonDominationLevel<T>> nonDominationLevels, long expectedPopSize) {
+    public CoarseLockJfbyPopulation(@Nonnull List<JfbyNonDominationLevel<T>> nonDominationLevels, long expectedPopSize) {
         super(nonDominationLevels, expectedPopSize);
     }
 
-    public TotalSyncJFBYPopulation(@Nonnull JFB2014 sorter, long expectedPopSize) {
+    public CoarseLockJfbyPopulation(@Nonnull JfbSorter sorter, long expectedPopSize) {
         super(sorter, expectedPopSize);
     }
 
-    public TotalSyncJFBYPopulation(@Nonnull List<JFBYNonDominationLevel<T>> nonDominationLevels, @Nonnull JFB2014 sorter, long expectedPopSize) {
+    public CoarseLockJfbyPopulation(@Nonnull List<JfbyNonDominationLevel<T>> nonDominationLevels, @Nonnull JfbSorter sorter, long expectedPopSize) {
         super(nonDominationLevels, sorter, expectedPopSize);
     }
 
     @Nonnull
     @Override
     public synchronized PopulationSnapshot<T> getSnapshot() {
-        final List<INonDominationLevel<T>> levels = new ArrayList<>();
+        final List<NonDominationLevel<T>> levels = new ArrayList<>();
         int size = 0;
-        for (INonDominationLevel<T> level : super.getSnapshot().getLevels()) {
+        for (NonDominationLevel<T> level : super.getSnapshot().getLevels()) {
             levels.add(level.copy());
             size += level.getMembers().size();
         }
@@ -43,7 +43,7 @@ public class TotalSyncJFBYPopulation<T> extends JFBYPopulation<T> {
 
     @Nullable
     @Override
-    synchronized IIndividual<T> intRemoveWorst() {
+    synchronized Individual<T> intRemoveWorst() {
         return super.intRemoveWorst();
     }
 
@@ -53,17 +53,17 @@ public class TotalSyncJFBYPopulation<T> extends JFBYPopulation<T> {
     }
 
     @Override
-    public synchronized int addIndividual(@Nonnull IIndividual<T> addend) {
+    public synchronized int addIndividual(@Nonnull Individual<T> addend) {
         return super.addIndividual(addend);
     }
 
     @Override
-    public synchronized JFBYPopulation<T> clone() {
+    public synchronized JfbyPopulation<T> clone() {
         return super.clone();
     }
 
     @Override
-    public synchronized RankedPopulation<IIndividual<T>> toRankedPopulation() {
+    public synchronized RankedPopulation<Individual<T>> toRankedPopulation() {
         return super.toRankedPopulation();
     }
 }

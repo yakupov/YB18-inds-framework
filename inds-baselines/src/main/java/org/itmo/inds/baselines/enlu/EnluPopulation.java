@@ -1,8 +1,8 @@
 package org.itmo.inds.baselines.enlu;
 
-import org.itmo.inds.api.IIndividual;
-import org.itmo.inds.api.IManagedPopulation;
-import org.itmo.inds.api.INonDominationLevel;
+import org.itmo.inds.api.Individual;
+import org.itmo.inds.api.ManagedPopulation;
+import org.itmo.inds.api.NonDominationLevel;
 import org.itmo.inds.api.PopulationSnapshot;
 import org.itmo.inds.api.FitnessAndCdIndividual;
 import org.itmo.inds.util.SortedObjectives;
@@ -14,23 +14,23 @@ import java.util.*;
 
 import static org.itmo.inds.util.Utils.getWorstCDIndividual;
 
-public class ENLUManagedPopulation<T> implements IManagedPopulation<T> {
-    private final Set<IIndividual<T>> individuals;
-    private final List<ENLUNonDominationLevel<T>> ranks;
+public class EnluPopulation<T> implements ManagedPopulation<T> {
+    private final Set<Individual<T>> individuals;
+    private final List<EnluNonDominationLevel<T>> ranks;
     private final long maxSize;
 
-    public ENLUManagedPopulation(long maxSize) {
+    public EnluPopulation(long maxSize) {
         this(new HashSet<>(), new ArrayList<>(), maxSize);
     }
 
-    public ENLUManagedPopulation(Set<IIndividual<T>> individuals, List<ENLUNonDominationLevel<T>> ranks, long maxSize) {
+    public EnluPopulation(Set<Individual<T>> individuals, List<EnluNonDominationLevel<T>> ranks, long maxSize) {
         this.individuals = individuals;
         this.ranks = ranks;
         this.maxSize = maxSize;
     }
 
     @Override
-    public synchronized int addIndividual(@Nonnull IIndividual<T> nInd) {
+    public synchronized int addIndividual(@Nonnull Individual<T> nInd) {
         final int rg = doAddIndividual(nInd);
         if (individuals.size() > maxSize) {
             intRemoveWorst();
@@ -39,44 +39,44 @@ public class ENLUManagedPopulation<T> implements IManagedPopulation<T> {
     }
 
 
-    private static <T> ENLUNonDominationLevel<T> removeIndividualFromLevel(@Nonnull final ENLUNonDominationLevel<T> lastLevel,
-                                                                          @Nonnull final IIndividual<T> removedIndividual) {
-        final SortedObjectives<IIndividual<T>, T> nso = lastLevel.getSortedObjectives().update(
+    private static <T> EnluNonDominationLevel<T> removeIndividualFromLevel(@Nonnull final EnluNonDominationLevel<T> lastLevel,
+                                                                          @Nonnull final Individual<T> removedIndividual) {
+        final SortedObjectives<Individual<T>, T> nso = lastLevel.getSortedObjectives().update(
                 Collections.emptyList(),
                 Collections.singletonList(removedIndividual),
                 (i, d) -> new FitnessAndCdIndividual<>(i.getObjectives(), d, i.getPayload())
         );
 
-        return new ENLUNonDominationLevel<>(new HashSet<>(nso.getLexSortedPop()), nso);
+        return new EnluNonDominationLevel<>(new HashSet<>(nso.getLexSortedPop()), nso);
     }
 
     @Nullable
-    IIndividual<T> intRemoveWorst() {
+    Individual<T> intRemoveWorst() {
         final int lastLevelIndex = ranks.size() - 1;
-        final ENLUNonDominationLevel<T> lastLevel = ranks.get(lastLevelIndex);
+        final EnluNonDominationLevel<T> lastLevel = ranks.get(lastLevelIndex);
         if (lastLevel.getMembers().size() <= 1) {
             ranks.remove(lastLevelIndex);
             if (lastLevel.getMembers().isEmpty()) {
                 System.err.println("Empty last ND level! Levels = " + ranks);
                 return null;
             } else {
-                final IIndividual<T> individual = lastLevel.getMembers().get(0);
+                final Individual<T> individual = lastLevel.getMembers().get(0);
                 individuals.remove(individual);
                 return individual;
             }
         } else {
-            final IIndividual<T> removedIndividual = getWorstCDIndividual(lastLevel);
+            final Individual<T> removedIndividual = getWorstCDIndividual(lastLevel);
             if (removedIndividual == null) {
                 return null;
             }
-            final ENLUNonDominationLevel<T> newLevel = removeIndividualFromLevel(lastLevel, removedIndividual);
+            final EnluNonDominationLevel<T> newLevel = removeIndividualFromLevel(lastLevel, removedIndividual);
             ranks.set(lastLevelIndex, newLevel);
             individuals.remove(removedIndividual);
             return removedIndividual;
         }
     }
 
-    private int doAddIndividual(@Nonnull IIndividual<T> nInd) {
+    private int doAddIndividual(@Nonnull Individual<T> nInd) {
         if (individuals.contains(nInd)) {
             return detRankOfExPoint(nInd);
         } else {
@@ -87,7 +87,7 @@ public class ENLUManagedPopulation<T> implements IManagedPopulation<T> {
             boolean dominates, dominated, nd;
             dominates = dominated = nd = false;
 
-            for (IIndividual<T> ind: ranks.get(i).getMembers()) {
+            for (Individual<T> ind: ranks.get(i).getMembers()) {
                 int domComparisonResult = Utils.dominates(nInd.getObjectives(), ind.getObjectives(), nInd.getObjectives().length);
                 //nInd.compareDom(ind);
                 if (domComparisonResult == 0)
@@ -104,27 +104,27 @@ public class ENLUManagedPopulation<T> implements IManagedPopulation<T> {
                 //noinspection UnnecessaryContinue
                 continue;
             else if (!nd && dominates) {
-                final Set<IIndividual<T>> newRank = new HashSet<>();
+                final Set<Individual<T>> newRank = new HashSet<>();
                 newRank.add(nInd);
-                ranks.add(i, new ENLUNonDominationLevel<>(newRank, SortedObjectives.create(
+                ranks.add(i, new EnluNonDominationLevel<>(newRank, SortedObjectives.create(
                         nInd.getObjectives().length,
                         Collections.singletonList(nInd),
                         (ind, d) -> new FitnessAndCdIndividual<>(ind.getObjectives(), d, ind.getPayload())
                 )));
                 return i;
             } else { //enlu update procedure
-                List<IIndividual<T>> dominatedList = Collections.singletonList(nInd);
+                List<Individual<T>> dominatedList = Collections.singletonList(nInd);
                 final int rs = i;
                 while (!dominatedList.isEmpty()) {
                     if (i >= ranks.size()) {
-                        ranks.add(i, new ENLUNonDominationLevel<>(new HashSet<>(dominatedList), SortedObjectives.create(
+                        ranks.add(i, new EnluNonDominationLevel<>(new HashSet<>(dominatedList), SortedObjectives.create(
                                 nInd.getObjectives().length,
                                 dominatedList,
                                 (ind, d) -> new FitnessAndCdIndividual<>(ind.getObjectives(), d, ind.getPayload())
                         )));
                         return rs;
                     } else {
-                        final INonDominationLevel.MemberAdditionResult<T, ENLUNonDominationLevel<T>> mar =
+                        final NonDominationLevel.MemberAdditionResult<T, EnluNonDominationLevel<T>> mar =
                                 ranks.get(i).addMembers(dominatedList);
                         dominatedList = mar.getEvictedMembers();
                         ranks.set(i, mar.getModifiedLevel());
@@ -136,7 +136,7 @@ public class ENLUManagedPopulation<T> implements IManagedPopulation<T> {
         }
 
         //Dominated by everyone
-        ranks.add(new ENLUNonDominationLevel<>(Collections.singleton(nInd), SortedObjectives.create(
+        ranks.add(new EnluNonDominationLevel<>(Collections.singleton(nInd), SortedObjectives.create(
                 nInd.getObjectives().length,
                 Collections.singletonList(nInd),
                 (ind, d) -> new FitnessAndCdIndividual<>(ind.getObjectives(), d, ind.getPayload())
@@ -144,7 +144,7 @@ public class ENLUManagedPopulation<T> implements IManagedPopulation<T> {
         return ranks.size() - 1;
     }
 
-    private int detRankOfExPoint(IIndividual<T> ind) {
+    private int detRankOfExPoint(Individual<T> ind) {
         for (int i = 0; i < ranks.size(); ++i) {
             if (ranks.get(i).getMembersSet().contains(ind))
                 return i;
@@ -155,9 +155,9 @@ public class ENLUManagedPopulation<T> implements IManagedPopulation<T> {
     @Nonnull
     @Override
     public synchronized PopulationSnapshot<T> getSnapshot() {
-        final List<INonDominationLevel<T>> levelsSnap = new ArrayList<>();
+        final List<NonDominationLevel<T>> levelsSnap = new ArrayList<>();
         int size = 0;
-        for (ENLUNonDominationLevel<T> rank : ranks) {
+        for (EnluNonDominationLevel<T> rank : ranks) {
             size += rank.getMembersSet().size();
             levelsSnap.add(rank.copy());
         }
@@ -171,12 +171,12 @@ public class ENLUManagedPopulation<T> implements IManagedPopulation<T> {
 
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     @Override
-    public synchronized IManagedPopulation<T> clone() {
-        final List<ENLUNonDominationLevel<T>> ranksSnap = new ArrayList<>();
-        for (ENLUNonDominationLevel<T> rank : ranks) {
+    public synchronized ManagedPopulation<T> clone() {
+        final List<EnluNonDominationLevel<T>> ranksSnap = new ArrayList<>();
+        for (EnluNonDominationLevel<T> rank : ranks) {
             ranksSnap.add(rank.copy());
         }
-        return new ENLUManagedPopulation<>(new HashSet<>(individuals), ranksSnap, maxSize);
+        return new EnluPopulation<>(new HashSet<>(individuals), ranksSnap, maxSize);
     }
 
     @Override

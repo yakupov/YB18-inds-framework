@@ -13,12 +13,12 @@ import java.util.TreeSet;
 import java.util.concurrent.ThreadLocalRandom;
 
 @SuppressWarnings("unused")
-public interface IManagedPopulation<T> extends Cloneable {
+public interface ManagedPopulation<T> extends Cloneable {
     /**
      * @param individual Individual to add
      * @return Added individual's rank (starting from zero)
      */
-    int addIndividual(@Nonnull IIndividual<T> individual);
+    int addIndividual(@Nonnull Individual<T> individual);
 
     /**
      * @return Some valid state of non-domination levels. The returned value is guaranteed to persist, no other thread
@@ -32,13 +32,13 @@ public interface IManagedPopulation<T> extends Cloneable {
      * modified by some other thread at any time. Index in list equals to layer's rank.
      */
     @Nonnull
-    default List<? extends INonDominationLevel<T>> getLevelsUnsafe() {
+    default List<? extends NonDominationLevel<T>> getLevelsUnsafe() {
         return getSnapshot().getLevels();
     }
 
     int size();
 
-    IManagedPopulation<T> clone();
+    ManagedPopulation<T> clone();
 
     /**
      * @param count max. number of solutions to return
@@ -64,10 +64,10 @@ public interface IManagedPopulation<T> extends Cloneable {
         Integer next = getNext(it);
         int prevLevelsSizeSum = 0;
         int rank = 0;
-        for (INonDominationLevel<T> level : popSnap.getLevels()) {
+        for (NonDominationLevel<T> level : popSnap.getLevels()) {
             final int levelSize = level.getMembers().size();
             while (next != null && next - prevLevelsSizeSum < levelSize) {
-                final IIndividual<T> ind = level.getMembers().get(next - prevLevelsSizeSum);
+                final Individual<T> ind = level.getMembers().get(next - prevLevelsSizeSum);
                 res.add(new RankedIndividual<>(ind.getObjectives(), ind.getCrowdingDistance(), rank, ind.getPayload()));
                 next = getNext(it);
             }
@@ -82,8 +82,8 @@ public interface IManagedPopulation<T> extends Cloneable {
         return it.hasNext() ? it.next() : null;
     }
 
-    default int determineRank(IIndividual<T> point) {
-        final List<? extends INonDominationLevel<T>> ndLayers = getSnapshot().getLevels();
+    default int determineRank(Individual<T> point) {
+        final List<? extends NonDominationLevel<T>> ndLayers = getSnapshot().getLevels();
 
         int l = 0;
         int r = ndLayers.size() - 1;
@@ -101,25 +101,25 @@ public interface IManagedPopulation<T> extends Cloneable {
         return lastNonDominating;
     }
 
-    default RankedPopulation<IIndividual<T>> toRankedPopulation() {
+    default RankedPopulation<Individual<T>> toRankedPopulation() {
         final PopulationSnapshot<T> popSnap = getSnapshot();
 
-        final IIndividual[] pop;
+        final Individual[] pop;
         final int[] sortedRanks;
         if (popSnap.getSize() > 0) {
             //noinspection unchecked
-            pop = new IIndividual[popSnap.getSize()];
+            pop = new Individual[popSnap.getSize()];
             final int[] ranks = new int[popSnap.getSize()];
             int j = 0;
             for (int i = 0; i < popSnap.getLevels().size(); ++i) {
-                for (IIndividual<T> d : popSnap.getLevels().get(i).getMembers()) {
+                for (Individual<T> d : popSnap.getLevels().get(i).getMembers()) {
                     pop[j] = d;
                     ranks[j] = i;
                     j++;
                 }
             }
 
-            sortedRanks = org.itmo.inds.util.RankedIndividual.sortRanksForLexSortedPopulation(ranks, pop, IIndividual::getObjectives);
+            sortedRanks = org.itmo.inds.util.RankSorting.sortRanksForLexSortedPopulation(ranks, pop, Individual::getObjectives);
 
             Arrays.sort(pop, AscLexSortComparator.getInstance());
         } else {

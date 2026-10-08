@@ -2,7 +2,7 @@ package org.itmo.inds.api;
 
 import javax.annotation.Nonnull;
 
-public interface IIndividual<T> {
+public interface Individual<T> {
     @Nonnull
     double[] getObjectives();
 

@@ -1,13 +1,13 @@
 package org.itmo.inds.api;
 
-import org.itmo.inds.api.IIndividual;
+import org.itmo.inds.api.Individual;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Arrays;
 
 @ThreadSafe
-public class FitnessAndCdIndividual<T> implements IIndividual<T> {
+public class FitnessAndCdIndividual<T> implements Individual<T> {
     private final double[] objectives;
 
     private final double crowdingDistance;

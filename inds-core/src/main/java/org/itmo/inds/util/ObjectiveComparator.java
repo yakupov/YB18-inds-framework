@@ -1,10 +1,10 @@
 package org.itmo.inds.util;
 
-import org.itmo.inds.api.IIndividual;
+import org.itmo.inds.api.Individual;
 
 import java.util.Comparator;
 
-public class ObjectiveComparator implements Comparator<IIndividual> {
+public class ObjectiveComparator implements Comparator<Individual> {
 	private final int objective;
 
 	/**
@@ -15,7 +15,7 @@ public class ObjectiveComparator implements Comparator<IIndividual> {
 	}
 
 	@Override
-	public int compare(IIndividual i1, IIndividual i2) {
+	public int compare(Individual i1, Individual i2) {
 		return Double.compare(i1.getObjectives()[objective], i2.getObjectives()[objective]);
 	}
 }

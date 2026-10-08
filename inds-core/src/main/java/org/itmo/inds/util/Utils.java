@@ -1,9 +1,9 @@
 package org.itmo.inds.util;
 
-import org.itmo.inds.api.IIndividual;
-import org.itmo.inds.api.INonDominationLevel;
-import org.itmo.inds.population.jfby.JFBYNonDominationLevel;
-import org.itmo.inds.sorting.JFB2014;
+import org.itmo.inds.api.Individual;
+import org.itmo.inds.api.NonDominationLevel;
+import org.itmo.inds.population.jfby.JfbyNonDominationLevel;
+import org.itmo.inds.sorting.JfbSorter;
 import org.itmo.inds.api.FitnessAndCdIndividual;
 
 import javax.annotation.Nonnull;
@@ -72,24 +72,24 @@ public class Utils {
         return 0;
     }
 
-    public static <T> JFBYNonDominationLevel<T> removeIndividualFromLevel(@Nonnull final JFBYNonDominationLevel<T> lastLevel,
-                                                                          @Nonnull final IIndividual<T> removedIndividual,
-                                                                          @Nonnull final JFB2014 sorter) {
-        final SortedObjectives<IIndividual<T>, T> nso = lastLevel.getSortedObjectives().update(
+    public static <T> JfbyNonDominationLevel<T> removeIndividualFromLevel(@Nonnull final JfbyNonDominationLevel<T> lastLevel,
+                                                                          @Nonnull final Individual<T> removedIndividual,
+                                                                          @Nonnull final JfbSorter sorter) {
+        final SortedObjectives<Individual<T>, T> nso = lastLevel.getSortedObjectives().update(
                 Collections.emptyList(),
                 Collections.singletonList(removedIndividual),
                 (i, d) -> new FitnessAndCdIndividual<>(i.getObjectives(), d, i.getPayload())
         );
 
-        return new JFBYNonDominationLevel<>(sorter, nso.getLexSortedPop(), nso);
+        return new JfbyNonDominationLevel<>(sorter, nso.getLexSortedPop(), nso);
     }
 
-    public static <T> IIndividual<T> getWorstCDIndividual(@Nonnull final INonDominationLevel<T> lastLevel) {
+    public static <T> Individual<T> getWorstCDIndividual(@Nonnull final NonDominationLevel<T> lastLevel) {
         if (lastLevel.getMembers().size() < 3) {
             return lastLevel.getMembers().get(0);
         } else {
-            IIndividual<T> worstIndividual = null;
-            for (IIndividual<T> individual : lastLevel.getMembers()) {
+            Individual<T> worstIndividual = null;
+            for (Individual<T> individual : lastLevel.getMembers()) {
                 if (worstIndividual == null || worstIndividual.getCrowdingDistance() > individual.getCrowdingDistance()) {
                     worstIndividual = individual;
                 }

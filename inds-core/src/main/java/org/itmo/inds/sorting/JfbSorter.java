@@ -1,6 +1,6 @@
 package org.itmo.inds.sorting;
 
-import org.itmo.inds.api.IIndividual;
+import org.itmo.inds.api.Individual;
 import org.itmo.inds.util.AscLexSortComparator;
 import org.itmo.inds.util.median.QuickSelect;
 import org.itmo.inds.util.RankedPopulation;
@@ -28,7 +28,7 @@ import static org.itmo.inds.util.Utils.dominates;
  */
 @SuppressWarnings({"UnnecessaryReturnStatement", "Convert2streamapi"})
 @ThreadSafe
-public class JFB2014 { //todo: extract interface
+public class JfbSorter { //todo: extract interface
     @SuppressWarnings("WeakerAccess")
     public static final String JFB_ENABLE_TRACE_PROPERTY = "ru.itmo.jfb.trace_to_stdout";
 
@@ -40,7 +40,7 @@ public class JFB2014 { //todo: extract interface
 
     private final QuickSelect quickSelect = new QuickSelect();
 
-    public JFB2014() {
+    public JfbSorter() {
         traceToStdout = System.getProperty(JFB_ENABLE_TRACE_PROPERTY) != null;
         debugEnabled = System.getProperty(JFB_ENABLE_DEBUG_PROPERTY) != null;
     }
@@ -54,7 +54,7 @@ public class JFB2014 { //todo: extract interface
      * @return New sorted population and its ranks
      */
     @SuppressWarnings("unused")
-    public RankedPopulation<IIndividual> performIncrementalNds(final IIndividual[] sortedPop, final int[] ranks, final IIndividual addend) {
+    public RankedPopulation<Individual> performIncrementalNds(final Individual[] sortedPop, final int[] ranks, final Individual addend) {
         final double[] addendObjectives = addend.getObjectives();
         if (debugEnabled) {
             assert (ranks.length == sortedPop.length);
@@ -62,7 +62,7 @@ public class JFB2014 { //todo: extract interface
         }
 
         final int dim = addendObjectives.length;
-        @SuppressWarnings("unchecked") final IIndividual[] newPop = new IIndividual[sortedPop.length + 1];
+        @SuppressWarnings("unchecked") final Individual[] newPop = new Individual[sortedPop.length + 1];
         final int[] newRanks = new int[ranks.length + 1];
         final List<Integer> hSet = new ArrayList<>(ranks.length);
         //final List<Integer> lSet = new ArrayList<>(ranks.length);
@@ -115,7 +115,7 @@ public class JFB2014 { //todo: extract interface
      * @param population population
      * @return ranks
      */
-    public int[] performNds(IIndividual[] population) {
+    public int[] performNds(Individual[] population) {
         if (population == null || population.length == 0)
             return new int[0];
 
@@ -158,22 +158,22 @@ public class JFB2014 { //todo: extract interface
      *                 relationships with the members of {@code pop}
      * @return Updated population
      */
-    public <T> RankedPopulation<IIndividual<T>> addRankedMembers(List<IIndividual<T>> pop,
+    public <T> RankedPopulation<Individual<T>> addRankedMembers(List<Individual<T>> pop,
                                                           int[] ranks,
-                                                          List<IIndividual<T>> addends,
+                                                          List<Individual<T>> addends,
                                                           @SuppressWarnings("SameParameterValue") int rankHint) { //todo: UT
         final double[] ultimateAddend = new double[addends.get(0).getObjectives().length];
         for (int i = 0; i < ultimateAddend.length; ++i) {
             ultimateAddend[i] = Double.POSITIVE_INFINITY;
         }
-        for (IIndividual addend : addends) {
+        for (Individual addend : addends) {
             final double[] obj = addend.getObjectives();
             for (int i = 0; i < ultimateAddend.length; ++i) {
                 ultimateAddend[i] = Math.min(ultimateAddend[i], obj[i]);
             }
         }
 
-        @SuppressWarnings("unchecked") final IIndividual<T>[] newPop = new IIndividual[pop.size() + addends.size()];
+        @SuppressWarnings("unchecked") final Individual<T>[] newPop = new Individual[pop.size() + addends.size()];
         final int[] newRanks = new int[newPop.length];
         final int dim = addends.get(0).getObjectives().length;
 
@@ -212,7 +212,7 @@ public class JFB2014 { //todo: extract interface
      * @param workingSet Indices of the population members that should be analyzed during the current run. Must be sorted.
      * @param level      Recursion level (used for logging)
      */
-    private void ndHelperA(IIndividual[] pop,
+    private void ndHelperA(Individual[] pop,
                            int[] ranks,
                            int k,
                            List<Integer> workingSet,
@@ -281,7 +281,7 @@ public class JFB2014 { //todo: extract interface
      * @param ranks      ranks[i] is the rank of individual pop[i]
      * @param workingSet Indices of the population members that should be analyzed during the current run. Must be sorted.
      */
-    void sweepA(IIndividual[] pop, int[] ranks, List<Integer> workingSet) {
+    void sweepA(Individual[] pop, int[] ranks, List<Integer> workingSet) {
         if (debugEnabled) {
             assert (pop.length == ranks.length);
             assert (workingSet.size() > 0 && workingSet.size() <= pop.length);
@@ -349,7 +349,7 @@ public class JFB2014 { //todo: extract interface
      *
      * @return whether at least one individual has changed its rank
      */
-    private boolean ndHelperB(IIndividual[] pop,
+    private boolean ndHelperB(Individual[] pop,
                               int[] ranks,
                               int k,
                               List<Integer> lSet,
@@ -438,7 +438,7 @@ public class JFB2014 { //todo: extract interface
      *
      * @return whether at least one individual has changed its rank
      */
-    boolean sweepB(IIndividual[] pop,
+    boolean sweepB(Individual[] pop,
                    int[] ranks,
                    List<Integer> lSet,
                    List<Integer> hSet) {
@@ -494,7 +494,7 @@ public class JFB2014 { //todo: extract interface
      * @param m           output: p_{@code k} = {@code medianValue}, where p is a member of {@code pop}
      * @param h           output: p_{@code k} > {@code medianValue}, where p is a member of {@code pop}
      */
-    private void split(IIndividual[] pop,
+    private void split(Individual[] pop,
                        int k,
                        double medianValue,
                        List<Integer> workingSet,

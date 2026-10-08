@@ -1,8 +1,8 @@
 package org.itmo.inds.population.jfby;
 
-import org.itmo.inds.api.IIndividual;
-import org.itmo.inds.api.INonDominationLevel;
-import org.itmo.inds.sorting.JFB2014;
+import org.itmo.inds.api.Individual;
+import org.itmo.inds.api.NonDominationLevel;
+import org.itmo.inds.sorting.JfbSorter;
 import org.itmo.inds.api.FitnessAndCdIndividual;
 import org.itmo.inds.util.SortedObjectives;
 import org.itmo.inds.util.RankedPopulation;
@@ -20,23 +20,23 @@ import static org.itmo.inds.util.Utils.dominates;
 
 @ThreadSafe
 @Immutable
-public class JFBYNonDominationLevel<T> implements INonDominationLevel<T> {
+public class JfbyNonDominationLevel<T> implements NonDominationLevel<T> {
     @Nonnull
-    private final JFB2014 sorter;
+    private final JfbSorter sorter;
 
     @Nonnull
-    private final List<IIndividual<T>> members;
+    private final List<Individual<T>> members;
 
     @Nonnull
-    private final SortedObjectives<IIndividual<T>, T> sortedObjectives;
+    private final SortedObjectives<Individual<T>, T> sortedObjectives;
 
     /**
      * Inefficient (O(NlogN) CD recalc) new level construction
      * @param sorter Sorter impl
      * @param members Level members
      */
-    public JFBYNonDominationLevel(@Nonnull JFB2014 sorter,
-                                  @Nonnull List<IIndividual<T>> members) {
+    public JfbyNonDominationLevel(@Nonnull JfbSorter sorter,
+                                  @Nonnull List<Individual<T>> members) {
         this.sorter = sorter;
         if (!members.isEmpty()) {
             final int dim = members.get(0).getObjectives().length;
@@ -48,9 +48,9 @@ public class JFBYNonDominationLevel<T> implements INonDominationLevel<T> {
         }
     }
 
-    public JFBYNonDominationLevel(@Nonnull JFB2014 sorter,
-                                  @Nonnull List<IIndividual<T>> members,
-                                  @Nonnull SortedObjectives<IIndividual<T>, T> sortedObjectives) {
+    public JfbyNonDominationLevel(@Nonnull JfbSorter sorter,
+                                  @Nonnull List<Individual<T>> members,
+                                  @Nonnull SortedObjectives<Individual<T>, T> sortedObjectives) {
         this.sorter = sorter;
         this.members = Collections.unmodifiableList(members);
         this.sortedObjectives = sortedObjectives;
@@ -58,20 +58,20 @@ public class JFBYNonDominationLevel<T> implements INonDominationLevel<T> {
 
     @Override
     @Nonnull
-    public List<IIndividual<T>> getMembers() {
+    public List<Individual<T>> getMembers() {
         return members;
     }
 
     @Nonnull
-    public SortedObjectives<IIndividual<T>, T> getSortedObjectives() {
+    public SortedObjectives<Individual<T>, T> getSortedObjectives() {
         return sortedObjectives;
     }
 
     @Override
-    public MemberAdditionResult<T, JFBYNonDominationLevel<T>> addMembers(@Nonnull List<IIndividual<T>> addends) {
+    public MemberAdditionResult<T, JfbyNonDominationLevel<T>> addMembers(@Nonnull List<Individual<T>> addends) {
         final int[] ranks = new int[members.size()];
-        final RankedPopulation<IIndividual<T>> rp = sorter.addRankedMembers(members, ranks, addends, 0);
-        final ArrayList<IIndividual<T>> nextLevel = new ArrayList<>(ranks.length);
+        final RankedPopulation<Individual<T>> rp = sorter.addRankedMembers(members, ranks, addends, 0);
+        final ArrayList<Individual<T>> nextLevel = new ArrayList<>(ranks.length);
 
         for (int i = 0; i < rp.getPop().length; ++i) {
             if (rp.getRanks()[i] != 0) {
@@ -79,7 +79,7 @@ public class JFBYNonDominationLevel<T> implements INonDominationLevel<T> {
             }
         }
 
-        final SortedObjectives<IIndividual<T>, T> nso = sortedObjectives.update(
+        final SortedObjectives<Individual<T>, T> nso = sortedObjectives.update(
                 addends,
                 nextLevel,
                 (i, d) -> new FitnessAndCdIndividual<>(i.getObjectives(), d, i.getPayload())
@@ -87,14 +87,14 @@ public class JFBYNonDominationLevel<T> implements INonDominationLevel<T> {
 
         return new MemberAdditionResult<>(
                 nextLevel,
-                new JFBYNonDominationLevel<>(sorter, nso.getLexSortedPop(), nso)
+                new JfbyNonDominationLevel<>(sorter, nso.getLexSortedPop(), nso)
         );
     }
 
     @Override
-    public boolean dominatedByAnyPointOfThisLayer(@Nonnull IIndividual point) {
+    public boolean dominatedByAnyPointOfThisLayer(@Nonnull Individual point) {
         final double[] pointObj = point.getObjectives();
-        for (IIndividual member : members) {
+        for (Individual member : members) {
             final double[] memberObj = member.getObjectives();
             if (memberObj[0] > pointObj[0])
                 break;
@@ -105,16 +105,16 @@ public class JFBYNonDominationLevel<T> implements INonDominationLevel<T> {
     }
 
     @Override
-    public JFBYNonDominationLevel<T> copy() {
-        final List<IIndividual<T>> newMembers = new ArrayList<>(members.size());
+    public JfbyNonDominationLevel<T> copy() {
+        final List<Individual<T>> newMembers = new ArrayList<>(members.size());
         newMembers.addAll(members);
-        return new JFBYNonDominationLevel<>(sorter, newMembers, sortedObjectives);
+        return new JfbyNonDominationLevel<>(sorter, newMembers, sortedObjectives);
     }
 
     @Override
     public String toString() {
         return "members=" + members.stream()
-                .map(IIndividual::getObjectives)
+                .map(Individual::getObjectives)
                 .map(Arrays::toString)
                 .collect(Collectors.toList());
     }

@@ -1,6 +1,6 @@
 package org.itmo.inds.testdata;
 
-import org.itmo.inds.util.RankedIndividual;
+import org.itmo.inds.util.RankSorting;
 import org.itmo.inds.util.RankedPopulation;
 
 import java.util.Arrays;
@@ -30,7 +30,7 @@ public class DoublesGeneration extends Generation<double[]> {
                 }
             }
 
-            final int[] sortedRanks = RankedIndividual.sortRanksForLexSortedPopulation(ranks, pop);
+            final int[] sortedRanks = RankSorting.sortRanksForLexSortedPopulation(ranks, pop);
             Arrays.sort(pop, (o1, o2) -> {
                 for (int i = 0; i < o1.length; ++i) {
                     if (o1[i] < o2[i])

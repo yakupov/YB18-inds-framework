@@ -6,15 +6,15 @@ import java.util.Objects;
 
 @Immutable
 public class PopulationSnapshot<T> {
-    private final List<INonDominationLevel<T>> levels;
+    private final List<NonDominationLevel<T>> levels;
     private final int size;
 
-    public PopulationSnapshot(List<INonDominationLevel<T>> levels, int size) {
+    public PopulationSnapshot(List<NonDominationLevel<T>> levels, int size) {
         this.levels = levels;
         this.size = size;
     }
 
-    public List<INonDominationLevel<T>> getLevels() {
+    public List<NonDominationLevel<T>> getLevels() {
         return levels;
     }
 

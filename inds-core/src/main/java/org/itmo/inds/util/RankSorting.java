@@ -3,11 +3,11 @@ package org.itmo.inds.util;
 import java.util.Arrays;
 import java.util.function.Function;
 
-public class RankedIndividual<T> {
+public class RankSorting<T> {
     private final int rank;
     private final T fitness;
 
-    private RankedIndividual(int rank, T fitness) {
+    private RankSorting(int rank, T fitness) {
         this.rank = rank;
         this.fitness = fitness;
     }
@@ -21,9 +21,9 @@ public class RankedIndividual<T> {
     }
 
     public static int[] sortRanksForLexSortedPopulation(int[] ranks, double[][] pop) {
-        @SuppressWarnings("unchecked") final RankedIndividual<double[]>[] ri = new RankedIndividual[ranks.length];
+        @SuppressWarnings("unchecked") final RankSorting<double[]>[] ri = new RankSorting[ranks.length];
         for (int i = 0; i < ranks.length; ++i) {
-            ri[i] = new RankedIndividual<>(ranks[i], pop[i]);
+            ri[i] = new RankSorting<>(ranks[i], pop[i]);
         }
 
         Arrays.sort(ri, (o1, o2) -> {
@@ -36,13 +36,13 @@ public class RankedIndividual<T> {
             return 0;
         });
 
-        return Arrays.stream(ri).mapToInt(RankedIndividual::getRank).toArray();
+        return Arrays.stream(ri).mapToInt(RankSorting::getRank).toArray();
     }
 
     public static <T> int[] sortRanksForLexSortedPopulation(int[] ranks, T[] pop, Function<T, double[]> objectivesExtractor) {
-        @SuppressWarnings("unchecked") final RankedIndividual<T>[] ri = new RankedIndividual[ranks.length];
+        @SuppressWarnings("unchecked") final RankSorting<T>[] ri = new RankSorting[ranks.length];
         for (int i = 0; i < ranks.length; ++i) {
-            ri[i] = new RankedIndividual<>(ranks[i], pop[i]);
+            ri[i] = new RankSorting<>(ranks[i], pop[i]);
         }
 
         Arrays.sort(ri, (o1, o2) -> {
@@ -57,6 +57,6 @@ public class RankedIndividual<T> {
             return 0;
         });
 
-        return Arrays.stream(ri).mapToInt(RankedIndividual::getRank).toArray();
+        return Arrays.stream(ri).mapToInt(RankSorting::getRank).toArray();
     }
 }

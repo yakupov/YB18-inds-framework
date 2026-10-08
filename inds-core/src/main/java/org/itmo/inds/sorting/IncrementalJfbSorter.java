@@ -1,6 +1,6 @@
 package org.itmo.inds.sorting;
 
-import org.itmo.inds.api.IIndividual;
+import org.itmo.inds.api.Individual;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.HashMap;
@@ -13,14 +13,14 @@ import static org.itmo.inds.util.Utils.dominates;
  * Can perform NDS only on a sorted population with one new point (or a contiguous set of points with the same rank)
  */
 @ThreadSafe
-public class IncrementalJFB extends JFB2014 {
+public class IncrementalJfbSorter extends JfbSorter {
     @Override
-    public int[] performNds(IIndividual[] population) {
+    public int[] performNds(Individual[] population) {
         throw new UnsupportedOperationException("Can't perform non-incremental sorting");
     }
 
     @Override
-    protected void sweepA(IIndividual[] pop, int[] ranks, List<Integer> workingSet) {
+    protected void sweepA(Individual[] pop, int[] ranks, List<Integer> workingSet) {
         final Map<Integer, Integer> rightmostStairs = new HashMap<>(); //From rank to index
 
         for (int index : workingSet) {
@@ -39,7 +39,7 @@ public class IncrementalJFB extends JFB2014 {
     }
 
     @Override
-    boolean sweepB(IIndividual[] pop, int[] ranks, List<Integer> lSet, List<Integer> hSet) {
+    boolean sweepB(Individual[] pop, int[] ranks, List<Integer> lSet, List<Integer> hSet) {
         if (lSet == null || lSet.isEmpty() || hSet == null || hSet.isEmpty())
             return false;
 
