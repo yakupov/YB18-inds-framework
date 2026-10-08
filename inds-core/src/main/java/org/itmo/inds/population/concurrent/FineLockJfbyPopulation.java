@@ -225,11 +225,11 @@ public class FineLockJfbyPopulation<T> implements ManagedPopulation<T> {
                 try {
                     final JfbyNonDominationLevel<T> level = nonDominationLevels.get(i);
                     final NonDominationLevel.MemberAdditionResult<T, JfbyNonDominationLevel<T>> memberAdditionResult = level.addMembers(addends);
-                    nonDominationLevels.set(i, memberAdditionResult.getModifiedLevel());
 
                     if (!memberAdditionResult.getEvictedMembers().isEmpty()) {
                         acquireLock(i + 1);
                     }
+                    nonDominationLevels.set(i, memberAdditionResult.getModifiedLevel());
                     addends = memberAdditionResult.getEvictedMembers();
                 } finally {
                     levelLocks.get(i).unlock();
