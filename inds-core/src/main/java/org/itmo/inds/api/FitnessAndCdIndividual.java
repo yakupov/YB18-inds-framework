@@ -1,7 +1,5 @@
 package org.itmo.inds.api;
 
-import org.itmo.inds.api.Individual;
-
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Arrays;
@@ -47,7 +45,7 @@ public class FitnessAndCdIndividual<T> implements Individual<T> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FitnessAndCdIndividual that = (FitnessAndCdIndividual) o;
+        final var that = (FitnessAndCdIndividual) o;
         return Arrays.equals(objectives, that.objectives);
     }
 
