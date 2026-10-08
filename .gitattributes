@@ -1,0 +1,5 @@
+# Line endings: LF everywhere in the repository and in checkouts, except Windows scripts.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.sh text eol=lf

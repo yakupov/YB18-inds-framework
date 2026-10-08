@@ -1,0 +1,3 @@
+# Data sets: stored byte-identical to the legacy git blobs (MANIFEST.tsv).
+# binary = no line-ending conversion, no text diffs.
+*.json binary

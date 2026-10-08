@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.itmo.inds</groupId>
+        <artifactId>inds-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>inds-baselines</artifactId>
+    <name>INDS baselines</name>
+    <description>Reference algorithms for comparison: ENLU (population and Ch. 3 sorter)</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.itmo.inds</groupId>
+            <artifactId>inds-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.itmo.inds</groupId>
+            <artifactId>inds-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.mbuzdalov</groupId>
+            <artifactId>non-dominated-sorting-implementations</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <!-- Long concurrency stress run: mvn -pl inds-baselines -am test -Pstress -Dtest=EnluConcurrentInsertionStressTest -Dsurefire.failIfNoSpecifiedTests=false -->
+        <profile>
+            <id>stress</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <inds.stress.repetitions>10000</inds.stress.repetitions>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
