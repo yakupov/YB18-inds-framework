@@ -1,10 +1,9 @@
-package org.itmo.inds.population.concurrent;
+package org.itmo.inds.population;
 
 import org.itmo.inds.api.Individual;
 import org.itmo.inds.api.ManagedPopulation;
 import org.itmo.inds.api.NonDominationLevel;
 import org.itmo.inds.api.PopulationSnapshot;
-import org.itmo.inds.population.jfby.JfbyNonDominationLevel;
 import org.itmo.inds.sorting.IncrementalJfbSorter;
 import org.itmo.inds.sorting.JfbSorter;
 import org.itmo.inds.api.FitnessAndCdIndividual;

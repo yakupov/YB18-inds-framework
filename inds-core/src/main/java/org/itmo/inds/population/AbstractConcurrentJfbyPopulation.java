@@ -1,4 +1,4 @@
-package org.itmo.inds.population.concurrent;
+package org.itmo.inds.population;
 
 import org.itmo.inds.api.Individual;
 import org.itmo.inds.api.ManagedPopulation;

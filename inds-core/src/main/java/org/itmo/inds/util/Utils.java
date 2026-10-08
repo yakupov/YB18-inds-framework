@@ -2,7 +2,7 @@ package org.itmo.inds.util;
 
 import org.itmo.inds.api.Individual;
 import org.itmo.inds.api.NonDominationLevel;
-import org.itmo.inds.population.jfby.JfbyNonDominationLevel;
+import org.itmo.inds.population.JfbyNonDominationLevel;
 import org.itmo.inds.sorting.JfbSorter;
 import org.itmo.inds.api.FitnessAndCdIndividual;
 
