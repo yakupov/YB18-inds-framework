@@ -1,4 +1,4 @@
-package org.itmo.inds.population;
+package org.itmo.inds.twod;
 
 import java.util.Arrays;
 
