@@ -1,10 +1,10 @@
 package org.itmo.inds.population;
 
-public class Treap {
+public class TwoDimTreap {
     public static class Treaps {
-        Treap l, r;
+        TwoDimTreap l, r;
         public Treaps() {};
-        public Treaps(Treap l, Treap r) {
+        public Treaps(TwoDimTreap l, TwoDimTreap r) {
             super();
             this.l = l;
             this.r = r;
@@ -15,33 +15,33 @@ public class Treap {
         }
     }
 
-    public Double2DIndividual x;
+    public TwoDimPoint x;
     public int y;
 
-    public Treap left;
-    public Treap right;
+    public TwoDimTreap left;
+    public TwoDimTreap right;
 
-    public Treap(Double2DIndividual x, int y, Treap left, Treap right) {
+    public TwoDimTreap(TwoDimPoint x, int y, TwoDimTreap left, TwoDimTreap right) {
         this.x = x;
         this.y = y;
         this.left = left;
         this.right = right;
     }
 
-    public static Treap merge(Treap l, Treap r) {
+    public static TwoDimTreap merge(TwoDimTreap l, TwoDimTreap r) {
         if (l == null) return r;
         if (r == null) return l;
 
         if (l.y > r.y) {
-            Treap newR = merge(l.right, r);
-            return new Treap(l.x, l.y, l.left, newR);
+            TwoDimTreap newR = merge(l.right, r);
+            return new TwoDimTreap(l.x, l.y, l.left, newR);
         } else {
-            Treap newL = merge(l, r.left);
-            return new Treap(r.x, r.y, newL, r.right);
+            TwoDimTreap newL = merge(l, r.left);
+            return new TwoDimTreap(r.x, r.y, newL, r.right);
         }
     }
 
-    public Treaps splitX(Double2DIndividual x) {
+    public Treaps splitX(TwoDimPoint x) {
         Treaps res = new Treaps();
         Treaps t = new Treaps();
         if (this.x.compareX1(x) < 0) {
@@ -51,7 +51,7 @@ public class Treap {
                 t = right.splitX(x);
                 res.r = t.r;
             }
-            res.l = new Treap(this.x, y, left, t.l);
+            res.l = new TwoDimTreap(this.x, y, left, t.l);
         } else {
             if (left == null) {
                 res.l = null;
@@ -59,7 +59,7 @@ public class Treap {
                 t = left.splitX(x);
                 res.l = t.l;
             }
-            res.r = new Treap(this.x, y, t.r, right);
+            res.r = new TwoDimTreap(this.x, y, t.r, right);
         }
         //System.err.println("SPL: " + String.valueOf(this.x) + "_" + String.valueOf(left) + "_" + String.valueOf(right) + " : " + res.toString());
         return res;
@@ -70,7 +70,7 @@ public class Treap {
      * @param x
      * @return
      */
-    public Treaps splitY(Double2DIndividual x) {
+    public Treaps splitY(TwoDimPoint x) {
         Treaps res = new Treaps();
         Treaps t = new Treaps();
         if (this.x.compareX2(x) >= 0) {
@@ -80,7 +80,7 @@ public class Treap {
                 t = right.splitY(x);
                 res.r = t.r;
             }
-            res.l = new Treap(this.x, y, left, t.l);
+            res.l = new TwoDimTreap(this.x, y, left, t.l);
         } else {
             if (left == null) {
                 res.l = null;
@@ -88,12 +88,12 @@ public class Treap {
                 t = left.splitY(x);
                 res.l = t.l;
             }
-            res.r = new Treap(this.x, y, t.r, right);
+            res.r = new TwoDimTreap(this.x, y, t.r, right);
         }
         return res;
     }
 
-    public boolean dominatesSomebody(Double2DIndividual nInd) {
+    public boolean dominatesSomebody(TwoDimPoint nInd) {
         Treaps split = splitX(nInd);
         if (split.l != null && nInd.compareDom(split.l.getMax()) < 0)
             return true;
@@ -102,7 +102,7 @@ public class Treap {
         return false;
     }
 
-    public boolean dominatedBySomebody(Double2DIndividual nInd) {
+    public boolean dominatedBySomebody(TwoDimPoint nInd) {
         Treaps split = splitX(nInd);
         //System.err.println("DBS: " + split);
         //System.err.println("_DBS: " + this);
@@ -114,25 +114,25 @@ public class Treap {
         return false;
     }
 
-    public Double2DIndividual getMinP() {
-        Treap l = this;
+    public TwoDimPoint getMinP() {
+        TwoDimTreap l = this;
         while (l.left != null)
             l = l.left;
-        Treap r = this;
+        TwoDimTreap r = this;
         while (r.right != null)
             r = r.right;
-        return new Double2DIndividual(l.x.getX1(), r.x.getX2());
+        return new TwoDimPoint(l.x.getX1(), r.x.getX2());
     }
 
-    public Double2DIndividual getMin() {
-        Treap l = this;
+    public TwoDimPoint getMin() {
+        TwoDimTreap l = this;
         while (l.left != null)
             l = l.left;
         return l.x;
     }
 
-    public Double2DIndividual getMax() {
-        Treap r = this;
+    public TwoDimPoint getMax() {
+        TwoDimTreap r = this;
         while (r.right != null)
             r = r.right;
         return r.x;

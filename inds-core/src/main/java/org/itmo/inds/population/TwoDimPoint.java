@@ -2,17 +2,17 @@ package org.itmo.inds.population;
 
 import java.util.Arrays;
 
-public class Double2DIndividual {
+public class TwoDimPoint {
     private double x1, x2;
     public static int dominationComparsionCount;
 
-    public Double2DIndividual(double x1, double x2) {
+    public TwoDimPoint(double x1, double x2) {
         super();
         this.x1 = x1;
         this.x2 = x2;
     }
 
-    public Double2DIndividual(double[] x) {
+    public TwoDimPoint(double[] x) {
         if (x.length != 2)
             throw new RuntimeException("Can't cast to Double2DIndividual this array: " + Arrays.toString(x));
         this.x1 = x[0];
@@ -27,12 +27,12 @@ public class Double2DIndividual {
         return x2;
     }
 
-    public int compareX1(Double2DIndividual o) {
+    public int compareX1(TwoDimPoint o) {
         ++dominationComparsionCount;
         return Double.compare(x1, o.x1);
     }
 
-    public int compareX2(Double2DIndividual o) {
+    public int compareX2(TwoDimPoint o) {
         ++dominationComparsionCount;
         return Double.compare(x2, o.x2);
     }
@@ -42,7 +42,7 @@ public class Double2DIndividual {
      * @param o
      * @return
      */
-    public int compareDom(Double2DIndividual o) {
+    public int compareDom(TwoDimPoint o) {
         //synchronized(Double2DIndividual.class) {
         ++dominationComparsionCount;
         //}
@@ -59,7 +59,7 @@ public class Double2DIndividual {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Double2DIndividual that = (Double2DIndividual) o;
+        TwoDimPoint that = (TwoDimPoint) o;
 
         if (Double.compare(that.x1, x1) != 0) return false;
         return Double.compare(that.x2, x2) == 0;

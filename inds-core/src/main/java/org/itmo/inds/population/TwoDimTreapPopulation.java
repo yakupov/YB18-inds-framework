@@ -2,26 +2,26 @@ package org.itmo.inds.population;
 
 import java.util.*;
 
-public class TreapPopulation {
-    private final Set<Double2DIndividual> individuals;
-    private final List<Treap> ranks;
+public class TwoDimTreapPopulation {
+    private final Set<TwoDimPoint> individuals;
+    private final List<TwoDimTreap> ranks;
     private final Random random = new Random();
 
     public int size() {
         return individuals.size();
     }
 
-    public TreapPopulation() {
+    public TwoDimTreapPopulation() {
         this(new HashSet<>(), new ArrayList<>());
     }
 
-    public TreapPopulation(Set<Double2DIndividual> individuals, List<Treap> ranks) {
+    public TwoDimTreapPopulation(Set<TwoDimPoint> individuals, List<TwoDimTreap> ranks) {
         this.individuals = individuals;
         this.ranks = ranks;
     }
 
     @Deprecated
-    protected int determineRankStupid(Double2DIndividual nInd) {
+    protected int determineRankStupid(TwoDimPoint nInd) {
         int currRank = 0;
         for (int i = 0; i < ranks.size(); ++i) {
             if (ranks.get(i).dominatedBySomebody(nInd))
@@ -32,7 +32,7 @@ public class TreapPopulation {
         return currRank;
     }
 
-    protected int determineRank(Double2DIndividual nInd) {
+    protected int determineRank(TwoDimPoint nInd) {
         int currRank = 0;
         int l = 0;
         int r = ranks.size() - 1;
@@ -48,7 +48,7 @@ public class TreapPopulation {
         return currRank;
     }
 
-    public void addPoint(Double2DIndividual nInd) {
+    public void addPoint(TwoDimPoint nInd) {
         if (individuals.contains(nInd)) {
             return;
         } else {
@@ -56,7 +56,7 @@ public class TreapPopulation {
         }
         int rank = determineRank(nInd);
         //System.err.println(rank + "_" + nInd.toString() + "_" + ranks.size());
-        Treap nTreap = new Treap(nInd, random.nextInt(), null, null);
+        TwoDimTreap nTreap = new TwoDimTreap(nInd, random.nextInt(), null, null);
 
         if (rank >= ranks.size()) {
             ranks.add(nTreap);
@@ -65,8 +65,8 @@ public class TreapPopulation {
             return;
         } else {
             int i = 0;
-            Double2DIndividual minP = nInd;
-            Treap cNext = nTreap;
+            TwoDimPoint minP = nInd;
+            TwoDimTreap cNext = nTreap;
             while (minP != null) {
                 if (ranks.size() <= rank + i) {
                     ranks.add(cNext);
@@ -77,8 +77,8 @@ public class TreapPopulation {
                 printTreap(cNext, printTreaps);
                 printTreap(ranks.get(rank + i), printTreaps);
 
-                Treap.Treaps t1 = ranks.get(rank + i).splitX(minP);
-                Treap.Treaps tr = new Treap.Treaps();
+                TwoDimTreap.Treaps t1 = ranks.get(rank + i).splitX(minP);
+                TwoDimTreap.Treaps tr = new TwoDimTreap.Treaps();
                 if (t1.r != null)
                     tr = t1.r.splitY(minP);
 
@@ -87,9 +87,9 @@ public class TreapPopulation {
                 printTreap(tr.l, printTreaps);
                 printTreap(tr.r, printTreaps);
 
-                Treap res = Treap.merge(t1.l, cNext);
+                TwoDimTreap res = TwoDimTreap.merge(t1.l, cNext);
                 printTreap(res, printTreaps);
-                res = Treap.merge(res, tr.r);
+                res = TwoDimTreap.merge(res, tr.r);
                 printTreap(res, printTreaps);
                 ranks.set(rank + i, res);
                 cNext = tr.l;
@@ -103,15 +103,15 @@ public class TreapPopulation {
         }
     }
 
-    private void printTreap(Treap cNext, boolean sw) {
+    private void printTreap(TwoDimTreap cNext, boolean sw) {
         if (sw)
             System.err.println(cNext);
     }
 
     public static class IndWithRank {
-        Double2DIndividual ind;
+        TwoDimPoint ind;
         int rank;
-        public IndWithRank(Double2DIndividual ind, int rank) {
+        public IndWithRank(TwoDimPoint ind, int rank) {
             super();
             this.ind = ind;
             this.rank = rank;
@@ -125,11 +125,11 @@ public class TreapPopulation {
     public IndWithRank getRandWithRank() {
         if (individuals.size() == 0)
             throw new RuntimeException("Can't get random individual from empty population");
-        Double2DIndividual randInd = (Double2DIndividual) individuals.toArray()[random.nextInt(individuals.size())];
+        TwoDimPoint randInd = (TwoDimPoint) individuals.toArray()[random.nextInt(individuals.size())];
         return new IndWithRank(randInd, detRankOfExPoint(randInd));
     }
 
-    protected int detRankOfExPoint(Double2DIndividual ind) {
+    protected int detRankOfExPoint(TwoDimPoint ind) {
         int r = ranks.size() - 1;
         int l = 0;
         int result = -1;
@@ -170,7 +170,7 @@ public class TreapPopulation {
     }
 
 
-    protected int detRankOfExPointDumb(Double2DIndividual ind) {
+    protected int detRankOfExPointDumb(TwoDimPoint ind) {
         for (int l = 0; l < ranks.size(); ++l) {
             boolean dominated = ranks.get(l).dominatedBySomebody(ind);
             boolean dominates = ranks.get(l).dominatesSomebody(ind);
@@ -197,12 +197,12 @@ public class TreapPopulation {
         }
     }
 
-    private void checkDom(Treap t, int rk) {
+    private void checkDom(TwoDimTreap t, int rk) {
         if (t == null)
             return;
         int cRankCalcd = 0;
-        Double2DIndividual rankDeterminator = null;
-        for (Double2DIndividual ind : individuals) {
+        TwoDimPoint rankDeterminator = null;
+        for (TwoDimPoint ind : individuals) {
             if (ind != t.x) {
                 if (t.x.compareDom(ind) > 0) { //dominated
                     int newPossibleRank = detRankOfExPoint(ind) + 1;
