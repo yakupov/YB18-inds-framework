@@ -46,6 +46,21 @@ remove the worst point. How they work: [architecture](docs/architecture.md).
 | `inds-benchmark-data` | the data sets of the thesis experiments (~1.9 GB of JSON, resources only): NSGA-II population snapshots and insertion sequences for DTLZ / ZDT problems, synthetic sets ([README](inds-benchmark-data/README.md)) |
 | `inds-benchmarks` | JMH benchmarks of the thesis experiments |
 
+## Use from Maven
+
+`inds-core` (API, sorters, populations, 2D) and `inds-baselines` (ENLU) are on Maven Central:
+
+```xml
+<dependency>
+    <groupId>io.github.yakupov</groupId>
+    <artifactId>inds-core</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+Requires Java 17; the only runtime dependency is the jsr305 annotations. The data sets and benchmarks are not
+published: clone the repository for them.
+
 ## Quick start
 
 Prerequisites: JDK 17 or newer, Maven 3.9 or newer.

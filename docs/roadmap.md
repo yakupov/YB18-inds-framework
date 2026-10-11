@@ -95,9 +95,6 @@ golden-master records).
   setup depends on the local IDE installation. If IntelliJ's inspections are wanted reproducibly, JetBrains Qodana
   runs them in a container; compare its cost and noise with Checkstyle / PMD. Gate: clean on new code.
 - **F4 — Continuous integration** (GitHub Actions) running `mvn verify`; the long stress runs and JMH stay manual.
-- **F7 — Publishing to Maven Central.** Prepared: group id `io.github.yakupov` (package names stay `org.itmo.inds`),
-  `release` profile and `scripts/central-bundle.py` for `inds-parent`, `inds-core` and `inds-baselines` with sources,
-  Javadoc and signatures ([CONTRIBUTING.md](../CONTRIBUTING.md#releasing)). Done with the first release (`0.1.0`).
 - **F8 — JSON library.** The data model uses Gson 2.8 (with a type adapter for JDK 17); move to a current Gson or
   another library (e.g. Jackson) while keeping the existing data files readable.
 
@@ -117,6 +114,9 @@ golden-master records).
 
 ## Done and closed
 
+- **F7 — Publishing to Maven Central** (done, `0.1.0`). Group id `io.github.yakupov` (package names stay
+  `org.itmo.inds`); `inds-parent`, `inds-core` and `inds-baselines` with sources, Javadoc and signatures; release
+  steps in [CONTRIBUTING.md](../CONTRIBUTING.md#releasing).
 - **F5 — Decide on the defects kept from the cited code:** split into one item per defect (F19, F20, F21; F15 and
   F11 existed already).
 - **F9 — Benchmark populations from recomputed fronts** (done). Two data sets store fronts that differ from the true
