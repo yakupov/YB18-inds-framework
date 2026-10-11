@@ -1,0 +1,84 @@
+cff-version: 1.2.0
+message: "If you use this library, please cite the thesis below and the paper of the algorithm you use."
+type: software
+title: "YB18 INDS framework: incremental and asynchronous non-dominated sorting"
+abstract: >-
+  Java library of incremental and asynchronous non-dominated sorting for steady-state evolutionary multiobjective
+  algorithms: the algorithms of I. Yakupov's PhD thesis (ITMO University, 2019), ported from the research
+  repositories the thesis cites, with baselines, benchmark data and benchmarks.
+authors:
+  - family-names: Yakupov
+    given-names: Ilya
+  - family-names: Buzdalov
+    given-names: Maxim
+repository-code: "https://github.com/yakupov/YB18-inds-framework"
+license: MIT
+keywords:
+  - non-dominated sorting
+  - incremental non-dominated sorting
+  - asynchronous algorithms
+  - evolutionary multiobjective optimization
+  - steady-state NSGA-II
+preferred-citation:
+  type: thesis
+  thesis-type: "PhD thesis"
+  title: "Efficient Incremental and Asynchronous Non-Dominated Sorting for Evolutionary Multiobjective Algorithms"
+  authors:
+    - family-names: Yakupov
+      given-names: Ilya
+  institution:
+    name: "ITMO University"
+    city: "Saint Petersburg"
+  year: 2019
+references:
+  - type: conference-paper
+    title: "Fast Implementation of the Steady-State NSGA-II Algorithm for Two Dimensions Based on Incremental Non-Dominated Sorting"
+    authors:
+      - family-names: Buzdalov
+        given-names: Maxim
+      - family-names: Yakupov
+        given-names: Ilya
+      - family-names: Stankevich
+        given-names: Andrey
+    collection-title: "Proceedings of the Genetic and Evolutionary Computation Conference (GECCO 2015)"
+    start: 647
+    end: 654
+    year: 2015
+  - type: conference-paper
+    title: "Incremental Non-Dominated Sorting with O(N) Insertion for the Two-Dimensional Case"
+    authors:
+      - family-names: Yakupov
+        given-names: Ilya
+      - family-names: Buzdalov
+        given-names: Maxim
+    collection-title: "IEEE Congress on Evolutionary Computation (CEC 2015)"
+    start: 1853
+    end: 1860
+    year: 2015
+  - type: conference-paper
+    title: "Improved Incremental Non-dominated Sorting for Steady-State Evolutionary Multiobjective Optimization"
+    authors:
+      - family-names: Yakupov
+        given-names: Ilya
+      - family-names: Buzdalov
+        given-names: Maxim
+    collection-title: "Proceedings of the Genetic and Evolutionary Computation Conference (GECCO 2017)"
+    start: 649
+    end: 656
+    year: 2017
+  - type: conference-paper
+    title: "On Asynchronous Non-Dominated Sorting for Steady-State Multiobjective Evolutionary Algorithms"
+    authors:
+      - family-names: Yakupov
+        given-names: Ilya
+      - family-names: Buzdalov
+        given-names: Maxim
+    collection-title: "Proceedings of the Genetic and Evolutionary Computation Conference Companion (GECCO 2018)"
+    start: 205
+    end: 206
+    year: 2018
+    identifiers:
+      - type: other
+        value: "arXiv:1804.05208"
+        description: "arXiv preprint"
+    url: "https://arxiv.org/abs/1804.05208"
