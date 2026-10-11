@@ -140,10 +140,16 @@ Release `X.Y.Z`:
 mvn verify                                                    # all tests, on the code to release
 mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false
 git commit -am "Release X.Y.Z" && git tag -a vX.Y.Z -m "Release X.Y.Z"
-mvn -Prelease -Dmaven.test.skip=true -pl .,inds-core,inds-baselines deploy   # signs, uploads, Central validates
+mvn -Prelease -Dmaven.test.skip=true -pl .,inds-core,inds-baselines deploy   # signs; writes target/central-staging
+python scripts/central-bundle.py target/central-staging target/central-bundle.zip
 ```
 
-Then publish the validated deployment on central.sonatype.com (Deployments), push the commit and the tag, and set
-the next development version (`mvn versions:set -DnewVersion=X.Y+1.0-SNAPSHOT -DgenerateBackupPoms=false`, commit,
-push). The `release` profile refuses to run without `-Dmaven.test.skip=true`: that switch also keeps `inds-core`'s
-test-jar out of the upload.
+The `release` profile deploys into the local directory `target/central-staging`, not to a server, and refuses to run
+without `-Dmaven.test.skip=true` (that switch also keeps `inds-core`'s test-jar out). `central-bundle.py` checks that
+every POM and jar has its signature and checksums and zips them with the layout Central expects. Upload
+`target/central-bundle.zip` on central.sonatype.com (Publish → Publish Component), wait for the validation, check the
+three components and publish. Then push the commit and the tag, and set the next development version
+(`mvn versions:set -DnewVersion=X.Y+1.0-SNAPSHOT -DgenerateBackupPoms=false`, commit, push).
+
+Sonatype's `central-publishing-maven-plugin` is not used: on Windows with Maven 3.10 it writes zip entries with
+backslashes and puts resolver files into the bundle, which Central rejects.

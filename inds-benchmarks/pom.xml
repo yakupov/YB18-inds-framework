@@ -13,6 +13,10 @@
     <name>INDS benchmarks</name>
     <description>JMH benchmarks; packaged as target/benchmarks.jar</description>
 
+    <properties>
+        <!-- not published to Maven Central (CONTRIBUTING.md, Releasing) -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>io.github.yakupov</groupId>

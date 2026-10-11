@@ -13,6 +13,10 @@
     <name>INDS test data</name>
     <description>Benchmark data-set model (JSON) and loaders</description>
 
+    <properties>
+        <!-- not published to Maven Central (CONTRIBUTING.md, Releasing) -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
     <dependencies>
         <!-- RankSorting, RankedPopulation (DoublesGeneration#getLexSortedRankedPop) -->
         <dependency>

@@ -96,8 +96,8 @@ golden-master records).
   runs them in a container; compare its cost and noise with Checkstyle / PMD. Gate: clean on new code.
 - **F4 — Continuous integration** (GitHub Actions) running `mvn verify`; the long stress runs and JMH stay manual.
 - **F7 — Publishing to Maven Central.** Prepared: group id `io.github.yakupov` (package names stay `org.itmo.inds`),
-  `release` profile publishing `inds-parent`, `inds-core` and `inds-baselines` with sources, Javadoc and signatures
-  ([CONTRIBUTING.md](../CONTRIBUTING.md#releasing)). Done with the first release (`0.1.0`).
+  `release` profile and `scripts/central-bundle.py` for `inds-parent`, `inds-core` and `inds-baselines` with sources,
+  Javadoc and signatures ([CONTRIBUTING.md](../CONTRIBUTING.md#releasing)). Done with the first release (`0.1.0`).
 - **F8 — JSON library.** The data model uses Gson 2.8 (with a type adapter for JDK 17); move to a current Gson or
   another library (e.g. Jackson) while keeping the existing data files readable.
 

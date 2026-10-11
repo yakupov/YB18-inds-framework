@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Benchmark data sets as resources only (no code). Kept in its own module so it can be moved out of the repository
-  later (follow-up F6) without touching benchmark code. Data is added in Phase 5.
+  later (roadmap F6) without touching benchmark code.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -16,4 +16,8 @@
     <artifactId>inds-benchmark-data</artifactId>
     <name>INDS benchmark data</name>
     <description>Data sets of the thesis Ch. 3 / Ch. 4 benchmarks (JSON resources)</description>
+    <properties>
+        <!-- not published to Maven Central (CONTRIBUTING.md, Releasing) -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 </project>

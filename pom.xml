@@ -240,14 +240,21 @@
     </build>
     <profiles>
         <!--
-            Release to Maven Central (CONTRIBUTING.md, "Releasing"): only inds-parent, inds-core and inds-baselines are
-            published. Run `mvn verify` first, then
+            Release to Maven Central (CONTRIBUTING.md, "Releasing"): run `mvn verify` first, then
               mvn -Prelease -Dmaven.test.skip=true -pl .,inds-core,inds-baselines deploy
-            Skipping the tests also leaves out inds-core's test-jar (golden records and test infrastructure are not
-            published); excludeArtifacts below keeps the other modules out even without -pl.
+              python scripts/central-bundle.py target/central-staging target/central-bundle.zip
+            and upload the zip on central.sonatype.com. deploy writes the signed artifacts of inds-parent, inds-core and
+            inds-baselines into target/central-staging (the other modules set maven.deploy.skip); skipping the tests
+            also leaves out inds-core's test-jar (golden records and test infrastructure are not published).
+            The bundle is built by a script, not by Sonatype's publishing plugin: on Windows with Maven 3.10 that
+            plugin writes zip entries with backslashes and puts resolver files (.locks, _remote.repositories,
+            maven-metadata-local.xml) into the bundle, which Central rejects.
         -->
         <profile>
             <id>release</id>
+            <properties>
+                <altDeploymentRepository>central-staging::file:${maven.multiModuleProjectDirectory}/target/central-staging</altDeploymentRepository>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -264,7 +271,7 @@
                                         <requireProperty>
                                             <property>maven.test.skip</property>
                                             <regex>true</regex>
-                                            <message>Release: run mvn verify first, then mvn -Prelease -Dmaven.test.skip=true -pl .,inds-core,inds-baselines deploy</message>
+                                            <message>Release: run mvn verify first, then mvn -Prelease -Dmaven.test.skip=true -pl .,inds-core,inds-baselines deploy (CONTRIBUTING.md, Releasing)</message>
                                         </requireProperty>
                                     </rules>
                                 </configuration>
@@ -310,22 +317,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.sonatype.central</groupId>
-                        <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.11.0</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <publishingServerId>central</publishingServerId>
-                            <!-- the upload is checked by Central, then published by hand on central.sonatype.com -->
-                            <autoPublish>false</autoPublish>
-                            <excludeArtifacts>
-                                <excludeArtifact>inds-testdata</excludeArtifact>
-                                <excludeArtifact>inds-benchmark-data</excludeArtifact>
-                                <excludeArtifact>inds-benchmarks</excludeArtifact>
-                            </excludeArtifacts>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
