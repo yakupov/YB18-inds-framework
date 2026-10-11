@@ -8,7 +8,7 @@ inds-core            API, sorters, populations, 2D          (runtime: jsr305 ann
   │   └── inds-baselines        ENLU population
   └────── inds-testdata         data-set model and loader     (Gson)
                 ▲
-inds-benchmark-data             data sets, resources only (~1 GB)
+inds-benchmark-data             data sets, resources only (~1.9 GB)
 inds-benchmarks                 JMH benchmarks on all of the above
 ```
 

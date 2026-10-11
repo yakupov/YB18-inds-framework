@@ -4,29 +4,23 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.itmo.inds</groupId>
+        <groupId>io.github.yakupov</groupId>
         <artifactId>inds-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>inds-baselines</artifactId>
     <name>INDS baselines</name>
-    <description>Reference algorithms for comparison: ENLU (population and Ch. 3 sorter)</description>
+    <description>Reference algorithm for comparison: the ENLU population (Li et al. 2017)</description>
 
     <dependencies>
         <dependency>
-            <groupId>org.itmo.inds</groupId>
+            <groupId>io.github.yakupov</groupId>
             <artifactId>inds-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.itmo.inds</groupId>
-            <artifactId>inds-core</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.mbuzdalov</groupId>
@@ -36,6 +30,25 @@
     </dependencies>
 
     <profiles>
+        <!-- inds-core's test classes (golden replay, oracle, stress harness) for the tests of this module; not needed
+             (and not built) when tests are skipped with -Dmaven.test.skip=true, as in the release -->
+        <profile>
+            <id>shared-test-classes</id>
+            <activation>
+                <property>
+                    <name>maven.test.skip</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>io.github.yakupov</groupId>
+                    <artifactId>inds-core</artifactId>
+                    <type>test-jar</type>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
         <!-- Long concurrency stress run: mvn -pl inds-baselines -am test -Pstress -Dtest=EnluConcurrentInsertionStressTest -Dsurefire.failIfNoSpecifiedTests=false -->
         <profile>
             <id>stress</id>

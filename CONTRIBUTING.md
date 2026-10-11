@@ -120,3 +120,30 @@ fixed → the item moves to "Done and closed", the fix gets an entry in `changes
 
 MIT only: no source derived from LGPL / GPL code (e.g. MOEA Framework) and no third-party code without a clear
 license; third-party libraries only as Maven dependencies with MIT-compatible licenses.
+
+## Releasing
+
+Published to Maven Central under the group id `io.github.yakupov`: `inds-parent` (POM only), `inds-core` and
+`inds-baselines`, each with sources and Javadoc. The test data and benchmark modules and `inds-core`'s test-jar
+(golden records, test infrastructure) are not published. A release on Central is permanent: check before uploading.
+
+One-time setup of the publishing account (maintainer only):
+
+1. Sign in to [central.sonatype.com](https://central.sonatype.com) with the GitHub account `yakupov`; the namespace
+   `io.github.yakupov` is verified with it.
+2. Generate a user token there and put it into `~/.m2/settings.xml` as the server with the id `central`.
+3. Create a GPG key and publish its public part to a key server (e.g. `keys.openpgp.org`); Maven signs with it.
+
+Release `X.Y.Z`:
+
+```bash
+mvn verify                                                    # all tests, on the code to release
+mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false
+git commit -am "Release X.Y.Z" && git tag -a vX.Y.Z -m "Release X.Y.Z"
+mvn -Prelease -Dmaven.test.skip=true -pl .,inds-core,inds-baselines deploy   # signs, uploads, Central validates
+```
+
+Then publish the validated deployment on central.sonatype.com (Deployments), push the commit and the tag, and set
+the next development version (`mvn versions:set -DnewVersion=X.Y+1.0-SNAPSHOT -DgenerateBackupPoms=false`, commit,
+push). The `release` profile refuses to run without `-Dmaven.test.skip=true`: that switch also keeps `inds-core`'s
+test-jar out of the upload.

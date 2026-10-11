@@ -43,7 +43,7 @@ remove the worst point. How they work: [architecture](docs/architecture.md).
 | `inds-core` | API (`Individual`, `ManagedPopulation`, `NonDominationLevel`, `PopulationSnapshot`) and the algorithms above; no runtime dependencies besides jsr305 annotations |
 | `inds-baselines` | ENLU |
 | `inds-testdata` | loader and model of the benchmark data sets (`DataSets`) |
-| `inds-benchmark-data` | the data sets of the thesis experiments (~1 GB of JSON, resources only): NSGA-II population snapshots and insertion sequences for DTLZ / ZDT problems, synthetic sets ([README](inds-benchmark-data/README.md)) |
+| `inds-benchmark-data` | the data sets of the thesis experiments (~1.9 GB of JSON, resources only): NSGA-II population snapshots and insertion sequences for DTLZ / ZDT problems, synthetic sets ([README](inds-benchmark-data/README.md)) |
 | `inds-benchmarks` | JMH benchmarks of the thesis experiments |
 
 ## Quick start

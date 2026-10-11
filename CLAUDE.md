@@ -51,7 +51,7 @@ the unchanged code has drifted too, compare both from the same day.
 | `inds-core` | `api`, `sorting` (DC / DC1 / DC2), `population` (Level, Coarse, Fine ×2, CAS), `twod` (2D), `util`; `package-info` files map classes to thesis labels and papers |
 | `inds-baselines` | ENLU population |
 | `inds-testdata` | data-set loader (`DataSets`, `FrontsAndAddends`) and the original Gson model |
-| `inds-benchmark-data` | JSON data sets, resources only (~1 GB) |
+| `inds-benchmark-data` | JSON data sets, resources only (~1.9 GB) |
 | `inds-benchmarks` | JMH benchmarks → `target/benchmarks.jar` |
 
 ## Commands

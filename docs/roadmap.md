@@ -95,14 +95,15 @@ golden-master records).
   setup depends on the local IDE installation. If IntelliJ's inspections are wanted reproducibly, JetBrains Qodana
   runs them in a container; compare its cost and noise with Checkstyle / PMD. Gate: clean on new code.
 - **F4 — Continuous integration** (GitHub Actions) running `mvn verify`; the long stress runs and JMH stay manual.
-- **F7 — Publishing to Maven Central.** Needs a verified group-id namespace; `org.itmo` would require control of that
-  domain, so a different group id (e.g. `io.github.<owner>`) would be needed. Package names can stay.
+- **F7 — Publishing to Maven Central.** Prepared: group id `io.github.yakupov` (package names stay `org.itmo.inds`),
+  `release` profile publishing `inds-parent`, `inds-core` and `inds-baselines` with sources, Javadoc and signatures
+  ([CONTRIBUTING.md](../CONTRIBUTING.md#releasing)). Done with the first release (`0.1.0`).
 - **F8 — JSON library.** The data model uses Gson 2.8 (with a type adapter for JDK 17); move to a current Gson or
   another library (e.g. Jackson) while keeping the existing data files readable.
 
 ## Data
 
-- **F6 — Data-set storage.** `inds-benchmark-data` adds about 1 GB to every clone. Options: release assets, Git LFS,
+- **F6 — Data-set storage.** `inds-benchmark-data` adds about 1.9 GB to every checkout (about 0.5 GB compressed in a clone). Options: release assets, Git LFS,
   a separate data repository, gzipped files, or regenerating the sets from seeds.
 - **F1 — Synthetic 2D data sets** of the thesis Chapter 2 experiments (square, parallel, diag1, diag2, parper;
   thesis Section 2.3.1). The generator code was not found; locate it or recreate it from the thesis, then add the

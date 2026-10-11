@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.itmo.inds</groupId>
+    <groupId>io.github.yakupov</groupId>
     <artifactId>inds-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -30,6 +30,11 @@
             <url>https://github.com/mbuzdalov</url>
         </developer>
     </developers>
+    <scm>
+        <connection>scm:git:https://github.com/yakupov/YB18-inds-framework.git</connection>
+        <developerConnection>scm:git:git@github.com:yakupov/YB18-inds-framework.git</developerConnection>
+        <url>https://github.com/yakupov/YB18-inds-framework</url>
+    </scm>
 
     <modules>
         <module>inds-core</module>
@@ -55,30 +60,30 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.itmo.inds</groupId>
+                <groupId>io.github.yakupov</groupId>
                 <artifactId>inds-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- inds-core's test classes (shared test bases, golden replay, stress harness) for other modules' tests -->
             <dependency>
-                <groupId>org.itmo.inds</groupId>
+                <groupId>io.github.yakupov</groupId>
                 <artifactId>inds-core</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.itmo.inds</groupId>
+                <groupId>io.github.yakupov</groupId>
                 <artifactId>inds-baselines</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.itmo.inds</groupId>
+                <groupId>io.github.yakupov</groupId>
                 <artifactId>inds-testdata</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.itmo.inds</groupId>
+                <groupId>io.github.yakupov</groupId>
                 <artifactId>inds-benchmark-data</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -233,4 +238,97 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!--
+            Release to Maven Central (CONTRIBUTING.md, "Releasing"): only inds-parent, inds-core and inds-baselines are
+            published. Run `mvn verify` first, then
+              mvn -Prelease -Dmaven.test.skip=true -pl .,inds-core,inds-baselines deploy
+            Skipping the tests also leaves out inds-core's test-jar (golden records and test infrastructure are not
+            published); excludeArtifacts below keeps the other modules out even without -pl.
+        -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>enforce-release-without-test-jar</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireProperty>
+                                            <property>maven.test.skip</property>
+                                            <regex>true</regex>
+                                            <message>Release: run mvn verify first, then mvn -Prelease -Dmaven.test.skip=true -pl .,inds-core,inds-baselines deploy</message>
+                                        </requireProperty>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.12.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.11.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <!-- the upload is checked by Central, then published by hand on central.sonatype.com -->
+                            <autoPublish>false</autoPublish>
+                            <excludeArtifacts>
+                                <excludeArtifact>inds-testdata</excludeArtifact>
+                                <excludeArtifact>inds-benchmark-data</excludeArtifact>
+                                <excludeArtifact>inds-benchmarks</excludeArtifact>
+                            </excludeArtifacts>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
