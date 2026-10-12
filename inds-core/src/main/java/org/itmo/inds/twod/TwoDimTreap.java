@@ -1,10 +1,10 @@
 package org.itmo.inds.twod;
 
-public class TwoDimTreap {
-    public static class Treaps {
-        TwoDimTreap l, r;
+public class TwoDimTreap<T> {
+    public static class Treaps<T> {
+        TwoDimTreap<T> l, r;
         public Treaps() {};
-        public Treaps(TwoDimTreap l, TwoDimTreap r) {
+        public Treaps(TwoDimTreap<T> l, TwoDimTreap<T> r) {
             super();
             this.l = l;
             this.r = r;
@@ -15,35 +15,35 @@ public class TwoDimTreap {
         }
     }
 
-    public TwoDimPoint x;
+    public TwoDimBucket<T> x;
     public int y;
 
-    public TwoDimTreap left;
-    public TwoDimTreap right;
+    public TwoDimTreap<T> left;
+    public TwoDimTreap<T> right;
 
-    public TwoDimTreap(TwoDimPoint x, int y, TwoDimTreap left, TwoDimTreap right) {
+    public TwoDimTreap(TwoDimBucket<T> x, int y, TwoDimTreap<T> left, TwoDimTreap<T> right) {
         this.x = x;
         this.y = y;
         this.left = left;
         this.right = right;
     }
 
-    public static TwoDimTreap merge(TwoDimTreap l, TwoDimTreap r) {
+    public static <T> TwoDimTreap<T> merge(TwoDimTreap<T> l, TwoDimTreap<T> r) {
         if (l == null) return r;
         if (r == null) return l;
 
         if (l.y > r.y) {
-            TwoDimTreap newR = merge(l.right, r);
-            return new TwoDimTreap(l.x, l.y, l.left, newR);
+            TwoDimTreap<T> newR = merge(l.right, r);
+            return new TwoDimTreap<>(l.x, l.y, l.left, newR);
         } else {
-            TwoDimTreap newL = merge(l, r.left);
-            return new TwoDimTreap(r.x, r.y, newL, r.right);
+            TwoDimTreap<T> newL = merge(l, r.left);
+            return new TwoDimTreap<>(r.x, r.y, newL, r.right);
         }
     }
 
-    public Treaps splitX(TwoDimPoint x) {
-        Treaps res = new Treaps();
-        Treaps t = new Treaps();
+    public Treaps<T> splitX(TwoDimBucket<T> x) {
+        Treaps<T> res = new Treaps<>();
+        Treaps<T> t = new Treaps<>();
         if (this.x.compareX1(x) < 0) {
             if (right == null) {
                 res.r = null;
@@ -51,7 +51,7 @@ public class TwoDimTreap {
                 t = right.splitX(x);
                 res.r = t.r;
             }
-            res.l = new TwoDimTreap(this.x, y, left, t.l);
+            res.l = new TwoDimTreap<>(this.x, y, left, t.l);
         } else {
             if (left == null) {
                 res.l = null;
@@ -59,7 +59,7 @@ public class TwoDimTreap {
                 t = left.splitX(x);
                 res.l = t.l;
             }
-            res.r = new TwoDimTreap(this.x, y, t.r, right);
+            res.r = new TwoDimTreap<>(this.x, y, t.r, right);
         }
         //System.err.println("SPL: " + String.valueOf(this.x) + "_" + String.valueOf(left) + "_" + String.valueOf(right) + " : " + res.toString());
         return res;
@@ -68,9 +68,9 @@ public class TwoDimTreap {
     /**
      * same as split X - members of r have greater x1 than members of l
      */
-    public Treaps splitY(TwoDimPoint x) {
-        Treaps res = new Treaps();
-        Treaps t = new Treaps();
+    public Treaps<T> splitY(TwoDimBucket<T> x) {
+        Treaps<T> res = new Treaps<>();
+        Treaps<T> t = new Treaps<>();
         if (this.x.compareX2(x) >= 0) {
             if (right == null) {
                 res.r = null;
@@ -78,7 +78,7 @@ public class TwoDimTreap {
                 t = right.splitY(x);
                 res.r = t.r;
             }
-            res.l = new TwoDimTreap(this.x, y, left, t.l);
+            res.l = new TwoDimTreap<>(this.x, y, left, t.l);
         } else {
             if (left == null) {
                 res.l = null;
@@ -86,13 +86,13 @@ public class TwoDimTreap {
                 t = left.splitY(x);
                 res.l = t.l;
             }
-            res.r = new TwoDimTreap(this.x, y, t.r, right);
+            res.r = new TwoDimTreap<>(this.x, y, t.r, right);
         }
         return res;
     }
 
-    public boolean dominatesSomebody(TwoDimPoint nInd) {
-        Treaps split = splitX(nInd);
+    public boolean dominatesSomebody(TwoDimBucket<T> nInd) {
+        Treaps<T> split = splitX(nInd);
         if (split.l != null && nInd.compareDom(split.l.getMax()) < 0)
             return true;
         if (split.r != null && nInd.compareDom(split.r.getMin()) < 0)
@@ -100,8 +100,8 @@ public class TwoDimTreap {
         return false;
     }
 
-    public boolean dominatedBySomebody(TwoDimPoint nInd) {
-        Treaps split = splitX(nInd);
+    public boolean dominatedBySomebody(TwoDimBucket<T> nInd) {
+        Treaps<T> split = splitX(nInd);
         //System.err.println("DBS: " + split);
         //System.err.println("_DBS: " + this);
 
@@ -112,25 +112,29 @@ public class TwoDimTreap {
         return false;
     }
 
-    public TwoDimPoint getMinP() {
-        TwoDimTreap l = this;
+    /**
+     * @return a search key (no members) from the smallest {@code x1} and the smallest {@code x2} of this level: it
+     * dominates or equals every member
+     */
+    public TwoDimBucket<T> getMinP() {
+        TwoDimTreap<T> l = this;
         while (l.left != null)
             l = l.left;
-        TwoDimTreap r = this;
+        TwoDimTreap<T> r = this;
         while (r.right != null)
             r = r.right;
-        return new TwoDimPoint(l.x.getX1(), r.x.getX2());
+        return new TwoDimBucket<>(l.x.getX1(), r.x.getX2());
     }
 
-    public TwoDimPoint getMin() {
-        TwoDimTreap l = this;
+    public TwoDimBucket<T> getMin() {
+        TwoDimTreap<T> l = this;
         while (l.left != null)
             l = l.left;
         return l.x;
     }
 
-    public TwoDimPoint getMax() {
-        TwoDimTreap r = this;
+    public TwoDimBucket<T> getMax() {
+        TwoDimTreap<T> r = this;
         while (r.right != null)
             r = r.right;
         return r.x;

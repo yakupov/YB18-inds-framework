@@ -1,6 +1,6 @@
 package org.itmo.inds.benchmarks;
 
-import org.itmo.inds.twod.TwoDimPoint;
+import org.itmo.inds.api.FitnessAndCdIndividual;
 import org.itmo.inds.twod.TwoDimTreapPopulation;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -40,7 +40,7 @@ public class TwoDimInsertionBenchmark {
 
     private BenchmarkInput input;
     private double[] addend;
-    private TwoDimTreapPopulation population;
+    private TwoDimTreapPopulation<Object> population;
 
     @Setup(Level.Trial)
     public void prepare() {
@@ -53,9 +53,9 @@ public class TwoDimInsertionBenchmark {
 
     @Setup(Level.Invocation)
     public void reset() {
-        population = new TwoDimTreapPopulation();
+        population = new TwoDimTreapPopulation<>();
         for (final double[] point : input.population()) {
-            population.addPoint(new TwoDimPoint(point));
+            population.addPoint(new FitnessAndCdIndividual<>(point, null));
         }
     }
 
@@ -64,7 +64,7 @@ public class TwoDimInsertionBenchmark {
      */
     @Benchmark
     public int insert() {
-        population.addPoint(new TwoDimPoint(addend));
+        population.addPoint(new FitnessAndCdIndividual<>(addend, null));
         return population.size();
     }
 }

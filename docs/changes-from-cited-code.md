@@ -43,8 +43,8 @@ levels are unchanged.
 
 ## Known defects
 
-Kept as they are, so that the code stays the cited code; the tests record them (`TwoDimTreapPopulationKnownBugsTest`,
-golden-master records). Each defect that should be fixed has an issue.
+Kept as they are, so that the code stays the cited code; the golden-master records record them. Each defect that
+should be fixed has an issue.
 
 | Where | Defect | Issue |
 |---|---|---|
@@ -53,7 +53,6 @@ golden-master records). Each defect that should be fixed has an issue.
 | CAS | retry loops swallow index errors of the sorting and crowding-distance code (endless retry); a removed last level is waited for by spinning | [#3](https://github.com/yakupov/YB18-inds-framework/issues/3) |
 | CAS | the logical clock (`AtomicLong`) has no overflow handling (`todo` in the code) | none: 2⁶³ ticks are out of reach |
 | Fine, CAS | `getSnapshot()` is not linearizable: points moving between levels can be missing, and `size()` can disagree with the snapshot during insertions | none: inherent in the lock / CAS design ([architecture.md](architecture.md)) |
-| 2D | `TwoDimPoint` has a static, unsynchronized comparison counter shared by all populations and threads | [#4](https://github.com/yakupov/YB18-inds-framework/issues/4) |
 
 ## Structure
 
@@ -67,5 +66,9 @@ golden-master records). Each defect that should be fixed has an issue.
   like Level, so the two compare like for like. The levels-only ENLU sorter of the Chapter 3 experiments (nds2016,
   no crowding distances) is not included; like a sorting-only Level, it would be a second version of an algorithm
   the library already has.
+- 2D works on the library's `Individual` instead of its own point type (`Double2DIndividual`), which also counted
+  comparisons in a static counter; this library does not count them. Points are ranked by their first two
+  objectives. As in the cited code, a point equal to one in the population is not added again; points that are
+  different but have equal coordinates (the cited code had no such points) share a treap node and a level.
 - Not ported: the NSGA-II code (it depends on the LGPL MOEA Framework), the data-set generators, vendored third-party
   code, unused experiments.

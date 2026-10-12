@@ -27,7 +27,6 @@ the 2D population followed, each in a commit of its own with a test.
 | Golden master | any change of observable behaviour against the cited code | `GoldenMasterTest` (inds-core), `EnluGoldenMasterTest` (inds-baselines) |
 | Oracle cross-check | wrong results, independently of the cited code | `OracleCrossCheckTest`, `TwoDimTreapPopulationOracleTest`, `EnluOracleCrossCheckTest` |
 | Concurrency stress | races in the asynchronous populations | `ConcurrentInsertionStressTest`, `EnluConcurrentInsertionStressTest` |
-| Known defects | that documented defects of the cited code are still there, unchanged | `TwoDimTreapPopulationKnownBugsTest` |
 
 A full `mvn verify` runs about 780 tests in a few minutes.
 

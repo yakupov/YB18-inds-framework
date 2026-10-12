@@ -7,15 +7,18 @@
  *
  * <ul>
  * <li>{@link org.itmo.inds.twod.TwoDimTreapPopulation}: the population ({@code addPoint}, {@code size},
- *     {@code getRandWithRank}).</li>
- * <li>{@link org.itmo.inds.twod.TwoDimTreap}: one level, an immutable treap with split / merge.</li>
- * <li>{@link org.itmo.inds.twod.TwoDimPoint}: a point with two objectives (minimized); equal points are stored
- *     once.</li>
+ *     {@code getRandWithRank}). Points are {@link org.itmo.inds.api.Individual}s with at least two objectives; they
+ *     are ranked by the first two ({@code x1}, {@code x2}, minimized), further objectives are ignored. A point equal
+ *     ({@code equals}) to one in the population is not added again.</li>
+ * <li>{@link org.itmo.inds.twod.TwoDimTreap}: one level, an immutable treap with split / merge, ordered by
+ *     {@code x1}.</li>
+ * <li>{@link org.itmo.inds.twod.TwoDimBucket}: the content of a treap node: the points with the same
+ *     {@code (x1, x2)}, which share a level.</li>
  * </ul>
  *
- * <p>The classes are ported from the cited code with fixes ({@code toString}; {@code detRankOfExPoint} with one level
- * or with a point that is not in the population). Known defect that remains: a static unsynchronized comparison
- * counter. Both lists: {@code docs/changes-from-cited-code.md}.
+ * <p>The classes are ported from the cited code; the cited point type {@code Double2DIndividual} became the bucket.
+ * Fixes: {@code detRankOfExPoint} with one level or with a point that is not in the population; see
+ * {@code docs/changes-from-cited-code.md}.
  *
  * <p>References:
  * <ul>

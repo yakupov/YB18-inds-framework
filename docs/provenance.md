@@ -37,10 +37,13 @@ nds2018 paths are relative to `src/main/java/ru/ifmo/nds/` (tests: `src/test/jav
 | `population/CasJfbyPopulation` | nds2018 **cd1** | `dcns/concurrent/CJFBYPopulation` (thesis version) |
 | `twod/TwoDimTreapPopulation` | nds2016 | `PPSN2017Test/src/main/java/ru/itmo/nds/reference/treap2015/TreapPopulation` |
 | `twod/TwoDimTreap` | nds2016 | `…/treap2015/Treap` |
-| `twod/TwoDimPoint` | nds2016 | `…/treap2015/Double2DIndividual` |
 | `util/Utils`, `util/SortedObjectives`, `util/RankedPopulation`, `util/AscLexSortComparator`, `util/ObjectiveComparator` | nds2018 r2019.2 | `util/` (same names) |
 | `util/RankSorting` | nds2018 r2019.2 | `util/RankedIndividual` (renamed: clashes with `impl.RankedIndividual`) |
 | `util/median/QuickSelect`, `util/median/MedianOfMediansQS` | nds2018 r2019.2 | `util/median/` (same names) |
+
+The 2D classes were refactored after 0.1.1 (cleanup; the point type `…/treap2015/Double2DIndividual` became
+`twod/TwoDimBucket`, which holds the `Individual`s with equal coordinates); the cited version is in the tag
+`v0.1.1`.
 
 Unified helpers: the cd1 classes (CAS, thesis Fine) run on the r2019.2 versions of the shared classes. Between the two
 refs these differ only in imports and comments, except `Utils`: r2019.2 drops unused crowding-distance helpers and

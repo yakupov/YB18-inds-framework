@@ -22,7 +22,7 @@ the shared test infrastructure (golden master, oracle, stress harness) to the ot
 | `api` | `Individual` (objectives, crowding distance, payload) and `FitnessAndCdIndividual`; `ManagedPopulation`; `NonDominationLevel`; `PopulationSnapshot`; `RankedIndividual` |
 | `sorting` | divide-and-conquer sorters: `JfbSorter` (DC full sort, DC1 incremental insertion, `addRankedMembers` used by the levels), `IncrementalJfbSorter` (DC2) |
 | `population` | populations for any number of objectives: `JfbyPopulation` (Level), `CoarseLockJfbyPopulation`, `FineLockJfbyPopulation` / `FineLockJfbyPopulationRankHint`, `CasJfbyPopulation`; their level type `JfbyNonDominationLevel` |
-| `twod` | the two-objective population: `TwoDimTreapPopulation`, `TwoDimTreap`, `TwoDimPoint` |
+| `twod` | the two-objective population: `TwoDimTreapPopulation`, `TwoDimTreap`, `TwoDimBucket` (points with equal first two objectives) |
 | `util` | dominance and lexicographic comparison (`Utils`, comparators), crowding-distance maintenance (`SortedObjectives`), `RankedPopulation`, `RankSorting` |
 | `util.median` | selection used by the sorter (quickselect, median of medians) |
 
@@ -110,7 +110,7 @@ and round-robin split of the points) with new class names. Parameters and usage:
 | `golden` | golden-master replay: `GoldenMasterTest` (inds-core), `EnluGoldenMasterTest` (inds-baselines); infrastructure and vocabulary in the package's `package-info`; records: `src/test/resources/org/itmo/inds/golden/`, format in [golden-records.md](golden-records.md) |
 | `oracle` | `Oracle` (the independent sorter), `OracleInputs` (seeded inputs), `PopulationInvariants` (the expected state of a population), `PopulationOracle` (insert and compare), `OracleCrossCheckTest` |
 | `stress` | `AbstractConcurrentInsertionStressTest` (harness) with one subclass per module |
-| `twod`, `baselines.enlu` | oracle cross-checks of the 2D population and the ENLU baselines; `TwoDimTreapPopulationKnownBugsTest` |
+| `twod`, `baselines.enlu` | oracle cross-checks of the 2D population and the ENLU baselines; `TwoDimTreapPopulationTest` (input checks, fixed defects) |
 | `testdata` | data-set catalogue checks (`DataSetsTest`), golden inputs vs. data files, the Gson adapter |
 | `benchmarks` (inds-benchmarks) | benchmark inputs and every measured operation against the oracle |
 

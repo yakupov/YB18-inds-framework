@@ -1,30 +1,51 @@
 package org.itmo.inds.twod;
 
+import org.itmo.inds.api.Individual;
+
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
-public class TwoDimTreapPopulation {
-    private final Set<TwoDimPoint> individuals;
-    private final List<TwoDimTreap> ranks;
+/**
+ * Incremental non-dominated sorting by the first two objectives of the points (thesis label 2D); further objectives
+ * are ignored. Points with equal first two objectives share a level and a treap node ({@link TwoDimBucket}); a point
+ * equal ({@code equals}) to a point already in the population is not added again. Insertion only; not thread-safe.
+ *
+ * @param <T> payload type of the points
+ */
+public class TwoDimTreapPopulation<T> {
+    /** Debug output of every treap of an insertion's cascade: run with {@code -DprintTreaps=Y}. */
+    private static final boolean PRINT_TREAPS = "Y".equals(System.getProperty("printTreaps"));
+
+    private final List<TwoDimTreap<T>> ranks;
     private final Random random = new Random();
+    /** Every point of the population once, in the order of insertion: random points in O(1). */
+    private final List<Individual<T>> points = new ArrayList<>();
+    /** The bucket of every coordinate pair in the population (key and value are the same bucket). */
+    private final Map<TwoDimBucket<T>, TwoDimBucket<T>> buckets = new HashMap<>();
 
+    /**
+     * @return the number of points (each point once by {@code equals})
+     */
     public int size() {
-        return individuals.size();
+        return points.size();
     }
 
     public TwoDimTreapPopulation() {
-        this(new HashSet<>(), new ArrayList<>());
+        this(new ArrayList<>());
     }
 
-    public TwoDimTreapPopulation(Set<TwoDimPoint> individuals, List<TwoDimTreap> ranks) {
-        this.individuals = individuals;
+    /**
+     * @param ranks the empty list the population keeps its levels in (index = rank), for callers that observe them
+     */
+    public TwoDimTreapPopulation(List<TwoDimTreap<T>> ranks) {
         this.ranks = ranks;
     }
 
-    protected int determineRank(TwoDimPoint nInd) {
+    protected int determineRank(TwoDimBucket<T> nInd) {
         int currRank = 0;
         int l = 0;
         int r = ranks.size() - 1;
@@ -40,15 +61,29 @@ public class TwoDimTreapPopulation {
         return currRank;
     }
 
-    public void addPoint(TwoDimPoint nInd) {
-        if (individuals.contains(nInd)) {
-            return;
-        } else {
-            individuals.add(nInd);
+    /**
+     * Adds a point unless an equal ({@code equals}) point is in the population.
+     *
+     * @param point the point; at least two objectives, of which the first two are used
+     * @throws IllegalArgumentException if the point has fewer than two objectives
+     */
+    public void addPoint(Individual<T> point) {
+        if (point.getObjectives().length < 2) {
+            throw new IllegalArgumentException("2D population: a point needs at least 2 objectives, got "
+                    + Arrays.toString(point.getObjectives()));
         }
+        final TwoDimBucket<T> nInd = new TwoDimBucket<>(point);
+        final TwoDimBucket<T> sameCoordinates = buckets.putIfAbsent(nInd, nInd);
+        if (sameCoordinates != null) {
+            if (sameCoordinates.add(point)) {
+                points.add(point);
+            }
+            return;
+        }
+        points.add(point);
         int rank = determineRank(nInd);
         //System.err.println(rank + "_" + nInd.toString() + "_" + ranks.size());
-        final TwoDimTreap nTreap = new TwoDimTreap(nInd, random.nextInt(), null, null);
+        final TwoDimTreap<T> nTreap = new TwoDimTreap<>(nInd, random.nextInt(), null, null);
 
         if (rank >= ranks.size()) {
             ranks.add(nTreap);
@@ -56,36 +91,35 @@ public class TwoDimTreapPopulation {
             ranks.add(rank, nTreap);
         } else {
             int i = 0;
-            TwoDimPoint minP = nInd;
-            TwoDimTreap cNext = nTreap;
+            TwoDimBucket<T> minP = nInd;
+            TwoDimTreap<T> cNext = nTreap;
             while (minP != null) {
                 if (ranks.size() <= rank + i) {
                     ranks.add(cNext);
                     break;
                 }
 
-                boolean printTreaps = "Y".equals(System.getProperty("printTreaps"));
-                printTreap(cNext, printTreaps);
-                printTreap(ranks.get(rank + i), printTreaps);
+                printTreap(cNext, PRINT_TREAPS);
+                printTreap(ranks.get(rank + i), PRINT_TREAPS);
 
-                TwoDimTreap.Treaps t1 = ranks.get(rank + i).splitX(minP);
-                TwoDimTreap.Treaps tr = new TwoDimTreap.Treaps();
+                TwoDimTreap.Treaps<T> t1 = ranks.get(rank + i).splitX(minP);
+                TwoDimTreap.Treaps<T> tr = new TwoDimTreap.Treaps<>();
                 if (t1.r != null) {
                     tr = t1.r.splitY(minP);
                 }
 
-                printTreap(t1.l, printTreaps);
-                printTreap(t1.r, printTreaps);
-                printTreap(tr.l, printTreaps);
-                printTreap(tr.r, printTreaps);
+                printTreap(t1.l, PRINT_TREAPS);
+                printTreap(t1.r, PRINT_TREAPS);
+                printTreap(tr.l, PRINT_TREAPS);
+                printTreap(tr.r, PRINT_TREAPS);
 
-                TwoDimTreap res = TwoDimTreap.merge(t1.l, cNext);
-                printTreap(res, printTreaps);
+                TwoDimTreap<T> res = TwoDimTreap.merge(t1.l, cNext);
+                printTreap(res, PRINT_TREAPS);
                 res = TwoDimTreap.merge(res, tr.r);
-                printTreap(res, printTreaps);
+                printTreap(res, PRINT_TREAPS);
                 ranks.set(rank + i, res);
                 cNext = tr.l;
-                printTreap(cNext, printTreaps);
+                printTreap(cNext, PRINT_TREAPS);
 
                 if (cNext == null) {
                     break;
@@ -99,17 +133,17 @@ public class TwoDimTreapPopulation {
     /**
      * Local helper for print-based debugging
      */
-    private void printTreap(TwoDimTreap cNext, boolean shouldPrint) {
+    private void printTreap(TwoDimTreap<T> cNext, boolean shouldPrint) {
         if (shouldPrint) {
             System.err.println(cNext);
         }
     }
 
-    public static class IndWithRank {
-        final TwoDimPoint ind;
+    public static class IndWithRank<T> {
+        final Individual<T> ind;
         final int rank;
 
-        public IndWithRank(TwoDimPoint ind, int rank) {
+        public IndWithRank(Individual<T> ind, int rank) {
             super();
             this.ind = ind;
             this.rank = rank;
@@ -120,20 +154,39 @@ public class TwoDimTreapPopulation {
         }
     }
 
-    public IndWithRank getRandWithRank() {
-        if (individuals.isEmpty()) {
+    public IndWithRank<T> getRandWithRank() {
+        if (points.isEmpty()) {
             throw new RuntimeException("Can't get random individual from empty population");
         }
-        final TwoDimPoint randInd = (TwoDimPoint) individuals.toArray()[random.nextInt(individuals.size())];
-        return new IndWithRank(randInd, detRankOfExPoint(randInd));
+        final Individual<T> randInd = points.get(random.nextInt(points.size()));
+        return new IndWithRank<>(randInd, detRankOfExPoint(randInd));
     }
 
-    protected int detRankOfExPoint(TwoDimPoint ind) {
-        if (ind == null || !individuals.contains(ind)) {
+    /**
+     * @throws IllegalArgumentException if {@code ind} is {@code null} or not in the population
+     */
+    protected int detRankOfExPoint(Individual<T> ind) {
+        final TwoDimBucket<T> bucket = ind == null ? null : bucketOf(ind);
+        if (bucket == null) {
             throw new IllegalArgumentException("Requested rank of existing point, but point is not in " +
                     "the population " + ind);
         }
+        return detRankOfExPoint(bucket);
+    }
 
+    /**
+     * @return the bucket that contains {@code point}, or {@code null}
+     */
+    private TwoDimBucket<T> bucketOf(Individual<T> point) {
+        if (point.getObjectives().length < 2) {
+            return null;
+        }
+        final double[] objectives = point.getObjectives();
+        final TwoDimBucket<T> bucket = buckets.get(new TwoDimBucket<T>(objectives[0], objectives[1]));
+        return bucket != null && bucket.contains(point) ? bucket : null;
+    }
+
+    private int detRankOfExPoint(TwoDimBucket<T> ind) {
         int r = ranks.size() - 1;
         int l = 0;
         int result = -1;
@@ -185,35 +238,5 @@ public class TwoDimTreapPopulation {
             sb.append('\n');
         }
         return sb.toString();
-    }
-
-    public void validate() {
-        for (int i = 0; i < ranks.size(); ++i) {
-            checkDom(ranks.get(i), i);
-        }
-    }
-
-    private void checkDom(TwoDimTreap t, int rk) {
-        if (t == null)
-            return;
-        int cRankCalcd = 0;
-        TwoDimPoint rankDeterminator = null;
-        for (TwoDimPoint ind : individuals) {
-            if (ind != t.x) {
-                if (t.x.compareDom(ind) > 0) { //dominated
-                    int newPossibleRank = detRankOfExPoint(ind) + 1;
-                    if (newPossibleRank > cRankCalcd) {
-                        cRankCalcd = newPossibleRank;
-                        rankDeterminator = ind;
-                    }
-                }
-            }
-        }
-        if (cRankCalcd != rk) {
-            throw new RuntimeException("Population is sorted incorrectly. Point = " + t.x.toString() +
-                    ", rk = " + rk + ", should be = " + cRankCalcd + ", determinator = " + rankDeterminator);
-        }
-        checkDom(t.left, rk);
-        checkDom(t.right, rk);
     }
 }

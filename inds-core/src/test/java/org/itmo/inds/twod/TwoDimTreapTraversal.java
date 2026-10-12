@@ -1,5 +1,7 @@
 package org.itmo.inds.twod;
 
+import org.itmo.inds.api.Individual;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,20 +14,21 @@ public final class TwoDimTreapTraversal {
 
     /**
      * @param level one level of a population
-     * @return its points in in-order (increasing first objective), which does not depend on the random treap
-     * priorities; iterative, because treaps built from chain inputs can be deep
+     * @return its points in in-order (increasing first objective; points with equal coordinates in the order of
+     * their bucket), which does not depend on the random treap priorities; iterative, because treaps built from
+     * chain inputs can be deep
      */
-    public static List<TwoDimPoint> inOrderPoints(final TwoDimTreap level) {
-        final List<TwoDimPoint> points = new ArrayList<>();
-        final List<TwoDimTreap> stack = new ArrayList<>();
-        TwoDimTreap current = level;
+    public static <T> List<Individual<T>> inOrderPoints(final TwoDimTreap<T> level) {
+        final List<Individual<T>> points = new ArrayList<>();
+        final List<TwoDimTreap<T>> stack = new ArrayList<>();
+        TwoDimTreap<T> current = level;
         while (current != null || !stack.isEmpty()) {
             while (current != null) {
                 stack.add(current);
                 current = current.left;
             }
             current = stack.remove(stack.size() - 1);
-            points.add(current.x);
+            points.addAll(current.x.getMembers());
             current = current.right;
         }
         return points;

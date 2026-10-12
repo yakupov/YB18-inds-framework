@@ -1,5 +1,7 @@
 package org.itmo.inds.golden;
 
+import org.itmo.inds.api.FitnessAndCdIndividual;
+import org.itmo.inds.api.Individual;
 import org.itmo.inds.population.CasJfbyPopulation;
 import org.itmo.inds.population.CoarseLockJfbyPopulation;
 import org.itmo.inds.population.FineLockJfbyPopulation;
@@ -7,7 +9,6 @@ import org.itmo.inds.population.FineLockJfbyPopulationRankHint;
 import org.itmo.inds.population.JfbyPopulation;
 import org.itmo.inds.sorting.IncrementalJfbSorter;
 import org.itmo.inds.sorting.JfbSorter;
-import org.itmo.inds.twod.TwoDimPoint;
 import org.itmo.inds.twod.TwoDimTreap;
 import org.itmo.inds.twod.TwoDimTreapPopulation;
 import org.itmo.inds.twod.TwoDimTreapTraversal;
@@ -15,7 +16,6 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -63,21 +63,22 @@ class GoldenMasterTest {
         final int n = input.n();
         int step = 0;
         try {
-            final List<TwoDimTreap> levels = new ArrayList<>();
-            final TwoDimTreapPopulation population = new TwoDimTreapPopulation(new HashSet<>(), levels);
+            final List<TwoDimTreap<Object>> levels = new ArrayList<>();
+            final TwoDimTreapPopulation<Object> population = new TwoDimTreapPopulation<>(levels);
             for (int i = 0; i < n; ++i) {
                 step = i + 1;
                 final double[] point = input.points()[i];
-                population.addPoint(new TwoDimPoint(point[0], point[1]));
+                population.addPoint(new FitnessAndCdIndividual<>(new double[]{point[0], point[1]}, null));
                 if (RecordBuffer.recordAt(step, n)) {
                     final boolean withDump = RecordBuffer.dumpAt(step, n);
                     final StateEncoder encoder = new StateEncoder(withDump);
                     encoder.population(population.size(), levels.size());
                     for (int levelIndex = 0; levelIndex < levels.size(); ++levelIndex) {
-                        final List<TwoDimPoint> members = TwoDimTreapTraversal.inOrderPoints(levels.get(levelIndex));
+                        final List<Individual<Object>> members =
+                                TwoDimTreapTraversal.inOrderPoints(levels.get(levelIndex));
                         encoder.level(levelIndex, members.size());
-                        for (final TwoDimPoint member : members) {
-                            encoder.point(new double[]{member.getX1(), member.getX2()});
+                        for (final Individual<Object> member : members) {
+                            encoder.point(member.getObjectives());
                         }
                     }
                     out.step(step, population.size(), encoder.digest());
