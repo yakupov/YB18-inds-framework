@@ -22,4 +22,21 @@ class TwoDimTreapPopulationTest {
         population.addPoint(point);
         assertEquals("0\n[ind 0.0 1.0]; \n", population.toString());
     }
+
+    /**
+     * {@code detRankOfExPoint} and {@code getRandWithRank} work while there is only one level; the cited code
+     * rejected rank 0 after the binary search, which is skipped with one level, and threw for every point.
+     */
+    @Test
+    void detRankOfExPointWithOneLevel() {
+        final TwoDimTreapPopulation population = new TwoDimTreapPopulation();
+        final TwoDimPoint first = new TwoDimPoint(0, 1);
+        final TwoDimPoint second = new TwoDimPoint(1, 0);
+        population.addPoint(first);
+        population.addPoint(second);
+        assertEquals(0, population.detRankOfExPoint(first));
+        assertEquals(0, population.detRankOfExPoint(second));
+        assertEquals(0, population.getRandWithRank().rank);
+        population.validate();
+    }
 }

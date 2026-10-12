@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * Oracle cross-checks of the 2D treap population on the inputs of {@link OracleInputs} with two objectives: before
  * each insertion, the rank {@code determineRank} computes for the new point ({@code addPoint} returns nothing); at the
  * {@link PopulationOracle#isCheckpoint checkpoints}, the level of every point so far; at the end,
- * {@code detRankOfExPoint} of every point (populations with at least two levels). The population keeps one copy of
+ * {@code detRankOfExPoint} of every point. The population keeps one copy of
  * equal points (a set of {@link TwoDimPoint}s, equal by coordinates); equal points have equal oracle ranks.
  */
 class TwoDimTreapPopulationOracleTest {
@@ -54,14 +54,11 @@ class TwoDimTreapPopulationOracleTest {
                 assertEquals(distinct.size(), population.size(), "size() after step " + step);
             }
         }
-        // detRankOfExPoint (rank of a point already in the population, used by getRandWithRank) at the end; it
-        // throws for every point while there is only one level (TwoDimTreapPopulationKnownBugsTest).
-        if (levels.size() >= 2) {
-            final int[] oracleRanks = Oracle.ranks(points);
-            for (int j = 0; j < n; ++j) {
-                assertEquals(oracleRanks[j], population.detRankOfExPoint(point(points[j])),
-                        "detRankOfExPoint of point " + j);
-            }
+        // detRankOfExPoint (rank of a point already in the population, used by getRandWithRank) at the end
+        final int[] oracleRanks = Oracle.ranks(points);
+        for (int j = 0; j < n; ++j) {
+            assertEquals(oracleRanks[j], population.detRankOfExPoint(point(points[j])),
+                    "detRankOfExPoint of point " + j);
         }
     }
 

@@ -19,7 +19,6 @@ golden-master records).
 |---|---|---|
 | Level, Coarse | `size()` undercounts and eviction is skipped when an insertion pushes a whole level down | F19 |
 | Level, Coarse, Fine | `clone()` throws (Level, Coarse) or returns a copy that shares state with the original (Fine) | F20 |
-| 2D | `detRankOfExPoint` / `getRandWithRank` fail while the population has exactly one level | F15 |
 | 2D | `TwoDimPoint` has a static, unsynchronized comparison counter shared by all populations and threads | F14 |
 | CAS | retry loops swallow index errors of the sorting and crowding-distance code (endless retry); a removed last level is waited for by spinning | F11 |
 | CAS | the logical clock (`AtomicLong`) has no overflow handling (`todo` in the code) | none: 2⁶³ ticks are out of reach |
@@ -40,11 +39,6 @@ golden-master records).
   shares the original `CopyOnWriteArrayList` and puts its level copies into a list that is thrown away: inserting into
   the copy changes the original. Fix: return independent copies (or drop `Cloneable` from the API). Gate: the golden
   clone scenarios change (re-recorded), new tests that the copy and the original evolve independently.
-- **F15 — 2D `detRankOfExPoint` with one level.** The binary search is skipped when there is only one level; the
-  branch after the loop then sets `result = 0` but does not return, and the final `if (result > 0)` rejects rank 0,
-  so every call ends in "Can't determine rank".
-  Fix: accept `result >= 0` (or return from that branch). Gate: `TwoDimTreapPopulationKnownBugsTest` updated, oracle
-  cross-check extended to one-level populations; the golden records do not call the method.
 - **F11 — CAS retry loops.** (a) In `CasJfbyPopulation.insertOneByOne`, `insertViaFullSortings` and `intRemoveWorst`
   the `try { … } catch (ArrayIndexOutOfBoundsException ignored)` that handles a level removed by another thread
   (`CopyOnWriteArrayList.get`) wraps the whole step, including `performNds`, `SortedObjectives.update` and the
@@ -120,6 +114,10 @@ golden-master records).
 
 ## Done and closed
 
+- **F15 — 2D `detRankOfExPoint` with one level** (done). The final check rejected rank 0, which is reached only when
+  the binary search is skipped (one level): every call threw. Fixed by accepting rank 0
+  ([changes](changes-from-cited-code.md#2d-rank-of-a-point-in-a-population-with-one-level)); the oracle cross-check
+  covers one-level populations.
 - **F21 — 2D `toString`** (done). `TwoDimPoint.toString` formatted doubles with `%d` and threw, and with it the
   `toString` of `TwoDimTreap` and `TwoDimTreapPopulation` and every error message that prints a point. Fixed with
   `%s` ([changes](changes-from-cited-code.md#2d-tostring-of-a-point)).

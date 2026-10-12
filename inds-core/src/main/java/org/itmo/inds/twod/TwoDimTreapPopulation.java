@@ -164,7 +164,7 @@ public class TwoDimTreapPopulation {
         if (!dominates && !dominated)
             result = result < 0 ? l : Math.min(l, result);
 
-        if (result > 0)
+        if (result >= 0)
             return result;
         throw new RuntimeException("Can't determine rank for " + ind.toString());
     }

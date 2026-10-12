@@ -118,6 +118,22 @@ error message that prints a point. Now it uses `%s`:
 
 Insertion and rank queries do not call it: behaviour and performance are unchanged.
 
+### 2D: rank of a point in a population with one level
+
+`TwoDimTreapPopulation.detRankOfExPoint` (the rank of a point in the population, used by `getRandWithRank` and
+`validate`). A binary search over the levels finds the rank; with one level the search loop is skipped, the check
+after it finds rank 0, and the final test accepted only ranks `> 0`, so every call threw "Can't determine rank" while
+the population had exactly one level. With two or more levels the method returns from inside the loop, so the final
+test is reached only with one level, and accepting rank 0 there changes nothing else:
+
+```diff
+-        if (result > 0)
++        if (result >= 0)
+             return result;
+```
+
+Insertion does not call it; the oracle cross-check now covers `detRankOfExPoint` on one-level populations too.
+
 ### Benchmarks: measure compiled code
 
 The single-point insertion benchmarks behind the thesis Chapter 3 figures (nds2016 `PPSN2016Test`) rebuilt the
