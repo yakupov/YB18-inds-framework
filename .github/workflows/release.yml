@@ -1,7 +1,7 @@
 # Release X.Y.Z to Maven Central, started by hand (Actions -> Release -> Run workflow, on main).
 #
-# 1. check: the inputs, main unchanged since the start, the tag vX.Y.Z new;
-# 2. verify: mvn verify with the release version (no secrets);
+# 1. check: the inputs, the current version a snapshot, the tag vX.Y.Z new, and whether CI has passed on this commit;
+# 2. verify: mvn verify, only if CI has not passed on this commit (no secrets);
 # 3. publish (environment `release`: waits for the maintainer's approval, then gets the secrets): commit "Release X.Y.Z",
 #    build and sign inds-parent, inds-core and inds-baselines, bundle them, upload the bundle to Central and wait until
 #    Central has validated it; then tag vX.Y.Z, commit the next development version, push both commits and the tag to
@@ -39,26 +39,48 @@ jobs:
   check:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     outputs:
       next: ${{ steps.versions.outputs.next }}
+      ci-passed: ${{ steps.ci.outputs.passed }}
     steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: pom.xml
+          sparse-checkout-cone-mode: false
       - id: versions
         name: Check the versions and the tag
         env:
           NEXT: ${{ inputs.next }}
-          REPOSITORY: ${{ github.server_url }}/${{ github.repository }}
         run: |
           [[ "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+$ ]] || { echo "::error::version must be X.Y.Z: $VERSION"; exit 1; }
           next="${NEXT:-${BASH_REMATCH[1]}.$((BASH_REMATCH[2] + 1)).0-SNAPSHOT}"
           [[ "$next" =~ ^[0-9]+\.[0-9]+\.[0-9]+-SNAPSHOT$ ]] || { echo "::error::next must be X.Y.Z-SNAPSHOT: $next"; exit 1; }
-          if git ls-remote --exit-code --tags "$REPOSITORY" "refs/tags/v$VERSION" > /dev/null; then
+          current=$(python3 -c 'import xml.etree.ElementTree as T; print(T.parse("pom.xml").getroot().findtext("{http://maven.apache.org/POM/4.0.0}version"))')
+          [[ "$current" == *-SNAPSHOT ]] || { echo "::error::current version $current is not a snapshot"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" > /dev/null; then
             echo "::error::tag v$VERSION exists"; exit 1
           fi
           echo "next=$next" >> "$GITHUB_OUTPUT"
-          echo "Release $VERSION, then $next" >> "$GITHUB_STEP_SUMMARY"
+          echo "Release $VERSION (current $current), then $next" >> "$GITHUB_STEP_SUMMARY"
+      - id: ci
+        name: Look for a passed CI run of this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          passed=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&status=success" --jq .total_count)
+          if (( passed > 0 )); then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+            echo "CI passed on $GITHUB_SHA: mvn verify is not repeated" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No passed CI run on $GITHUB_SHA: running mvn verify" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   verify:
     needs: check
+    if: needs.check.outputs.ci-passed != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -68,17 +90,13 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-      - name: Check that the current version is a snapshot
-        run: |
-          current=$($MVN -q org.apache.maven.plugins:maven-help-plugin:3.5.1:evaluate -Dexpression=project.version -DforceStdout -N)
-          [[ "$current" == *-SNAPSHOT ]] || { echo "::error::current version $current is not a snapshot"; exit 1; }
-      - name: Set the release version
-        run: $MVN versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
       - name: mvn verify
         run: $MVN verify
 
   publish:
     needs: [check, verify]
+    # verify is skipped when CI has already passed on this commit
+    if: ${{ !cancelled() && needs.check.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.verify.result) }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: release

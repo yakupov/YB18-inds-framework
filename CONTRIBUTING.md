@@ -157,7 +157,8 @@ Published to Maven Central under the group id `io.github.yakupov`: `inds-parent`
 1. Actions → **Release** → Run workflow on `main`: `version` `X.Y.Z`; `next` defaults to `X.Y+1.0-SNAPSHOT`.
    `dry-run` builds and bundles without signing, uploading or pushing.
 2. The workflow ([release.yml](.github/workflows/release.yml)) checks the inputs and that the tag is new, runs
-   `mvn verify` with the release version, then waits for approval (environment `release`). After approval it commits
+   `mvn verify` unless CI has already passed on the same commit (start the release after CI is green to save the
+   run), then waits for approval (environment `release`). After approval it commits
    "Release X.Y.Z", builds and signs the three artifacts, bundles them, uploads the bundle
    ([scripts/central-upload.py](scripts/central-upload.py)) and waits until Central has validated it. Only then it
    tags `vX.Y.Z`, commits the next development version and pushes both commits and the tag to `main` in one atomic
