@@ -159,4 +159,5 @@ structure and average thousands of insertions per iteration, so every algorithm 
   no crowding distances) is not included; like a sorting-only Level, it would be a second version of an algorithm
   the library already has.
 - Not ported: the NSGA-II code (it depends on the LGPL MOEA Framework), the data-set generators, vendored third-party
-  code, unused experiments.
+  code, unused experiments. `AbstractConcurrentJFBYPopulation` (nds2018) was ported and later deleted: nothing
+  extended it, also not in the cited code.

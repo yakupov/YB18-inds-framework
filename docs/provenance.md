@@ -35,7 +35,6 @@ nds2018 paths are relative to `src/main/java/ru/ifmo/nds/` (tests: `src/test/jav
 | `population/FineLockJfbyPopulation` | nds2018 **cd1** | `dcns/concurrent/LevelLockJFBYPopulation` (thesis version) |
 | `population/FineLockJfbyPopulationRankHint` | nds2018 r2019.2 | `dcns/concurrent/LevelLockJFBYPopulation` (2019 revision) |
 | `population/CasJfbyPopulation` | nds2018 **cd1** | `dcns/concurrent/CJFBYPopulation` (thesis version) |
-| `population/AbstractConcurrentJfbyPopulation` | nds2018 r2019.2 | `dcns/concurrent/AbstractConcurrentJFBYPopulation` |
 | `twod/TwoDimTreapPopulation` | nds2016 | `PPSN2017Test/src/main/java/ru/itmo/nds/reference/treap2015/TreapPopulation` |
 | `twod/TwoDimTreap` | nds2016 | `…/treap2015/Treap` |
 | `twod/TwoDimPoint` | nds2016 | `…/treap2015/Double2DIndividual` |

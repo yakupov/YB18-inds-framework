@@ -23,7 +23,6 @@ golden-master records).
 | CAS | retry loops swallow index errors of the sorting and crowding-distance code (endless retry); a removed last level is waited for by spinning | F11 |
 | CAS | the logical clock (`AtomicLong`) has no overflow handling (`todo` in the code) | none: 2⁶³ ticks are out of reach |
 | Fine, CAS | `getSnapshot()` is not linearizable: points moving between levels can be missing, and `size()` can disagree with the snapshot during insertions | none: inherent in the lock / CAS design; documented in [architecture.md](architecture.md) |
-| `AbstractConcurrentJfbyPopulation` | unused (nothing extends it) | F10 |
 | `ManagedPopulationCorrectnessTest.testRand` (ported test) | seeded with `System.nanoTime()`, so not reproducible; `@Ignore`d in the cited code and here | none |
 
 ## Correctness and robustness
@@ -53,8 +52,6 @@ golden-master records).
   under `addRemoveLevelLock`) never runs concurrently with insertions. Add scenarios with small expected sizes:
   size bound after quiescence, levels consistent and non-dominated, every remaining point once, removed points have
   the worst crowding distance of the last level where this can be checked.
-- **F10 — `AbstractConcurrentJfbyPopulation`** is unused (nothing extends it, also not in the cited code): keep or
-  delete.
 
 ## API
 
@@ -114,6 +111,8 @@ golden-master records).
 
 ## Done and closed
 
+- **F10 — `AbstractConcurrentJfbyPopulation`** (done: deleted). Unused: nothing extended it, also not in the cited
+  code.
 - **F15 — 2D `detRankOfExPoint` with one level** (done). The final check rejected rank 0, which is reached only when
   the binary search is skipped (one level): every call threw. Fixed by accepting rank 0
   ([changes](changes-from-cited-code.md#2d-rank-of-a-point-in-a-population-with-one-level)); the oracle cross-check

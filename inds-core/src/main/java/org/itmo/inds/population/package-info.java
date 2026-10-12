@@ -26,8 +26,7 @@
  *     <td>[T] Sections 4.2.1-4.2.2; [GECCO 2018]</td></tr>
  * </table>
  *
- * <p>{@link org.itmo.inds.population.AbstractConcurrentJfbyPopulation} is unused legacy code, kept for now
- * ({@code docs/roadmap.md}). The divide-and-conquer sorters DC, DC1, DC2 used inside the populations are in
+ * <p>The divide-and-conquer sorters DC, DC1, DC2 used inside the populations are in
  * {@link org.itmo.inds.sorting}.
  *
  * <p>The asynchronous classes (Coarse, Fine, CAS) are ported by moving and class renames only, except three

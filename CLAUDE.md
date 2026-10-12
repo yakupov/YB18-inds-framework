@@ -19,9 +19,9 @@ baselines, benchmark data and benchmarks. Start with [README.md](README.md) and 
   [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md), golden records updated in the same commit).
   Known defects and open work: [docs/roadmap.md](docs/roadmap.md).
 - **Concurrent classes** (`FineLockJfbyPopulation*`, `CasJfbyPopulation`, `CoarseLockJfbyPopulation`,
-  `AbstractConcurrentJfbyPopulation`, `EnluPopulation`): not even "harmless" edits (`final`, diamonds, lambdas,
-  collection-type swaps, annotation or comment changes, replacing `synchronized` / locks / atomics). Any change to them
-  is a fix as above, checked with `mvn verify -Pstress` and a performance comparison.
+  `EnluPopulation`): not even "harmless" edits (`final`, diamonds, lambdas, collection-type swaps, annotation or comment
+  changes, replacing `synchronized` / locks / atomics). Any change to them is a fix as above, checked with
+  `mvn verify -Pstress` and a performance comparison.
 - Thesis labels (DC, DC1, DC2, Level, Coarse, Fine, CAS, ENLU, 2D) go into `package-info.java` and docs, not into
   ported classes.
 - **MIT only:** no source derived from LGPL / GPL code (e.g. MOEA Framework), no third-party code without a clear
