@@ -111,6 +111,14 @@ golden-master records).
 - **F3 — NSGA-II experiments repository.** The steady-state and asynchronous NSGA-II of thesis Chapters 2 and 4
   (`ssNSGAII2018` `r2018.9.1`, the Chapter 4 configurations) and the data-set generators of nds2016 depend on the
   LGPL MOEA Framework and will live in a separate repository that uses this library.
+- **F22 — Sharded levels for Fine (research idea).** Based on A. Polozenko's BSc thesis (ITMO, 2021;
+  [AlexandraPolozenko/NSGAII2021](https://github.com/AlexandraPolozenko/NSGAII2021)), which explored lock order,
+  removal and level sharding to make Fine scale with more threads in steady-state NSGA-II. Motivation: the time of
+  one insertion grows with the number of threads, and the threads meet at the last level and, near convergence, at
+  one large front, where every insertion rewrites the same level under one lock. Idea: split a level into shards
+  with locks of their own. Open questions: a lock protocol that keeps the cascade correct (Fine's hand-over-hand
+  order across all shards of a level), the dominance check under the lock, and global or per-shard crowding distance.
+  Gate: stress tests including F12, JMH against Fine with a near-front workload.
 
 ## Done and closed
 
