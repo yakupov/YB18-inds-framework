@@ -13,9 +13,9 @@
  *     once.</li>
  * </ul>
  *
- * <p>The classes are ported from the cited code with two fixes ({@code toString}; {@code detRankOfExPoint} with one
- * level). Known defects that remain: a static unsynchronized comparison counter, and {@code detRankOfExPoint} does not
- * return for some points that are not in the population. Both lists: {@code docs/changes-from-cited-code.md}.
+ * <p>The classes are ported from the cited code with fixes ({@code toString}; {@code detRankOfExPoint} with one level
+ * or with a point that is not in the population). Known defect that remains: a static unsynchronized comparison
+ * counter. Both lists: {@code docs/changes-from-cited-code.md}.
  *
  * <p>References:
  * <ul>

@@ -54,8 +54,6 @@ golden-master records). Each defect that should be fixed has an issue.
 | CAS | the logical clock (`AtomicLong`) has no overflow handling (`todo` in the code) | none: 2⁶³ ticks are out of reach |
 | Fine, CAS | `getSnapshot()` is not linearizable: points moving between levels can be missing, and `size()` can disagree with the snapshot during insertions | none: inherent in the lock / CAS design ([architecture.md](architecture.md)) |
 | 2D | `TwoDimPoint` has a static, unsynchronized comparison counter shared by all populations and threads | [#4](https://github.com/yakupov/YB18-inds-framework/issues/4) |
-| 2D | `detRankOfExPoint` never returns for some points that are not in the population | [#5](https://github.com/yakupov/YB18-inds-framework/issues/5) |
-| `ManagedPopulationCorrectnessTest.testRand` (ported test) | seeded with `System.nanoTime()`, so not reproducible; `@Ignore`d in the cited code and here | none |
 
 ## Structure
 

@@ -3,6 +3,7 @@ package org.itmo.inds.twod;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Behaviour of the 2D treap population that the oracle cross-check does not cover: the defects of the cited code fixed
@@ -38,5 +39,18 @@ class TwoDimTreapPopulationTest {
         assertEquals(0, population.detRankOfExPoint(second));
         assertEquals(0, population.getRandWithRank().rank);
         population.validate();
+    }
+
+    /**
+     * {@code detRankOfExPoint} rejects a point that is not in the population; the cited code looped forever for some
+     * of them (here: dominated by the first level, dominating a point of the second).
+     */
+    @Test
+    void detRankOfExPointRejectsPointNotInPopulation() {
+        final TwoDimTreapPopulation population = new TwoDimTreapPopulation();
+        population.addPoint(new TwoDimPoint(0, 0));
+        population.addPoint(new TwoDimPoint(2, 2));
+        assertThrows(IllegalArgumentException.class, () -> population.detRankOfExPoint(new TwoDimPoint(1, 1)));
+        assertThrows(IllegalArgumentException.class, () -> population.detRankOfExPoint(null));
     }
 }

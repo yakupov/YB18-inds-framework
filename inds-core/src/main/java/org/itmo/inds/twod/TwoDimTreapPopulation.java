@@ -1,6 +1,10 @@
 package org.itmo.inds.twod;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 public class TwoDimTreapPopulation {
     private final Set<TwoDimPoint> individuals;
@@ -18,18 +22,6 @@ public class TwoDimTreapPopulation {
     public TwoDimTreapPopulation(Set<TwoDimPoint> individuals, List<TwoDimTreap> ranks) {
         this.individuals = individuals;
         this.ranks = ranks;
-    }
-
-    @Deprecated
-    protected int determineRankStupid(TwoDimPoint nInd) {
-        int currRank = 0;
-        for (int i = 0; i < ranks.size(); ++i) {
-            if (ranks.get(i).dominatedBySomebody(nInd))
-                currRank = i + 1;
-            else
-                return currRank;
-        }
-        return currRank;
     }
 
     protected int determineRank(TwoDimPoint nInd) {
@@ -56,13 +48,12 @@ public class TwoDimTreapPopulation {
         }
         int rank = determineRank(nInd);
         //System.err.println(rank + "_" + nInd.toString() + "_" + ranks.size());
-        TwoDimTreap nTreap = new TwoDimTreap(nInd, random.nextInt(), null, null);
+        final TwoDimTreap nTreap = new TwoDimTreap(nInd, random.nextInt(), null, null);
 
         if (rank >= ranks.size()) {
             ranks.add(nTreap);
         } else if (nInd.compareDom(ranks.get(rank).getMinP()) < 0) {
             ranks.add(rank, nTreap);
-            return;
         } else {
             int i = 0;
             TwoDimPoint minP = nInd;
@@ -79,8 +70,9 @@ public class TwoDimTreapPopulation {
 
                 TwoDimTreap.Treaps t1 = ranks.get(rank + i).splitX(minP);
                 TwoDimTreap.Treaps tr = new TwoDimTreap.Treaps();
-                if (t1.r != null)
+                if (t1.r != null) {
                     tr = t1.r.splitY(minP);
+                }
 
                 printTreap(t1.l, printTreaps);
                 printTreap(t1.r, printTreaps);
@@ -95,22 +87,28 @@ public class TwoDimTreapPopulation {
                 cNext = tr.l;
                 printTreap(cNext, printTreaps);
 
-                if (cNext == null)
+                if (cNext == null) {
                     break;
+                }
                 minP = cNext.getMinP();
                 i++;
             }
         }
     }
 
-    private void printTreap(TwoDimTreap cNext, boolean sw) {
-        if (sw)
+    /**
+     * Local helper for print-based debugging
+     */
+    private void printTreap(TwoDimTreap cNext, boolean shouldPrint) {
+        if (shouldPrint) {
             System.err.println(cNext);
+        }
     }
 
     public static class IndWithRank {
-        TwoDimPoint ind;
-        int rank;
+        final TwoDimPoint ind;
+        final int rank;
+
         public IndWithRank(TwoDimPoint ind, int rank) {
             super();
             this.ind = ind;
@@ -118,18 +116,24 @@ public class TwoDimTreapPopulation {
         }
 
         public String toString() {
-            return "Rank = " + rank + ", value = " + String.valueOf(ind);
+            return "Rank = " + rank + ", value = " + ind;
         }
     }
 
     public IndWithRank getRandWithRank() {
-        if (individuals.size() == 0)
+        if (individuals.isEmpty()) {
             throw new RuntimeException("Can't get random individual from empty population");
-        TwoDimPoint randInd = (TwoDimPoint) individuals.toArray()[random.nextInt(individuals.size())];
+        }
+        final TwoDimPoint randInd = (TwoDimPoint) individuals.toArray()[random.nextInt(individuals.size())];
         return new IndWithRank(randInd, detRankOfExPoint(randInd));
     }
 
     protected int detRankOfExPoint(TwoDimPoint ind) {
+        if (ind == null || !individuals.contains(ind)) {
+            throw new IllegalArgumentException("Requested rank of existing point, but point is not in " +
+                    "the population " + ind);
+        }
+
         int r = ranks.size() - 1;
         int l = 0;
         int result = -1;
@@ -161,27 +165,19 @@ public class TwoDimTreapPopulation {
         }
         boolean dominated = ranks.get(l).dominatedBySomebody(ind);
         boolean dominates = ranks.get(l).dominatesSomebody(ind);
-        if (!dominates && !dominated)
+        if (!dominates && !dominated) {
             result = result < 0 ? l : Math.min(l, result);
-
-        if (result >= 0)
-            return result;
-        throw new RuntimeException("Can't determine rank for " + ind.toString());
-    }
-
-
-    protected int detRankOfExPointDumb(TwoDimPoint ind) {
-        for (int l = 0; l < ranks.size(); ++l) {
-            boolean dominated = ranks.get(l).dominatedBySomebody(ind);
-            boolean dominates = ranks.get(l).dominatesSomebody(ind);
-            if (!dominates && !dominated)
-                return l;
         }
-        throw new RuntimeException("Can't determine rank for " + ind.toString());
+
+        if (result >= 0) {
+            return result;
+        }
+
+        throw new RuntimeException("Can't determine rank for " + ind);
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
         for (int i = 0; i < ranks.size(); ++i) {
             sb.append(i);
             sb.append('\n');

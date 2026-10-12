@@ -39,8 +39,6 @@ public class TwoDimPoint {
 
     /**
      * not normalized
-     * @param o
-     * @return
      */
     public int compareDom(TwoDimPoint o) {
         //synchronized(Double2DIndividual.class) {

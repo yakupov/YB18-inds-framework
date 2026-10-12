@@ -12,16 +12,19 @@ baselines, benchmark data and benchmarks. Start with [README.md](README.md) and 
   algorithm classes, origin per file in [docs/provenance.md](docs/provenance.md)) from *new code*, sets the quality,
   Javadoc, formatting and test rules for new code, and says which document holds which information ("Where
   information belongs"): keep each fact in its one place when you update docs.
-- **Ported code stays the cited code.** No member renames, no "cleanups" of internals (loops, data structures,
-  array-vs-list choices, sweep / merge logic, crowding-distance math), no reformatting: it is performance-tuned research
-  code, and results must stay comparable with the thesis. A suspected defect is reported first; a fix needs the
-  maintainer's approval and comes as CONTRIBUTING.md describes (a test that shows it, a commit of its own, an entry in
-  [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md), golden records updated in the same commit).
+- **Ported code changes only with the maintainer's approval.** Fixes, cleanups and refactorings of ported code are
+  possible, but each one needs the maintainer's explicit approval: implement it, show the diff of the ported files and
+  ask the maintainer to verify it before committing. Nothing on the side: no member renames, no "cleanups" of
+  internals (loops, data structures, array-vs-list choices, sweep / merge logic, crowding-distance math), no
+  reformatting as part of other work: it is performance-tuned research code, and results must stay comparable with
+  the thesis. A suspected defect is reported first; a fix comes as CONTRIBUTING.md describes (a test that shows it, a
+  commit of its own, an entry in [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md), golden records
+  updated in the same commit).
   Known defects: [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md#known-defects); open work: GitHub
   issues (`gh issue list`).
 - **Concurrent classes** (`FineLockJfbyPopulation*`, `CasJfbyPopulation`, `CoarseLockJfbyPopulation`,
   `EnluPopulation`): not even "harmless" edits (`final`, diamonds, lambdas, collection-type swaps, annotation or comment
-  changes, replacing `synchronized` / locks / atomics). Any change to them is a fix as above, checked with
+  changes, replacing `synchronized` / locks / atomics) unless approved as above; every change to them is checked with
   `mvn verify -Pstress` and a performance comparison.
 - Thesis labels (DC, DC1, DC2, Level, Coarse, Fine, CAS, ENLU, 2D) go into `package-info.java` and docs, not into
   ported classes.

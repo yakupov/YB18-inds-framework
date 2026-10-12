@@ -1,7 +1,6 @@
 package org.itmo.inds.population;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.itmo.inds.api.Individual;
 import org.itmo.inds.api.ManagedPopulation;
@@ -10,13 +9,12 @@ import org.itmo.inds.api.FitnessAndCdIndividual;
 import org.itmo.inds.util.RankedPopulation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class ManagedPopulationCorrectnessTest {
     protected abstract ManagedPopulation<Object> constructPopulation(int dimensionsCount);
 
@@ -149,26 +147,6 @@ public abstract class ManagedPopulationCorrectnessTest {
         });
     }
 
-    @Ignore
-    @Test
-    public void testRand() {
-        final double[][] testData = new double[200][];
-        final Random random = new Random(System.nanoTime());
-        for (int i = 0; i < testData.length; ++i) {
-            final double[] d = new double[2];
-            d[0] = random.nextInt(1000) - 500;
-            d[1] = random.nextInt(1000) - 500;
-            testData[i] = d;
-        }
-
-        System.out.println("Test data: ");
-        for (double[] d : testData) {
-            System.out.println("\t" + Arrays.toString(d));
-        }
-
-        compareIncrementalWithGenerational(testData);
-    }
-
     @Test
     public void test4() {
         compareIncrementalWithGenerational(new double[][]{
@@ -189,18 +167,10 @@ public abstract class ManagedPopulationCorrectnessTest {
 
         final ManagedPopulation pop = constructPopulation(testDataArr[0].length);
         for (Individual individual: testData) {
-            //noinspection unchecked
             pop.addIndividual(individual);
         }
 
         final RankedPopulation rp = pop.toRankedPopulation();
-
-        //System.out.println(Arrays.toString(testData));
-        //System.out.println(Arrays.toString(rp.getPop()));
-
-        //System.out.println(Arrays.toString(ranks));
-        //System.out.println(Arrays.toString(rp.getRanks()));
-
         Assert.assertArrayEquals(testData, rp.getPop());
         Assert.assertArrayEquals(ranks, rp.getRanks());
     }

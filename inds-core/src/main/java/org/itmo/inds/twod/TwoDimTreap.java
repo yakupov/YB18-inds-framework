@@ -67,8 +67,6 @@ public class TwoDimTreap {
 
     /**
      * same as split X - members of r have greater x1 than members of l
-     * @param x
-     * @return
      */
     public Treaps splitY(TwoDimPoint x) {
         Treaps res = new Treaps();
