@@ -19,7 +19,6 @@ golden-master records).
 |---|---|---|
 | Level, Coarse | `size()` undercounts and eviction is skipped when an insertion pushes a whole level down | F19 |
 | Level, Coarse, Fine | `clone()` throws (Level, Coarse) or returns a copy that shares state with the original (Fine) | F20 |
-| 2D | every `toString` that reaches a point throws `IllegalFormatConversionException` | F21 |
 | 2D | `detRankOfExPoint` / `getRandWithRank` fail while the population has exactly one level | F15 |
 | 2D | `TwoDimPoint` has a static, unsynchronized comparison counter shared by all populations and threads | F14 |
 | CAS | retry loops swallow index errors of the sorting and crowding-distance code (endless retry); a removed last level is waited for by spinning | F11 |
@@ -41,12 +40,9 @@ golden-master records).
   shares the original `CopyOnWriteArrayList` and puts its level copies into a list that is thrown away: inserting into
   the copy changes the original. Fix: return independent copies (or drop `Cloneable` from the API). Gate: the golden
   clone scenarios change (re-recorded), new tests that the copy and the original evolve independently.
-- **F21 — 2D `toString`.** `TwoDimPoint.toString` uses `String.format("ind %d %d", x1, x2)` with doubles; the
-  `toString` of `TwoDimTreap` and `TwoDimTreapPopulation` and every error message that prints a point throw with it.
-  Fix: `%s` (or `%f`). Gate: `TwoDimTreapPopulationKnownBugsTest` updated; golden records do not call `toString`.
 - **F15 — 2D `detRankOfExPoint` with one level.** The binary search is skipped when there is only one level; the
   branch after the loop then sets `result = 0` but does not return, and the final `if (result > 0)` rejects rank 0,
-  so every call ends in "Can't determine rank" (thrown as `IllegalFormatConversionException` because of F21).
+  so every call ends in "Can't determine rank".
   Fix: accept `result >= 0` (or return from that branch). Gate: `TwoDimTreapPopulationKnownBugsTest` updated, oracle
   cross-check extended to one-level populations; the golden records do not call the method.
 - **F11 — CAS retry loops.** (a) In `CasJfbyPopulation.insertOneByOne`, `insertViaFullSortings` and `intRemoveWorst`
@@ -124,6 +120,9 @@ golden-master records).
 
 ## Done and closed
 
+- **F21 — 2D `toString`** (done). `TwoDimPoint.toString` formatted doubles with `%d` and threw, and with it the
+  `toString` of `TwoDimTreap` and `TwoDimTreapPopulation` and every error message that prints a point. Fixed with
+  `%s` ([changes](changes-from-cited-code.md#2d-tostring-of-a-point)).
 - **F4 — Continuous integration** (done). GitHub Actions ([ci.yml](../.github/workflows/ci.yml)) runs `mvn verify`
   with JDK 17 on every push to `main` and every pull request; the long stress runs and JMH stay manual.
 - **F7 — Publishing to Maven Central** (done, `0.1.0`). Group id `io.github.yakupov` (package names stay

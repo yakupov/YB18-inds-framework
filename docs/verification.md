@@ -1,6 +1,6 @@
 # Verification
 
-How this library was checked to be the code the thesis cites: the same logic (apart from the three fixes in
+How this library was checked to be the code the thesis cites: the same logic (apart from the fixes in
 [changes-from-cited-code.md](changes-from-cited-code.md)), the same behaviour and the same performance. The checks
 in `mvn verify` keep protecting it.
 
@@ -15,7 +15,8 @@ Every ported class entered the repository in two steps, each a commit of its own
 
 Algorithm internals were not reformatted, re-indented or otherwise edited; the only other edit of a ported class is
 cosmetic (`FitnessAndCdIndividual`, [changes-from-cited-code.md](changes-from-cited-code.md#structure)). The three
-fixes came later, one commit each; the concurrency stress tests that found them run in `mvn verify`.
+concurrency fixes came later, one commit each; the stress tests that found them run in `mvn verify`. Small fixes of
+the 2D population followed, each in a commit of its own with a test.
 
 ## 2. Tests in `mvn verify`
 

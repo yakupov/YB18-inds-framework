@@ -9,8 +9,8 @@ benchmarks, as one buildable, MIT-licensed Java 17 library.
 
 The algorithm code is the code the thesis and the papers cite, consolidated from the original research repositories
 (2015–2020) with new package and class names, and verified to behave and perform the same
-([verification](docs/verification.md)). Three concurrency defects of the cited code are fixed
-([changes](docs/changes-from-cited-code.md)).
+([verification](docs/verification.md)). Three concurrency defects of the cited code and small defects of the 2D
+population are fixed ([changes](docs/changes-from-cited-code.md)).
 
 ## Algorithms
 
@@ -110,7 +110,7 @@ Benchmarks, parameters, more examples and how to get comparable numbers:
 - [architecture.md](docs/architecture.md): modules, packages, API, how the populations work, data model, tests
 - [verification.md](docs/verification.md): how the library was checked against the cited code (golden master,
   oracle, stress tests, benchmarks)
-- [changes-from-cited-code.md](docs/changes-from-cited-code.md): what differs from the cited code (the three fixes,
+- [changes-from-cited-code.md](docs/changes-from-cited-code.md): what differs from the cited code (the fixes,
   structure)
 - [inds-benchmarks/README.md](inds-benchmarks/README.md): running the benchmarks
 - [reproducibility.md](docs/reproducibility.md): how the thesis experiments map to this repository, and how to

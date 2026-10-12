@@ -2,8 +2,6 @@ package org.itmo.inds.twod;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.IllegalFormatConversionException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -14,23 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 class TwoDimTreapPopulationKnownBugsTest {
     /**
-     * {@code String.format("ind %d %d", x1, x2)} with doubles: every {@code toString} that reaches a point throws.
-     */
-    @Test
-    void toStringThrows() {
-        final TwoDimPoint point = new TwoDimPoint(0, 1);
-        assertThrows(IllegalFormatConversionException.class, point::toString);
-        assertThrows(IllegalFormatConversionException.class, new TwoDimTreap(point, 0, null, null)::toString);
-        final TwoDimTreapPopulation population = new TwoDimTreapPopulation();
-        population.addPoint(point);
-        assertThrows(IllegalFormatConversionException.class, population::toString);
-    }
-
-    /**
      * {@code detRankOfExPoint} accepts a result only if it is {@code > 0} after the binary search. With two or more
      * levels, rank-0 points are found inside the loop and the method is correct (oracle cross-check); with exactly
-     * one level the loop is skipped and every point ends in the "Can't determine rank" exception, whose message
-     * calls the broken {@code toString}, so {@code getRandWithRank} throws {@link IllegalFormatConversionException}.
+     * one level the loop is skipped and every point ends in the "Can't determine rank" exception, so
+     * {@code getRandWithRank} throws too.
      */
     @Test
     void detRankOfExPointThrowsWithOneLevel() {
@@ -39,9 +24,11 @@ class TwoDimTreapPopulationKnownBugsTest {
         final TwoDimPoint second = new TwoDimPoint(1, 0);
         population.addPoint(first);
         population.addPoint(second);
-        assertThrows(IllegalFormatConversionException.class, () -> population.detRankOfExPoint(first));
-        assertThrows(IllegalFormatConversionException.class, () -> population.detRankOfExPoint(second));
-        assertThrows(IllegalFormatConversionException.class, population::getRandWithRank);
+        assertEquals("Can't determine rank for ind 0.0 1.0",
+                assertThrows(RuntimeException.class, () -> population.detRankOfExPoint(first)).getMessage());
+        assertEquals("Can't determine rank for ind 1.0 0.0",
+                assertThrows(RuntimeException.class, () -> population.detRankOfExPoint(second)).getMessage());
+        assertThrows(RuntimeException.class, population::getRandWithRank);
 
         population.addPoint(new TwoDimPoint(2, 2)); // second level: rank 0 is found
         assertEquals(0, population.detRankOfExPoint(first));

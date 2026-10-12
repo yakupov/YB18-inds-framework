@@ -1,10 +1,11 @@
 # Changes from the cited code
 
 The algorithm classes of this library are the code the thesis and the papers cite ([provenance.md](provenance.md)),
-with new package and class names. Their logic is unchanged except for **three concurrency fixes**, each in a commit
-of its own. Everything else that differs from the cited code is structure: modules, packages, class names, a common
-version of the shared helpers, documentation and tests. Single-threaded behaviour is identical to the cited code on
-all recorded scenarios, and performance is unchanged ([verification.md](verification.md)).
+with new package and class names. Their logic is unchanged except for **three concurrency fixes** and small fixes of
+the 2D population, each in a commit of its own. Everything else that differs from the cited code is structure:
+modules, packages, class names, a common version of the shared helpers, documentation and tests. Single-threaded
+behaviour is identical to the cited code on all recorded scenarios, and performance is unchanged
+([verification.md](verification.md)).
 
 This document lists only what differs from the cited code. Defects of the cited code that are not fixed are open
 work and listed in the [roadmap](roadmap.md#known-defects-of-the-cited-code); when one is fixed, it gets an entry here.
@@ -103,6 +104,19 @@ hangs or escaping `IndexOutOfBoundsException`s. The fix restores the earlier log
 ```
 
 The thesis experiments used the one-by-one variant, which was not affected.
+
+### 2D: `toString` of a point
+
+`TwoDimPoint` (thesis label 2D). `toString` formatted the two `double` coordinates with `%d`, so it threw
+`IllegalFormatConversionException`, and so did the `toString` of `TwoDimTreap` and `TwoDimTreapPopulation` and every
+error message that prints a point. Now it uses `%s`:
+
+```diff
+-        return String.format("ind %d %d", x1, x2);
++        return String.format("ind %s %s", x1, x2);
+```
+
+Insertion and rank queries do not call it: behaviour and performance are unchanged.
 
 ### Benchmarks: measure compiled code
 

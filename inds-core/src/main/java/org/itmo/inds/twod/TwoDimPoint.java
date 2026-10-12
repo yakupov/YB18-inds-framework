@@ -78,6 +78,6 @@ public class TwoDimPoint {
 
     @Override
     public String toString() {
-        return String.format("ind %d %d", x1, x2);
+        return String.format("ind %s %s", x1, x2);
     }
 }
