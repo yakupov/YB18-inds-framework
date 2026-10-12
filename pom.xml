@@ -211,6 +211,12 @@
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>3.5.0</version>
                 </plugin>
+                <plugin>
+                    <!-- versions:set when releasing (CONTRIBUTING.md, "Releasing") -->
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>2.18.0</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>

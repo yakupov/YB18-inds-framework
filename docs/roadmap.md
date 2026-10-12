@@ -94,6 +94,9 @@ golden-master records).
   like success), runs fail intermittently on project setup, a crashed run leaves a lock that survives reboots, and the
   setup depends on the local IDE installation. If IntelliJ's inspections are wanted reproducibly, JetBrains Qodana
   runs them in a container; compare its cost and noise with Checkstyle / PMD. Gate: clean on new code.
+- **F23 — Releases from GitHub Actions.** Workflow [release.yml](../.github/workflows/release.yml) (started by hand:
+  verify, approval, sign, upload to Central as a validated deployment, tag and next version pushed by CI; publishing
+  on Central stays manual). Open until the first release made with it.
 - **F8 — JSON library.** The data model uses Gson 2.8 (with a type adapter for JDK 17); move to a current Gson or
   another library (e.g. Jackson) while keeping the existing data files readable.
 
