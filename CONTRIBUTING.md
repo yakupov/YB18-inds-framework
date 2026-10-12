@@ -69,6 +69,8 @@ are LF ([.gitattributes](.gitattributes)), except Windows scripts (`.cmd`, `.bat
 records specified in [docs/golden-records.md](docs/golden-records.md)),
 oracle cross-checks (correctness against an independent sorter), short concurrency stress tests (long runs:
 `-Pstress`). New behaviour comes with tests; a fixed defect comes with a test that failed before the fix.
+[CI](.github/workflows/ci.yml) runs `mvn verify` on every push to `main` and every pull request; the long stress
+runs and the benchmarks are run by hand.
 
 - **Observe through the API.** Tests read the state of the code under test through its public API, including
   constructors that take the collections the object fills; reflection only where no API exists, in one helper per

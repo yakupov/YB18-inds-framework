@@ -94,7 +94,6 @@ golden-master records).
   like success), runs fail intermittently on project setup, a crashed run leaves a lock that survives reboots, and the
   setup depends on the local IDE installation. If IntelliJ's inspections are wanted reproducibly, JetBrains Qodana
   runs them in a container; compare its cost and noise with Checkstyle / PMD. Gate: clean on new code.
-- **F4 — Continuous integration** (GitHub Actions) running `mvn verify`; the long stress runs and JMH stay manual.
 - **F8 — JSON library.** The data model uses Gson 2.8 (with a type adapter for JDK 17); move to a current Gson or
   another library (e.g. Jackson) while keeping the existing data files readable.
 
@@ -122,6 +121,8 @@ golden-master records).
 
 ## Done and closed
 
+- **F4 — Continuous integration** (done). GitHub Actions ([ci.yml](../.github/workflows/ci.yml)) runs `mvn verify`
+  with JDK 17 on every push to `main` and every pull request; the long stress runs and JMH stay manual.
 - **F7 — Publishing to Maven Central** (done, `0.1.0`). Group id `io.github.yakupov` (package names stay
   `org.itmo.inds`); `inds-parent`, `inds-core` and `inds-baselines` with sources, Javadoc and signatures; release
   steps in [CONTRIBUTING.md](../CONTRIBUTING.md#releasing).

@@ -1,5 +1,7 @@
 # YB18 INDS framework
 
+[![CI](https://github.com/yakupov/YB18-inds-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/yakupov/YB18-inds-framework/actions/workflows/ci.yml)
+
 Incremental and asynchronous non-dominated sorting (INDS) for steady-state evolutionary multi-objective optimization:
 the algorithms of the thesis *Efficient Incremental and Asynchronous Non-Dominated Sorting for Evolutionary
 Multiobjective Algorithms* (I. Yakupov, ITMO University, 2019), their baselines, the benchmark data and the
