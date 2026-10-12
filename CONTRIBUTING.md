@@ -7,10 +7,10 @@ Rules for changing this library, for people and coding agents alike. `CLAUDE.md`
 - **Ported code**: the algorithm classes copied from the legacy repositories cited in the thesis (origin per file in
   [docs/provenance.md](docs/provenance.md)). They stay byte-identical to the cited code apart from `package` / `import`
   lines and class renames, so that results remain comparable with the thesis. Do not reformat, rename members or
-  "clean up" their internals. A defect is fixed only deliberately: list it as a known defect with an item of its own
-  in [docs/roadmap.md](docs/roadmap.md), add a test that shows it, then fix it in a commit of its own; move the item
-  to "Done and closed" and record the change in
-  [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md). The golden-master tests
+  "clean up" their internals. A defect is fixed only deliberately: it has an issue (label `known-defect`) and a row
+  in the known-defects table of [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md); add a test that
+  shows it, then fix it in a commit of its own whose message says `Fixes #N`, and move the row to the fixes there
+  (or delete it if the fix cannot change results). The golden-master tests
   (`org.itmo.inds.golden`) fail on any behaviour change, so a fix also updates or replaces the affected golden records,
   explained in the same commit.
 - **New code**: everything else (APIs written for this repository, data loading, tests, benchmarks). The rules below
@@ -39,7 +39,8 @@ Structure first, documentation second.
   variables and `try`-with-resources variables).
 - **No defect-prone code**: no possible `null` dereferences, ignored results of calls that report something, unused or
   redundant code, broken Javadoc references, raw types. Static analysis and linting in `mvn verify` that check this
-  automatically are planned ([docs/roadmap.md](docs/roadmap.md)); until then it is part of reviewing the diff (an
+  automatically are planned ([#9](https://github.com/yakupov/YB18-inds-framework/issues/9),
+  [#10](https://github.com/yakupov/YB18-inds-framework/issues/10)); until then it is part of reviewing the diff (an
   IDE's inspections help). Findings in ported code are left alone, and code is not contorted to silence style-only
   findings (prose style, a generator parameter that happens to be constant).
 - **Review your own diff** as someone new to the code before committing: string literals, vague names, two
@@ -102,8 +103,9 @@ what its name says.
 |---|---|
 | what the library is, quick start, index of the documentation | [README.md](README.md) |
 | how it works: modules, packages, API, how each population works, data model, test layout | [docs/architecture.md](docs/architecture.md) |
-| open work: the known defects of the cited code (each with its item or the reason it has none) and planned or possible improvements, one item per piece of work, with a stable ID (F1, F2, …) and a gate; finished items under "Done and closed" | [docs/roadmap.md](docs/roadmap.md) |
-| every way the code differs from the cited code (fixes with their diffs, structural changes), nothing that is still open | [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md) |
+| open work: defects to fix, improvements, ideas; one issue per piece of work, with its gate (the checks it has to pass); labels `known-defect` (defect of the cited code), `bug` (defect of new code), `enhancement`, `build`, `data`, `research` | [GitHub issues](https://github.com/yakupov/YB18-inds-framework/issues) |
+| what changed in a release | [GitHub release notes](https://github.com/yakupov/YB18-inds-framework/releases), drafted by the Release workflow from the issues closed since the previous release |
+| how the code differs from the cited code where it can change results: fixes, known defects (each with its issue or the reason it has none), structural changes that matter for comparisons | [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md) |
 | how sameness with the cited code is checked, and the results | [docs/verification.md](docs/verification.md) |
 | running the benchmarks: parameters, examples, comparable numbers | [inds-benchmarks/README.md](inds-benchmarks/README.md) |
 | which thesis experiment uses which data and benchmark, and how to re-run it | [docs/reproducibility.md](docs/reproducibility.md) |
@@ -114,9 +116,11 @@ what its name says.
 | the contract of a type or method | its Javadoc |
 | rules for changing the code | this file; agent-specific notes in `CLAUDE.md` |
 
-Typical updates: a defect found in ported code → a row in the roadmap's known-defects table and an item; the defect
-fixed → the item moves to "Done and closed", the fix gets an entry in `changes-from-cited-code.md`, and
-`verification.md` changes if the checks or their results do.
+Typical updates: a defect found in ported code → an issue (`known-defect`) and a row in the known-defects table of
+`changes-from-cited-code.md`; the defect fixed → a commit with `Fixes #N` (closes the issue), the row moves to the
+fixes (or is deleted if the fix cannot change results), and `verification.md` changes if the checks or their results
+do. Commit messages refer to issues by number; old messages refer to the former roadmap IDs F1–F23, which
+[#16](https://github.com/yakupov/YB18-inds-framework/issues/16) maps to issues and commits.
 
 ## Licenses
 
@@ -155,17 +159,18 @@ Published to Maven Central under the group id `io.github.yakupov`: `inds-parent`
 ### Release `X.Y.Z` from GitHub Actions
 
 1. Actions → **Release** → Run workflow on `main`: `version` `X.Y.Z`; `next` defaults to `X.Y+1.0-SNAPSHOT`.
-   `dry-run` builds and bundles without signing, uploading or pushing.
+   `dry-run` builds and bundles without signing, uploading or pushing, and shows the release notes in the run summary.
 2. The workflow ([release.yml](.github/workflows/release.yml)) checks the inputs and that the tag is new, runs
    `mvn verify` unless CI has already passed on the same commit (start the release after CI is green to save the
-   run), then waits for approval (environment `release`). After approval it commits
-   "Release X.Y.Z", builds and signs the three artifacts, bundles them, uploads the bundle
-   ([scripts/central-upload.py](scripts/central-upload.py)) and waits until Central has validated it. Only then it
-   tags `vX.Y.Z`, commits the next development version and pushes both commits and the tag to `main` in one atomic
-   push (as `github-actions[bot]`), and creates a draft GitHub release. It fails without uploading if `main` moved
-   after the start.
-3. Publish the validated deployment on central.sonatype.com (Publish → Deployments → Publish), or drop it. Then publish
-   the draft release on GitHub. After a drop, delete the tag and the draft release, or release the next version.
+   run), then waits for approval (environment `release`). After approval it commits "Release X.Y.Z" (POM versions and
+   the version in the README's dependency snippet), builds and signs the three artifacts, bundles them, uploads the
+   bundle ([scripts/central-upload.py](scripts/central-upload.py)) and waits until Central has validated it. Only then
+   it tags `vX.Y.Z`, commits the next development version and pushes both commits and the tag to `main` in one atomic
+   push (as `github-actions[bot]`), and creates a draft GitHub release whose notes list the issues closed (as
+   completed) since the previous release. It fails without uploading if `main` moved after the start.
+3. Publish the validated deployment on central.sonatype.com (Publish → Deployments → Publish), or drop it. Then edit
+   the draft release notes on GitHub (a sentence per user-visible change; drop issues that are not changes) and
+   publish them. After a drop, delete the tag and the draft release, or release the next version.
 
 ### Release by hand (fallback)
 

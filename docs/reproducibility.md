@@ -8,10 +8,10 @@ machine and JDK.
 
 | Thesis | Measures | In this repository |
 |---|---|---|
-| Ch. 2, synthetic 2D tests (CEC 2015) | insertion of N points from synthetic 2D sets | the 2D population; the synthetic generators are not (roadmap F1) |
-| Ch. 2, NSGA-II experiments | steady-state / generational NSGA-II with the 2D population | no: NSGA-II experiments live in a separate repository (roadmap F3) |
+| Ch. 2, synthetic 2D tests (CEC 2015) | insertion of N points from synthetic 2D sets | the 2D population; the synthetic generators are not ([#13](https://github.com/yakupov/YB18-inds-framework/issues/13)) |
+| Ch. 2, NSGA-II experiments | steady-state / generational NSGA-II with the 2D population | no: NSGA-II experiments live in a separate repository ([#14](https://github.com/yakupov/YB18-inds-framework/issues/14)) |
 | **Ch. 3, Figures 21–24** | single-point insertion into NSGA-II populations of 10 000 points, generations 0, 10, …, 90 | **yes**: `InsertionBenchmark` / `TwoDimInsertionBenchmark` on `snapshots/generational/` |
-| Ch. 4, Figures 26 and later | wall-clock time of asynchronous NSGA-II runs | no: NSGA-II experiments (roadmap F3). `ConcurrentInsertionBenchmark` measures concurrent insertion on its own, with the 2018 benchmark data (`sequences/`) |
+| Ch. 4, Figures 26 and later | wall-clock time of asynchronous NSGA-II runs | no: NSGA-II experiments ([#14](https://github.com/yakupov/YB18-inds-framework/issues/14)). `ConcurrentInsertionBenchmark` measures concurrent insertion on its own, with the 2018 benchmark data (`sequences/`) |
 
 ## Thesis Chapter 3 (Figures 21–24)
 
@@ -45,11 +45,14 @@ Re-running the figures here differs from the original measurements in two ways:
   (`ENLU`) does the same, so Level against ENLU is a like-for-like comparison here, but not the one of the figures
   ([changes-from-cited-code.md](changes-from-cited-code.md#structure)). The 2D population is the measured code
   itself.
-- **Compiled vs. interpreted code.** The original harness measured the ENLU sorter and Level as interpreted code and
-  the 2D treap as compiled code ([changes-from-cited-code.md](changes-from-cited-code.md#benchmarks-measure-compiled-code));
-  this library measures every algorithm compiled. The microsecond-scale orderings of the figures (2D fastest for two
-  objectives, Level against ENLU) are therefore not expected to reproduce; the millisecond-scale DC, DC1 and DC2 are
-  much less affected.
+- **Compiled vs. interpreted code.** The original harness (nds2016 `PPSN2016Test`) rebuilt the structures of all
+  algorithms for all ten generations before every measured insertion (about 0.5 s), so a fork ran the measured insertion
+  only 40–70 times, below the JIT compiler's threshold: the ENLU sorter and Level were measured as interpreted code
+  (only Level's inner dominance loop got compiled), the 2D treap as compiled code, because the setup itself inserts its
+  points (observed with `-XX:+PrintCompilation`). This library's benchmarks rebuild only the measured structure and
+  average thousands of insertions per iteration, so every algorithm is measured compiled. The microsecond-scale
+  orderings of the figures (2D fastest for two objectives, Level against ENLU) are therefore not expected to reproduce;
+  the millisecond-scale DC, DC1 and DC2 are much less affected.
 
 ### Example
 

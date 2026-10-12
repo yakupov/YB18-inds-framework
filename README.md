@@ -1,6 +1,7 @@
 # YB18 INDS framework
 
 [![CI](https://github.com/yakupov/YB18-inds-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/yakupov/YB18-inds-framework/actions/workflows/ci.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.yakupov/inds-core)](https://central.sonatype.com/artifact/io.github.yakupov/inds-core)
 
 Incremental and asynchronous non-dominated sorting (INDS) for steady-state evolutionary multi-objective optimization:
 the algorithms of the thesis *Efficient Incremental and Asynchronous Non-Dominated Sorting for Evolutionary
@@ -56,7 +57,7 @@ remove the worst point. How they work: [architecture](docs/architecture.md).
 <dependency>
     <groupId>io.github.yakupov</groupId>
     <artifactId>inds-core</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 </dependency>
 ```
 
@@ -110,15 +111,16 @@ Benchmarks, parameters, more examples and how to get comparable numbers:
 - [architecture.md](docs/architecture.md): modules, packages, API, how the populations work, data model, tests
 - [verification.md](docs/verification.md): how the library was checked against the cited code (golden master,
   oracle, stress tests, benchmarks)
-- [changes-from-cited-code.md](docs/changes-from-cited-code.md): what differs from the cited code (the fixes,
-  structure)
+- [changes-from-cited-code.md](docs/changes-from-cited-code.md): what differs from the cited code where it can
+  change results: fixes, known defects, structure
 - [inds-benchmarks/README.md](inds-benchmarks/README.md): running the benchmarks
 - [reproducibility.md](docs/reproducibility.md): how the thesis experiments map to this repository, and how to
   re-run the Chapter 3 figures
-- [roadmap.md](docs/roadmap.md): open work: known defects of the cited code, planned and possible improvements
 - [provenance.md](docs/provenance.md): the origin of every ported file
 - [golden-records.md](docs/golden-records.md): format of the golden-master records
 - [CONTRIBUTING.md](CONTRIBUTING.md): rules for changing the code
+- [Issues](https://github.com/yakupov/YB18-inds-framework/issues): open work (defects to fix, improvements, ideas);
+  [releases](https://github.com/yakupov/YB18-inds-framework/releases): what changed in each version
 
 ## NSGA-II experiments
 

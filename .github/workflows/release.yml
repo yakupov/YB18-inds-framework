@@ -5,7 +5,8 @@
 # 3. publish (environment `release`: waits for the maintainer's approval, then gets the secrets): commit "Release X.Y.Z",
 #    build and sign inds-parent, inds-core and inds-baselines, bundle them, upload the bundle to Central and wait until
 #    Central has validated it; then tag vX.Y.Z, commit the next development version, push both commits and the tag to
-#    main in one atomic push, and create a draft GitHub release.
+#    main in one atomic push, and create a draft GitHub release whose notes list the issues closed since the previous
+#    release.
 # Publishing on Central stays manual: central.sonatype.com -> Publish -> Deployments -> Publish (or Drop); then publish
 # the draft GitHub release. Steps, secrets and the manual fallback: CONTRIBUTING.md, "Releasing".
 name: Release
@@ -102,6 +103,7 @@ jobs:
     environment: release
     permissions:
       contents: write
+      issues: read
     env:
       NEXT: ${{ needs.check.outputs.next }}
       DRY_RUN: ${{ inputs.dry-run }}
@@ -123,6 +125,9 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           $MVN versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+          # the dependency snippet in the README shows the latest release
+          sed -i '/<artifactId>inds-core<\/artifactId>/{n;s|<version>[^<]*</version>|<version>'"$VERSION"'</version>|}' README.md
+          grep -q "<version>$VERSION</version>" README.md || { echo "::error::README version not updated"; exit 1; }
           git commit -q -am "Release $VERSION"
       - name: Build, sign and bundle
         env:
@@ -148,11 +153,32 @@ jobs:
           else
             git push --atomic origin HEAD:main "v$VERSION"
           fi
+      - name: Release notes from the issues closed since the previous release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          previous=$(gh release view -R "$GITHUB_REPOSITORY" --json tagName,publishedAt --jq '.tagName + " " + .publishedAt' || true)
+          read -r previous_tag previous_time <<< "$previous"
+          closed=$(gh issue list -R "$GITHUB_REPOSITORY" --state closed --limit 200 \
+            --search "reason:completed${previous_time:+ closed:>$previous_time}" \
+            --json number,title --jq '.[] | "- \(.title) (#\(.number))"')
+          {
+            echo "## Closed issues"
+            echo
+            echo "${closed:-- none}"
+            echo
+            echo "Maven Central: \`io.github.yakupov:inds-core:$VERSION\`, \`io.github.yakupov:inds-baselines:$VERSION\`."
+            if [[ -n "$previous_tag" ]]; then
+              echo
+              echo "**Full changelog**: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/$previous_tag...v$VERSION"
+            fi
+          } > target/release-notes.md
+          cat target/release-notes.md >> "$GITHUB_STEP_SUMMARY"
       - name: Draft GitHub release
         if: ${{ !inputs.dry-run }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "v$VERSION" target/central-bundle.zip --draft --verify-tag --title "$VERSION" --generate-notes
+        run: gh release create "v$VERSION" target/central-bundle.zip --draft --verify-tag --title "$VERSION" --notes-file target/release-notes.md
       - name: Summary
         run: |
           if [[ "$DRY_RUN" == true ]]; then

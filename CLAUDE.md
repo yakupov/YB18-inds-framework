@@ -17,7 +17,8 @@ baselines, benchmark data and benchmarks. Start with [README.md](README.md) and 
   code, and results must stay comparable with the thesis. A suspected defect is reported first; a fix needs the
   maintainer's approval and comes as CONTRIBUTING.md describes (a test that shows it, a commit of its own, an entry in
   [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md), golden records updated in the same commit).
-  Known defects and open work: [docs/roadmap.md](docs/roadmap.md).
+  Known defects: [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md#known-defects); open work: GitHub
+  issues (`gh issue list`).
 - **Concurrent classes** (`FineLockJfbyPopulation*`, `CasJfbyPopulation`, `CoarseLockJfbyPopulation`,
   `EnluPopulation`): not even "harmless" edits (`final`, diamonds, lambdas, collection-type swaps, annotation or comment
   changes, replacing `synchronized` / locks / atomics). Any change to them is a fix as above, checked with
@@ -33,8 +34,10 @@ baselines, benchmark data and benchmarks. Start with [README.md](README.md) and 
 
 Run `mvn verify` after every change (legacy unit, golden-master, oracle and short stress tests; the authoritative
 check), and `mvn verify -Pstress` after touching a concurrent class. Review the diff as CONTRIBUTING.md asks. Do not
-rely on headless IntelliJ inspections (`inspect.sh` / `inspect.bat`): they can analyse before indexing has finished
-and then report a stale state or nothing. Static analysis in the build is planned ([docs/roadmap.md](docs/roadmap.md)).
+rely on headless IntelliJ inspections (`inspect.sh` / `inspect.bat`): they can analyse before indexing has finished and
+then report a stale state or nothing. Static analysis in the build is planned
+([#9](https://github.com/yakupov/YB18-inds-framework/issues/9),
+[#10](https://github.com/yakupov/YB18-inds-framework/issues/10)).
 
 ## Performance work
 

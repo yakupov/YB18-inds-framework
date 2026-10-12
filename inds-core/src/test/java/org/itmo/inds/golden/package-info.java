@@ -2,7 +2,7 @@
  * Golden-master tests: the ported algorithms must reproduce, bit for bit, what the legacy code returned and exposed on
  * fixed inputs. A recorder ran the legacy builds once; their records ("golden records") are test resources of this
  * package. The tests run the same operations on the ported classes, write records in the same format and compare
- * them line by line, legacy defects included (known defects: {@code docs/roadmap.md}). The records are outputs of
+ * them line by line, legacy defects included (known defects: {@code docs/changes-from-cited-code.md}). The records are outputs of
  * deterministic single-threaded operations, not timings, so they do not depend on the machine. Human-readable
  * specification of the files and their content: {@code docs/golden-records.md}.
  *

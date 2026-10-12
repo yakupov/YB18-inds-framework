@@ -14,7 +14,8 @@ Every ported class entered the repository in two steps, each a commit of its own
    renames on the result gives the copied files back byte for byte.
 
 Algorithm internals were not reformatted, re-indented or otherwise edited; the only other edit of a ported class is
-cosmetic (`FitnessAndCdIndividual`, [changes-from-cited-code.md](changes-from-cited-code.md#structure)). The three
+cosmetic: `FitnessAndCdIndividual` lost an import of its own package, and `equals` declares its cast local as
+`final var`. The three
 concurrency fixes came later, one commit each; the stress tests that found them run in `mvn verify`. Small fixes of
 the 2D population followed, each in a commit of its own with a test.
 
@@ -41,7 +42,7 @@ snapshots after every step with levels, members, objectives and crowding distanc
 patterns), rank queries, `clone()`, and the 2D API. The tests replay the same scenarios on the ported
 classes and compare the records line by line; record format: [golden-records.md](golden-records.md).
 
-All records are identical, including the outcomes of the [known defects](roadmap.md#known-defects-of-the-cited-code)
+All records are identical, including the outcomes of the [known defects](changes-from-cited-code.md#known-defects)
 (e.g. the exception of `clone()`). The two nds2018 refs also agree with each other on every class they share, and the
 thesis and 2019 versions of Fine give identical records single-threaded. The fixes did not change a single record:
 none of the three defects shows up single-threaded.
@@ -66,7 +67,7 @@ split can be reproduced.
 
 The same test, run on the cited builds and on 34 historical builds of nds2018, found the three defects that are now
 fixed (and when each was introduced); Coarse passes on every build. After the fixes every population passes the long run (5 populations × 4 thread counts × 10 000
-repetitions, no failure). Not covered yet: eviction during concurrent insertion ([roadmap.md](roadmap.md)).
+repetitions, no failure). Not covered yet: eviction during concurrent insertion ([#6](https://github.com/yakupov/YB18-inds-framework/issues/6)).
 
 ## 3. Performance
 
