@@ -140,7 +140,7 @@ Published to Maven Central under the group id `io.github.yakupov`: `inds-parent`
    maintainer's machine:
 
    ```bash
-   gpg --quick-add-key <FINGERPRINT> ed25519 sign 2y                 # signing subkey, 2 years
+   gpg --quick-add-key <FINGERPRINT> rsa4096 sign 2y                 # signing subkey, 2 years
    gpg --keyserver keyserver.ubuntu.com --send-keys <FINGERPRINT>   # publish the key with the new subkey
    gpg --armor --export-secret-subkeys <SUBKEY_ID>!                 # only that subkey (note the "!")
    ```
