@@ -19,13 +19,13 @@ Each fix is a commit of its own with a test that failed before it. The golden-ma
 | Level, Coarse, Fine | `clone()` threw (Level, Coarse) or returned a copy sharing the level list with the original (Fine; inserting into it could hang) | copy the levels into a list of the copy's own; Coarse returns a Coarse | [#2](https://github.com/yakupov/YB18-inds-framework/issues/2) |
 | Level, Coarse, Fine, CAS, ENLU | members of a level sharing one objective value got crowding distance NaN (never evicted, broke comparisons) | an objective without range adds 0, as in 2D | [#17](https://github.com/yakupov/YB18-inds-framework/issues/17) |
 | CAS | `size()` counted insertions, not members, once eviction started | decrement it on eviction | [#18](https://github.com/yakupov/YB18-inds-framework/issues/18) |
+| CAS | `clone()` threw a `NullPointerException` if another thread removed the last level meanwhile | skip the reference of a level being removed, as `getSnapshot()` does | [#19](https://github.com/yakupov/YB18-inds-framework/issues/19) |
 
 ## Known defects
 
 | Where | Defect | Issue |
 |---|---|---|
 | CAS | retry loops swallow index errors (endless retry); a removed last level is waited for by spinning | [#3](https://github.com/yakupov/YB18-inds-framework/issues/3) |
-| CAS | `clone()` throws a `NullPointerException` if another thread removes the last level meanwhile | [#19](https://github.com/yakupov/YB18-inds-framework/issues/19) |
 | CAS | the logical clock (`AtomicLong`) has no overflow handling | none: 2⁶³ ticks are out of reach |
 | Fine, CAS | `getSnapshot()` is not linearizable: during insertions, moving points can be missing and `size()` can disagree with the snapshot | none: inherent in the design ([architecture.md](architecture.md)) |
 

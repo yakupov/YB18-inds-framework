@@ -429,7 +429,10 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
     public CasJfbyPopulation<T> clone() {
         final CopyOnWriteArrayList<AtomicReference<JfbyNonDominationLevel<T>>> list = new CopyOnWriteArrayList<>();
         for (AtomicReference<LevelRef> levelRef : nonDominationLevels) {
-            list.add(new AtomicReference<>(levelRef.get().level.copy()));
+            final LevelRef ref = levelRef.get();
+            if (ref != null) { //the level is being removed
+                list.add(new AtomicReference<>(ref.level.copy()));
+            }
         }
         return new CasJfbyPopulation<>(list, expectedPopulationSize, useOneByOneSorting);
     }
