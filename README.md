@@ -10,8 +10,7 @@ benchmarks, as one buildable, MIT-licensed Java 17 library.
 
 The algorithm code is the code the thesis and the papers cite, consolidated from the original research repositories
 (2015–2020) with new package and class names, and verified to behave and perform the same
-([verification](docs/verification.md)). Three concurrency defects of the cited code and small defects of the 2D
-population are fixed ([changes](docs/changes-from-cited-code.md)).
+([verification](docs/verification.md)), apart from fixed defects ([changes](docs/changes-from-cited-code.md)).
 
 ## Algorithms
 
@@ -82,10 +81,10 @@ int rank = population.addIndividual(new FitnessAndCdIndividual<>(objectives, pay
 PopulationSnapshot<MyPayload> snapshot = population.getSnapshot();             // levels, members, crowding distances
 ```
 
-All objectives are minimized. `addIndividual` keeps the population at its expected size: once it is exceeded, the
-member of the last level with the worst crowding distance is evicted (Fine: in batches above 1.2 × the expected
-size). `getSnapshot()` only reads. For concurrent insertion use `FineLockJfbyPopulation`, `CasJfbyPopulation` or
-`CoarseLockJfbyPopulation`; in the thesis experiments Fine was the fastest for practical thread counts.
+All objectives are minimized; `addIndividual` evicts the worst points above the expected size
+([architecture](docs/architecture.md#population-api)). For concurrent insertion use `FineLockJfbyPopulation`,
+`CasJfbyPopulation` or `CoarseLockJfbyPopulation`; in the thesis experiments Fine was the fastest for practical thread
+counts.
 
 ### Load a data set
 
@@ -110,7 +109,7 @@ Benchmarks, parameters, more examples and how to get comparable numbers:
 
 - [architecture.md](docs/architecture.md): modules, packages, API, how the populations work, data model, tests
 - [verification.md](docs/verification.md): how the library was checked against the cited code (golden master,
-  oracle, stress tests, benchmarks)
+  oracle, reference model, stress tests, benchmarks)
 - [changes-from-cited-code.md](docs/changes-from-cited-code.md): what differs from the cited code where it can
   change results: fixes, known defects, structure
 - [inds-benchmarks/README.md](inds-benchmarks/README.md): running the benchmarks
@@ -130,19 +129,15 @@ will live in a separate repository that uses this library. Until then, see
 
 ## Origins
 
-The original repositories are cited by the thesis and the papers and stay unchanged; this library copies from them
-([provenance](docs/provenance.md)).
-
-| Repository | Cited for | Contributes |
-|---|---|---|
-| [nds2018](https://github.com/yakupov/nds2018) | thesis Ch. 4 (`r2018.9.1-cd1`) | API, sorters, populations (from `r2019.2`); CAS and the thesis version of Fine (from `r2018.9.1-cd1`); ENLU population |
-| [nds2016](https://github.com/yakupov/nds2016) | thesis Ch. 3 | 2D population, data-set model |
-| [nds2018benchmarks](https://github.com/yakupov/nds2018benchmarks), [nds2018Cbenchmarks](https://github.com/yakupov/nds2018Cbenchmarks) | — | benchmarks and data sets |
-| [ssNSGAII2018](https://github.com/yakupov/ssNSGAII2018) | thesis Ch. 4 (`r2018.9.1`) | — (NSGA-II experiments) |
-| [mbuzdalov/papers: 2015-gecco-nsga-ii-ss](https://github.com/mbuzdalov/papers/tree/master/2015-gecco-nsga-ii-ss) | thesis Ch. 2 | — (M. Buzdalov's repository) |
-
-M. Buzdalov's [non-dominated-sorting](https://github.com/mbuzdalov/non-dominated-sorting) library (MIT) serves as
-the independent oracle in the tests.
+The code comes from the repositories the thesis and the papers cite, which stay unchanged:
+[nds2018](https://github.com/yakupov/nds2018) (Ch. 4), [nds2016](https://github.com/yakupov/nds2016) (Ch. 3),
+[nds2018benchmarks](https://github.com/yakupov/nds2018benchmarks) and
+[nds2018Cbenchmarks](https://github.com/yakupov/nds2018Cbenchmarks); origin of every file:
+[provenance](docs/provenance.md). Also cited, not used here: [ssNSGAII2018](https://github.com/yakupov/ssNSGAII2018)
+(Ch. 4 NSGA-II) and M. Buzdalov's
+[2015-gecco-nsga-ii-ss](https://github.com/mbuzdalov/papers/tree/master/2015-gecco-nsga-ii-ss) (Ch. 2). His
+[non-dominated-sorting](https://github.com/mbuzdalov/non-dominated-sorting) library (MIT) is the independent oracle in
+the tests.
 
 ## Publications
 
