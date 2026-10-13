@@ -18,6 +18,7 @@ java -jar inds-benchmarks/target/benchmarks.jar -lp  # ... with their parameters
 |---|---|---|
 | `InsertionBenchmark` | one insertion into a population snapshot | `algorithm`: `DC`, `DC1`, `DC2`, `LEVEL`, `ENLU` (population); `snapshot`: `path#id` |
 | `TwoDimInsertionBenchmark` | one insertion into the 2D population | `snapshot`: `path#id` of a two-objective data set |
+| `TwoDimSequenceBenchmark` | inserting all N points of a synthetic 2D problem (thesis Chapter 2) one by one into an empty population | `algorithm`: `TWO_DIM`, `ENLU`; `problem`: `SQUARE`, `PARALLEL`, `DIAG1`, `DIAG2`, `PARPER`; `size`: N (250 … 4000) |
 | `ConcurrentInsertionBenchmark` | inserting a sequence of 1 001 points into a population of 5 000 with several threads | `algorithm`: `LEVEL` (one thread), `COARSE`, `FINE`, `FINE_RANK_HINT`, `CAS`, `CAS_ONE_BY_ONE`; `sequence`: path; `threads` |
 
 A **snapshot** is named by its file path and snapshot id, `path#id`: the path under `org/itmo/inds/data/` of

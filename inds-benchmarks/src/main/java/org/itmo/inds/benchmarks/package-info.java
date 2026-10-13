@@ -11,6 +11,10 @@
  * <tr><td>{@link org.itmo.inds.benchmarks.TwoDimInsertionBenchmark}</td>
  *     <td>one insertion into the 2D population</td>
  *     <td>{@code snapshot} (two objectives)</td></tr>
+ * <tr><td>{@link org.itmo.inds.benchmarks.TwoDimSequenceBenchmark}</td>
+ *     <td>inserting all points of a synthetic problem into an empty population (thesis Chapter 2)</td>
+ *     <td>{@code algorithm} ({@link org.itmo.inds.benchmarks.TwoDimSequenceAlgorithm}: 2D, ENLU), {@code problem}
+ *         ({@link org.itmo.inds.testdata.SyntheticProblem}), {@code size}</td></tr>
  * <tr><td>{@link org.itmo.inds.benchmarks.ConcurrentInsertionBenchmark}</td>
  *     <td>inserting a sequence of points with several threads (thesis Chapter 4)</td>
  *     <td>{@code algorithm} ({@link org.itmo.inds.benchmarks.ConcurrentAlgorithm}: Level, Coarse, Fine, Fine with
@@ -20,7 +24,7 @@
  * <p>Populations are built from the true non-domination fronts of the data ({@link
  * org.itmo.inds.benchmarks.BenchmarkInput}), outside the measured time; populations that an insertion changes are
  * rebuilt before every measured invocation. Settings: average time in microseconds, 12 warm-up and 4 measurement
- * iterations of 1 s, 3 forks.
+ * iterations of 1 s, 3 forks (the Chapter 2 benchmark: 5 and 5 iterations, 2 forks).
  *
  * <p>The concurrent driver ({@link org.itmo.inds.benchmarks.ConcurrentInsertionDriver},
  * {@link org.itmo.inds.benchmarks.ConcurrentInsertionData}) is the driver of the cited benchmarks (nds2018Cbenchmarks)
