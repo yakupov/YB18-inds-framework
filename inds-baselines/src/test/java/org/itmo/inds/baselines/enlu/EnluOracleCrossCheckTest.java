@@ -24,4 +24,15 @@ class EnluOracleCrossCheckTest {
         assertEquals(Optional.empty(),
                 PopulationOracle.check(() -> new EnluPopulation<>(Long.MAX_VALUE), inputCase.points()));
     }
+
+    static Stream<OracleInputs.Case> cloneCases() {
+        return cases().filter(inputCase -> inputCase.points().length >= 3);
+    }
+
+    @ParameterizedTest(name = "EnluPopulation {0}")
+    @MethodSource("cloneCases")
+    void cloneAndOriginalEvolveIndependently(final OracleInputs.Case inputCase) {
+        assertEquals(Optional.empty(),
+                PopulationOracle.checkClone(() -> new EnluPopulation<>(Long.MAX_VALUE), inputCase.points()));
+    }
 }

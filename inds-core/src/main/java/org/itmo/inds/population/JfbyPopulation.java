@@ -58,6 +58,21 @@ public class JfbyPopulation<T> implements ManagedPopulation<T> {
         }
     }
 
+    /**
+     * A copy of {@code original}: copies of its levels, the same sorter and expected size.
+     */
+    JfbyPopulation(@Nonnull final JfbyPopulation<T> original) {
+        this(copies(original.nonDominationLevels), original.sorter, original.expectedPopSize);
+    }
+
+    private static <T> List<JfbyNonDominationLevel<T>> copies(@Nonnull final List<JfbyNonDominationLevel<T>> levels) {
+        final List<JfbyNonDominationLevel<T>> copies = new ArrayList<>(levels.size());
+        for (JfbyNonDominationLevel<T> level : levels) {
+            copies.add(level.copy());
+        }
+        return copies;
+    }
+
     @Override
     @Nonnull
     public PopulationSnapshot<T> getSnapshot() {
@@ -155,11 +170,7 @@ public class JfbyPopulation<T> implements ManagedPopulation<T> {
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     @Override
     public JfbyPopulation<T> clone() {
-        final JfbyPopulation<T> copy = new JfbyPopulation<>(nonDominationLevels, sorter, expectedPopSize);
-        for (NonDominationLevel<T> level : nonDominationLevels) {
-            copy.getSnapshot().getLevels().add(level.copy());
-        }
-        return copy;
+        return new JfbyPopulation<>(this);
     }
 
     @Override

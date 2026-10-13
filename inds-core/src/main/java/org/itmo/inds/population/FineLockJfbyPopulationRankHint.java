@@ -302,15 +302,16 @@ public class FineLockJfbyPopulationRankHint<T> implements ManagedPopulation<T> {
     }
 
     /**
-     * @return A copy of this population. All layers are also copied.
+     * @return A copy of this population. All layers are also copied. During concurrent insertions, the copy is as
+     * consistent as {@link #getSnapshot()}.
      */
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     @Override
     public FineLockJfbyPopulationRankHint<T> clone() {
-        final FineLockJfbyPopulationRankHint<T> copy = new FineLockJfbyPopulationRankHint<>(sorter, nonDominationLevels, expectedPopSize, deletionThreshold);
-        for (NonDominationLevel<T> level : nonDominationLevels) {
-            copy.getSnapshot().getLevels().add(level.copy());
+        final List<JfbyNonDominationLevel<T>> levels = new ArrayList<>(nonDominationLevels.size());
+        for (JfbyNonDominationLevel<T> level : nonDominationLevels) {
+            levels.add(level.copy());
         }
-        return copy;
+        return new FineLockJfbyPopulationRankHint<>(sorter, new CopyOnWriteArrayList<>(levels), expectedPopSize, deletionThreshold);
     }
 }

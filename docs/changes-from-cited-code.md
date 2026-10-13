@@ -16,12 +16,12 @@ Each fix is a commit of its own with a test that failed before it. The golden-ma
 | CAS, full sortings (since October 2018; not used in the thesis experiments) | concurrent insertions: duplicated points, hangs, exceptions | pass only the remaining addends to the level update, as before October 2018 | [`6582de9`](https://github.com/yakupov/YB18-inds-framework/commit/6582de9) |
 | 2D | rank queries threw while the population had one level | accept rank 0 | [`6f44d41`](https://github.com/yakupov/YB18-inds-framework/commit/6f44d41) |
 | Level, Coarse | an insertion that pushes a whole level down was not counted and skipped eviction: `size()` too small, the population above its expected size, `toRankedPopulation()` threw | count it and check eviction like any insertion | [#1](https://github.com/yakupov/YB18-inds-framework/issues/1) |
+| Level, Coarse, Fine | `clone()` threw (Level, Coarse) or returned a copy sharing the level list with the original (Fine; inserting into it could hang) | copy the levels into a list of the copy's own; Coarse returns a Coarse | [#2](https://github.com/yakupov/YB18-inds-framework/issues/2) |
 
 ## Known defects
 
 | Where | Defect | Issue |
 |---|---|---|
-| Level, Coarse, Fine | `clone()` throws (Level, Coarse) or returns a copy that shares state with the original (Fine) | [#2](https://github.com/yakupov/YB18-inds-framework/issues/2) |
 | Level, Coarse, Fine, CAS, ENLU | the inner members of a level whose members share one objective value get a NaN crowding distance | [#17](https://github.com/yakupov/YB18-inds-framework/issues/17) |
 | CAS | `size()` counts insertions, not members, once eviction starts | [#18](https://github.com/yakupov/YB18-inds-framework/issues/18) |
 | CAS | retry loops swallow index errors (endless retry); a removed last level is waited for by spinning | [#3](https://github.com/yakupov/YB18-inds-framework/issues/3) |

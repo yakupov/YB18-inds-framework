@@ -1,3 +1,4 @@
 # Golden blocks changed by deliberate fixes (docs/golden-records.md, "Changing the records").
 # <issue> <block labels> <input sets, or * for all>
 1 Level,Level-clone,Coarse,Coarse-clone U-k2-n10,U-k2-n100,U-k2-n1000,U-k3-n1000,U-k3-n10000,G-k2-n100,G-k2-n1000,G-k3-n100,G-k3-n1000,E-k2-chainWorstFirst,E-k3-chainWorstFirst
+2 Level-clone,Coarse-clone,Fine-clone *

@@ -140,4 +140,15 @@ class OracleCrossCheckTest {
     void populationMatchesOracle(final PopulationUnderTest population, final OracleInputs.Case inputCase) {
         assertEquals(Optional.empty(), PopulationOracle.check(population.factory(), inputCase.points()));
     }
+
+    static Stream<Arguments> cloneCases() {
+        return populationCases().filter(arguments -> ((OracleInputs.Case) arguments.get()[1]).points().length >= 3);
+    }
+
+    @ParameterizedTest(name = "{0} {1}")
+    @MethodSource("cloneCases")
+    void cloneAndOriginalEvolveIndependently(final PopulationUnderTest population,
+                                             final OracleInputs.Case inputCase) {
+        assertEquals(Optional.empty(), PopulationOracle.checkClone(population.factory(), inputCase.points()));
+    }
 }

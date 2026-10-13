@@ -29,6 +29,10 @@ public class CoarseLockJfbyPopulation<T> extends JfbyPopulation<T> {
         super(nonDominationLevels, sorter, expectedPopSize);
     }
 
+    private CoarseLockJfbyPopulation(@Nonnull CoarseLockJfbyPopulation<T> original) {
+        super(original);
+    }
+
     @Nonnull
     @Override
     public synchronized PopulationSnapshot<T> getSnapshot() {
@@ -57,9 +61,10 @@ public class CoarseLockJfbyPopulation<T> extends JfbyPopulation<T> {
         return super.addIndividual(addend);
     }
 
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     @Override
-    public synchronized JfbyPopulation<T> clone() {
-        return super.clone();
+    public synchronized CoarseLockJfbyPopulation<T> clone() {
+        return new CoarseLockJfbyPopulation<>(this);
     }
 
     @Override
