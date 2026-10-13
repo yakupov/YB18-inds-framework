@@ -29,8 +29,10 @@ the fixes, one commit each, and a cosmetic edit of `FitnessAndCdIndividual` (an 
   and into the model; ranks, evictions, levels, crowding distances (bit for bit) and sizes must agree.
 - **Stress.** 2, 6, 12 and 24 threads insert disjoint parts of a shuffled point set; 100 repetitions per case in
   `mvn verify`, 10 000 with `-Pstress` (about 15 minutes). Run on the cited builds, it found the three concurrency
-  defects that are now fixed. Not covered yet: eviction during concurrent insertion
-  ([#6](https://github.com/yakupov/YB18-inds-framework/issues/6)).
+  defects that are now fixed. A second scenario inserts concurrently into populations with expected sizes 5 and 50
+  (20 repetitions per case, 1 000 with `-Pstress`) and checks only what holds in every interleaving: no hang or
+  exception, remaining points are inserted ones and present once, non-dominated levels, consistent size, size within
+  the expected-size bounds. Crowding distances of the evicted points and exact ranks are not checked there.
 
 ## 3. Performance
 

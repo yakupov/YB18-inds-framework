@@ -54,6 +54,7 @@
                         <configuration>
                             <systemPropertyVariables>
                                 <inds.stress.repetitions>10000</inds.stress.repetitions>
+                                <inds.stress.evictionRepetitions>1000</inds.stress.evictionRepetitions>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>

@@ -11,6 +11,7 @@ import java.util.List;
 class EnluConcurrentInsertionStressTest extends AbstractConcurrentInsertionStressTest {
     @Override
     protected List<PopulationUnderTest> populations() {
-        return List.of(new PopulationUnderTest("ENLU", () -> new EnluPopulation<>(Long.MAX_VALUE)));
+        return List.of(new PopulationUnderTest("ENLU", () -> new EnluPopulation<>(Long.MAX_VALUE),
+                EnluPopulation::new, 1, true));
     }
 }
