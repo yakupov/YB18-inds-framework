@@ -62,7 +62,7 @@ objectives, so thesis-era timings of CAS and Fine may be slightly slower than th
 
 `FrontStorage`, `RunConfiguration`, `Generation`, `DoublesGeneration`, `Front`, `DoublesAdditionProblem`: nds2016
 `NDSUtils/src/main/java/ru/itmo/nds/front_storage/` (same names; their field names are the JSON format of the data
-sets). `DataSets`, `FrontsAndAddends` and `LocalDateTimeAdapter` are new.
+sets). `DataSets` and `FrontsAndAddends` are new.
 
 ## Tests
 

@@ -220,15 +220,17 @@ class DataSetsTest {
     }
 
     /**
-     * Why {@link DataSets} exists: the legacy {@link FrontStorage#deserialize} uses a plain Gson, which cannot reflect
-     * into {@code java.time.LocalDateTime} on JDK 17 (without {@code --add-opens java.base/java.time}).
+     * The legacy {@link FrontStorage#deserialize} uses a plain Gson; it must read the stored {@code LocalDateTime}
+     * timestamp on JDK 17 without {@code --add-opens java.base/java.time} (Gson before 2.14 could not).
      */
     @Test
-    void legacyDeserializeNeedsAddOpensOnJdk17() throws Exception {
+    void legacyDeserializeReadsTimestampOnJdk17() throws Exception {
         final String path = DataSets.ROOT + "snapshots/constant/twoLines_dim3_gen10000.json";
         try (final InputStream stream = DataSets.class.getResourceAsStream(path)) {
             assertNotNull(stream);
-            assertThrows(RuntimeException.class, () -> new FrontStorage().deserialize(stream));
+            final FrontStorage storage = new FrontStorage();
+            storage.deserialize(stream);
+            assertNotNull(storage.getRunConfigurations().iterator().next().getTimestamp());
         }
     }
 }

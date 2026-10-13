@@ -70,8 +70,7 @@ mvn -pl inds-core,inds-baselines verify -Pstress   # long concurrency stress run
   `inds-core/src/test/resources/org/itmo/inds/golden/` (large data); listing names and sizes is fine.
 - The field names of the data model classes (`FrontStorage`, `RunConfiguration`, `Generation` / `DoublesGeneration`,
   `Front`, `DoublesAdditionProblem`) are the JSON format of the data sets: renaming one breaks loading unless
-  `@SerializedName` keeps the old name. Gson cannot reflect into `java.time` on JDK 17; `DataSets` registers
-  `LocalDateTimeAdapter`.
+  `@SerializedName` keeps the old name.
 - Golden records are outputs of the cited code and never change; a deliberate behaviour change lists its blocks in
   `golden-divergences.txt` ([docs/golden-records.md](docs/golden-records.md)).
 - Shared test infrastructure lives in `inds-core`'s test sources and reaches the other modules through its test-jar:

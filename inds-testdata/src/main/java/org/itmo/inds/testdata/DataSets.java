@@ -1,7 +1,6 @@
 package org.itmo.inds.testdata;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
@@ -12,7 +11,6 @@ import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -50,9 +48,7 @@ import java.util.TreeMap;
  * model: copy them before handing them to code that modifies its input.
  *
  * <p>The legacy model is available too ({@link #frontStorage}, {@link #additionProblem}): {@link FrontStorage} for
- * snapshot files, {@link DoublesAdditionProblem} for sequence files. Its classes are unchanged from the original code;
- * this class only adds the {@link LocalDateTimeAdapter} that JDK 17 needs to read the files
- * ({@link FrontStorage#deserialize} uses a plain {@code Gson} and fails there on the {@code timestamp} field).
+ * snapshot files, {@link DoublesAdditionProblem} for sequence files. Its classes are unchanged from the original code.
  */
 public final class DataSets {
     /**
@@ -136,10 +132,10 @@ public final class DataSets {
     // ---------------------------------------------------------------- legacy model
 
     /**
-     * Gson for the data model: default settings plus {@link LocalDateTimeAdapter}.
+     * Gson for the data model: default settings.
      */
     public static Gson gson() {
-        return new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()).create();
+        return new Gson();
     }
 
     /**
