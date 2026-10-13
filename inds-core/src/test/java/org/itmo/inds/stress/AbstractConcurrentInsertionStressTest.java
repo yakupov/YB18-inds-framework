@@ -59,25 +59,12 @@ public abstract class AbstractConcurrentInsertionStressTest {
     private static final int MAX_REPORTED_FAILURES = 10;
 
     /**
-     * How {@code size()} of a population and of its snapshot must relate to the number of distinct inserted points.
-     */
-    public enum SizeCheck {
-        EXACT,
-        /**
-         * At most equal: for populations that miss some insertions in their size count (Level and Coarse do not count
-         * a point whose insertion pushes a whole level down, a known defect).
-         */
-        AT_MOST
-    }
-
-    /**
      * A population under test.
      *
-     * @param name      name in test reports and in {@code -Dinds.stress.populations}
-     * @param factory   creates an empty population with unlimited expected size
-     * @param sizeCheck the required size bookkeeping
+     * @param name    name in test reports and in {@code -Dinds.stress.populations}
+     * @param factory creates an empty population with unlimited expected size
      */
-    public record PopulationUnderTest(String name, Supplier<ManagedPopulation<Integer>> factory, SizeCheck sizeCheck) {
+    public record PopulationUnderTest(String name, Supplier<ManagedPopulation<Integer>> factory) {
         @Override
         @Nonnull
         public String toString() {
@@ -206,7 +193,7 @@ public abstract class AbstractConcurrentInsertionStressTest {
             return workerFailure.map(failure -> new Failure(failure.kind(), failure.description() + " (k = "
                     + points[0].length + ", " + population.getSnapshot().getLevels().size() + " levels)"));
         }
-        return invariantViolation(population, points, populationUnderTest.sizeCheck())
+        return invariantViolation(population, points)
                 .map(description -> new Failure(FailureKind.INVARIANT, description));
     }
 
@@ -258,12 +245,12 @@ public abstract class AbstractConcurrentInsertionStressTest {
      * @return a description of the first violated invariant of the final state, or empty
      */
     private static Optional<String> invariantViolation(final ManagedPopulation<Integer> population,
-                                                       final double[][] points, final SizeCheck sizeCheck) {
+                                                       final double[][] points) {
         final PopulationInvariants invariants = new PopulationInvariants(points, Oracle.ranks(points));
         final PopulationSnapshot<Integer> snapshot = population.getSnapshot();
         return invariants.levelsViolation(snapshot.getLevels())
                 .or(() -> dominatedMemberViolation(snapshot.getLevels()))
-                .or(() -> sizeViolation(population.size(), snapshot.getSize(), invariants.distinctCount(), sizeCheck));
+                .or(() -> sizeViolation(population.size(), snapshot.getSize(), invariants.distinctCount()));
     }
 
     /**
@@ -284,14 +271,11 @@ public abstract class AbstractConcurrentInsertionStressTest {
         return Optional.empty();
     }
 
-    private static Optional<String> sizeViolation(final int size, final int snapshotSize, final int distinctCount,
-                                                  final SizeCheck sizeCheck) {
-        final boolean holds = switch (sizeCheck) {
-            case EXACT -> size == distinctCount && snapshotSize == distinctCount;
-            case AT_MOST -> size <= distinctCount && snapshotSize <= distinctCount;
-        };
-        return holds ? Optional.empty() : Optional.of("size() = " + size + ", snapshot size = " + snapshotSize
-                + ", distinct points = " + distinctCount);
+    private static Optional<String> sizeViolation(final int size, final int snapshotSize, final int distinctCount) {
+        return size == distinctCount && snapshotSize == distinctCount
+                ? Optional.empty()
+                : Optional.of("size() = " + size + ", snapshot size = " + snapshotSize + ", distinct points = "
+                        + distinctCount);
     }
 
     /**

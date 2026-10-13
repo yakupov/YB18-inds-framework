@@ -15,12 +15,12 @@ Each fix is a commit of its own with a test that failed before it. The golden-ma
 | CAS, one-by-one insertion (all versions) | concurrent insertions: rarely a misranked point, about 1 in 10 000 runs | the fast path compares with a time stamp taken after publication | [`0b2076a`](https://github.com/yakupov/YB18-inds-framework/commit/0b2076a) |
 | CAS, full sortings (since October 2018; not used in the thesis experiments) | concurrent insertions: duplicated points, hangs, exceptions | pass only the remaining addends to the level update, as before October 2018 | [`6582de9`](https://github.com/yakupov/YB18-inds-framework/commit/6582de9) |
 | 2D | rank queries threw while the population had one level | accept rank 0 | [`6f44d41`](https://github.com/yakupov/YB18-inds-framework/commit/6f44d41) |
+| Level, Coarse | an insertion that pushes a whole level down was not counted and skipped eviction: `size()` too small, the population above its expected size, `toRankedPopulation()` threw | count it and check eviction like any insertion | [#1](https://github.com/yakupov/YB18-inds-framework/issues/1) |
 
 ## Known defects
 
 | Where | Defect | Issue |
 |---|---|---|
-| Level, Coarse | `size()` undercounts and eviction is skipped when an insertion pushes a whole level down | [#1](https://github.com/yakupov/YB18-inds-framework/issues/1) |
 | Level, Coarse, Fine | `clone()` throws (Level, Coarse) or returns a copy that shares state with the original (Fine) | [#2](https://github.com/yakupov/YB18-inds-framework/issues/2) |
 | Level, Coarse, Fine, CAS, ENLU | the inner members of a level whose members share one objective value get a NaN crowding distance | [#17](https://github.com/yakupov/YB18-inds-framework/issues/17) |
 | CAS | `size()` counts insertions, not members, once eviction starts | [#18](https://github.com/yakupov/YB18-inds-framework/issues/18) |

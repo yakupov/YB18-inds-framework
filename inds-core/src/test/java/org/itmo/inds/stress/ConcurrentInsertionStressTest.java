@@ -15,15 +15,10 @@ class ConcurrentInsertionStressTest extends AbstractConcurrentInsertionStressTes
     @Override
     protected List<PopulationUnderTest> populations() {
         return List.of(
-                new PopulationUnderTest("Coarse", () -> new CoarseLockJfbyPopulation<>(Long.MAX_VALUE),
-                        SizeCheck.AT_MOST),
-                new PopulationUnderTest("Fine-RankHint", () -> new FineLockJfbyPopulationRankHint<>(Long.MAX_VALUE),
-                        SizeCheck.EXACT),
-                new PopulationUnderTest("Fine-thesis", () -> new FineLockJfbyPopulation<>(Long.MAX_VALUE),
-                        SizeCheck.EXACT),
-                new PopulationUnderTest("CAS", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, false),
-                        SizeCheck.EXACT),
-                new PopulationUnderTest("CAS-oneByOne", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, true),
-                        SizeCheck.EXACT));
+                new PopulationUnderTest("Coarse", () -> new CoarseLockJfbyPopulation<>(Long.MAX_VALUE)),
+                new PopulationUnderTest("Fine-RankHint", () -> new FineLockJfbyPopulationRankHint<>(Long.MAX_VALUE)),
+                new PopulationUnderTest("Fine-thesis", () -> new FineLockJfbyPopulation<>(Long.MAX_VALUE)),
+                new PopulationUnderTest("CAS", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, false)),
+                new PopulationUnderTest("CAS-oneByOne", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, true)));
     }
 }

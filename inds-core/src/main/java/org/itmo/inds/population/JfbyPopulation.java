@@ -125,7 +125,8 @@ public class JfbyPopulation<T> implements ManagedPopulation<T> {
                 if (prevSize == addends.size()) { //Whole level was pushed
                     final JfbyNonDominationLevel<T> level = new JfbyNonDominationLevel<>(sorter, addends, prevSortedObjectives);
                     nonDominationLevels.add(i, level);
-                    return rank;
+                    addends = Collections.emptyList();
+                    break;
                 }
 
                 final JfbyNonDominationLevel<T> level = nonDominationLevels.get(i);
