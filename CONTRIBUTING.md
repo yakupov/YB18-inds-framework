@@ -14,7 +14,8 @@ Rules for changing this library, for people and coding agents alike. `CLAUDE.md`
   the known-defects table of [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md); add a test that
   shows it, then fix it in a commit of its own whose message says `Fixes #N`, and move the row to the fixes there
   (or delete it if the fix cannot change results). Golden records are never changed: the fix lists the blocks it
-  changes in `golden-divergences.txt` ([docs/golden-records.md](docs/golden-records.md#changing-the-records)).
+  changes in `golden-divergences.txt` ([docs/golden-records.md](docs/golden-records.md#changing-the-records)), and
+  changes the reference model (`ReferencePopulation`) if it changes a rule.
 - **New code**: everything else (APIs written for this repository, data loading, tests, benchmarks). The rules below
   apply to it.
 
@@ -69,8 +70,8 @@ are LF ([.gitattributes](.gitattributes)), except Windows scripts (`.cmd`, `.bat
 ## Tests
 
 `mvn verify` runs everything and must pass: ported legacy tests, golden-master tests (bit-identical behaviour;
-records specified in [docs/golden-records.md](docs/golden-records.md)),
-oracle cross-checks (correctness against an independent sorter), short concurrency stress tests (long runs:
+records specified in [docs/golden-records.md](docs/golden-records.md)), oracle cross-checks (correctness against an
+independent sorter), reference-model checks of the populations, short concurrency stress tests (long runs:
 `-Pstress`). New behaviour comes with tests; a fixed defect comes with a test that failed before the fix.
 [CI](.github/workflows/ci.yml) runs `mvn verify` on every push to `main` and every pull request; the long stress
 runs and the benchmarks are run by hand.

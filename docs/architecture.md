@@ -114,9 +114,9 @@ and round-robin split of the points) with new class names. Parameters and usage:
 |---|---|
 | `population`, `sorting` (inds-core), `population` (inds-baselines) | ported legacy unit tests; `LegacySorterShim` gives the nds2016 sorter tests their old `double[]` API |
 | `golden` | golden-master replay: `GoldenMasterTest` (inds-core), `EnluGoldenMasterTest` (inds-baselines); infrastructure and vocabulary in the package's `package-info`; records: `src/test/resources/org/itmo/inds/golden/`, format in [golden-records.md](golden-records.md) |
-| `oracle` | `Oracle` (the independent sorter), `OracleInputs` (seeded inputs), `PopulationInvariants` (the expected state of a population), `PopulationOracle` (insert and compare), `OracleCrossCheckTest` |
+| `oracle` | `Oracle` (the independent sorter), `OracleInputs` (seeded inputs), `ReferencePopulation` (reference model of the populations with crowding distances) and `ModelCrossCheck` (population vs. model), `PopulationInvariants` (the expected state of a population), `PopulationOracle` (insert and compare; `clone()`), `ModelCrossCheckTest`, `OracleCrossCheckTest` |
 | `stress` | `AbstractConcurrentInsertionStressTest` (harness) with one subclass per module |
-| `twod`, `baselines.enlu` | the 2D population against a simple reference model (`ReferenceTwoDimPopulation`: oracle ranks, crowding distances and eviction by definition) and the ENLU oracle cross-checks; `TwoDimTreapPopulationTest` |
+| `twod`, `baselines.enlu` | the 2D population against a simple reference model (`ReferenceTwoDimPopulation`: oracle ranks, crowding distances and eviction by definition) and ENLU against `ReferencePopulation`; `TwoDimTreapPopulationTest` |
 | `testdata` | data-set catalogue checks (`DataSetsTest`), golden inputs vs. data files, the Gson adapter |
 | `benchmarks` (inds-benchmarks) | benchmark inputs and every measured operation against the oracle |
 

@@ -7,6 +7,7 @@ import org.itmo.inds.api.NonDominationLevel;
 import org.itmo.inds.api.PopulationSnapshot;
 import org.itmo.inds.oracle.Oracle;
 import org.itmo.inds.oracle.PopulationInvariants;
+import org.itmo.inds.oracle.ReferencePopulation;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -262,7 +263,8 @@ public abstract class AbstractConcurrentInsertionStressTest {
             final List<Individual<Integer>> members = levels.get(levelIndex).getMembers();
             for (int a = 0; a < members.size(); ++a) {
                 for (int b = 0; b < members.size(); ++b) {
-                    if (a != b && dominates(members.get(a).getObjectives(), members.get(b).getObjectives())) {
+                    if (a != b && ReferencePopulation.dominates(members.get(a).getObjectives(),
+                            members.get(b).getObjectives())) {
                         return Optional.of("level " + levelIndex + " not non-dominated");
                     }
                 }
@@ -276,21 +278,5 @@ public abstract class AbstractConcurrentInsertionStressTest {
                 ? Optional.empty()
                 : Optional.of("size() = " + size + ", snapshot size = " + snapshotSize + ", distinct points = "
                         + distinctCount);
-    }
-
-    /**
-     * Pareto dominance, minimization: {@code a} is nowhere worse than {@code b} and somewhere better.
-     */
-    private static boolean dominates(final double[] a, final double[] b) {
-        boolean strict = false;
-        for (int i = 0; i < a.length; ++i) {
-            if (a[i] > b[i]) {
-                return false;
-            }
-            if (a[i] < b[i]) {
-                strict = true;
-            }
-        }
-        return strict;
     }
 }

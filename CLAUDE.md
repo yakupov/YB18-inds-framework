@@ -81,7 +81,8 @@ mvn -pl inds-core,inds-baselines verify -Pstress   # long concurrency stress run
   `golden-divergences.txt` ([docs/golden-records.md](docs/golden-records.md)).
 - Shared test infrastructure lives in `inds-core`'s test sources and reaches the other modules through its test-jar:
   golden (`GoldenCheck`, `Replays`, `Target`; vocabulary in the `org.itmo.inds.golden` package-info), oracle
-  (`OracleInputs`, `PopulationOracle`, `PopulationInvariants`, shared with the stress test), stress
+  (`OracleInputs`, `ReferencePopulation` / `ModelCrossCheck`, `PopulationOracle`, `PopulationInvariants`, shared with
+  the stress test), stress
   (`AbstractConcurrentInsertionStressTest`), 2D (`TwoDimTreapTraversal`). Same package names in the other module give
   access to package-private helpers. Tests reach the levels of `TwoDimTreapPopulation` by passing their own list to
   its `(Set, List)` constructor, not by reflection.

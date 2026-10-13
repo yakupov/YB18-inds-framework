@@ -28,8 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Oracle cross-checks of the core algorithms against M. Buzdalov's independent sorter ({@link Oracle}),
- * single-threaded, on {@link OracleInputs}: DC (full sort), DC1 / DC2 (incremental insertion), and every population.
- * Unlike the golden-master tests, these check correctness, not sameness with the cited code.
+ * single-threaded, on {@link OracleInputs}: DC (full sort), DC1 / DC2 (incremental insertion), the 2D population (the
+ * others: {@link ModelCrossCheckTest}), and {@code clone()} of every population. Unlike the golden-master tests, these
+ * check correctness, not sameness with the cited code.
  */
 class OracleCrossCheckTest {
     /**
@@ -48,23 +49,40 @@ class OracleCrossCheckTest {
         }
     }
 
+    private static final PopulationUnderTest TWO_DIM =
+            new PopulationUnderTest("2D", () -> new TwoDimTreapPopulation<>(Long.MAX_VALUE), 2);
+
     static Stream<OracleInputs.Case> cases() {
         return OracleInputs.cases().stream();
     }
 
+    /**
+     * The populations with crowding distances in more than two objectives are checked against the reference model
+     * ({@link ModelCrossCheckTest}), which covers this check.
+     */
     static Stream<Arguments> populationCases() {
-        final List<PopulationUnderTest> populations = List.of(
+        return casesOf(Stream.of(TWO_DIM));
+    }
+
+    /**
+     * @return every population of inds-core with every input case of at least three points
+     */
+    static Stream<Arguments> cloneCases() {
+        return casesOf(Stream.of(
                 new PopulationUnderTest("Level", () -> new JfbyPopulation<>(Long.MAX_VALUE)),
                 new PopulationUnderTest("Coarse", () -> new CoarseLockJfbyPopulation<>(Long.MAX_VALUE)),
                 new PopulationUnderTest("Fine", () -> new FineLockJfbyPopulation<>(Long.MAX_VALUE)),
                 new PopulationUnderTest("Fine-RankHint", () -> new FineLockJfbyPopulationRankHint<>(Long.MAX_VALUE)),
                 new PopulationUnderTest("CAS", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, false)),
                 new PopulationUnderTest("CAS-oneByOne", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, true)),
-                new PopulationUnderTest("2D", () -> new TwoDimTreapPopulation<>(Long.MAX_VALUE), 2));
-        return populations.stream()
-                .flatMap(population -> cases()
-                        .filter(inputCase -> inputCase.points()[0].length <= population.maxObjectives())
-                        .map(inputCase -> Arguments.of(population, inputCase)));
+                TWO_DIM))
+                .filter(arguments -> ((OracleInputs.Case) arguments.get()[1]).points().length >= 3);
+    }
+
+    private static Stream<Arguments> casesOf(final Stream<PopulationUnderTest> populations) {
+        return populations.flatMap(population -> cases()
+                .filter(inputCase -> inputCase.points()[0].length <= population.maxObjectives())
+                .map(inputCase -> Arguments.of(population, inputCase)));
     }
 
     /**
@@ -139,10 +157,6 @@ class OracleCrossCheckTest {
     @MethodSource("populationCases")
     void populationMatchesOracle(final PopulationUnderTest population, final OracleInputs.Case inputCase) {
         assertEquals(Optional.empty(), PopulationOracle.check(population.factory(), inputCase.points()));
-    }
-
-    static Stream<Arguments> cloneCases() {
-        return populationCases().filter(arguments -> ((OracleInputs.Case) arguments.get()[1]).points().length >= 3);
     }
 
     @ParameterizedTest(name = "{0} {1}")

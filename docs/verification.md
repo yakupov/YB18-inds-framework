@@ -16,7 +16,8 @@ the fixes, one commit each, and a cosmetic edit of `FitnessAndCdIndividual` (an 
 |---|---|---|
 | Legacy unit tests | the ported tests of the cited code pass | `*CorrectnessTest`, `*Nds2016Test` |
 | Golden master | behaviour equals the cited code bit for bit, except the blocks listed per fix in `golden-divergences.txt` | `GoldenMasterTest`, `EnluGoldenMasterTest` |
-| Oracle cross-check | ranks agree with an independent implementation | `OracleCrossCheckTest`, `TwoDimTreapPopulationOracleTest`, `EnluOracleCrossCheckTest` |
+| Oracle cross-check | ranks agree with an independent implementation | `OracleCrossCheckTest`, `TwoDimTreapPopulationOracleTest` |
+| Reference model | levels, crowding distances, eviction and sizes of the populations follow the rules in `ReferencePopulation` | `ModelCrossCheckTest`, `EnluModelCrossCheckTest` |
 | Concurrency stress | concurrent insertions leave every point once, in the level of its true rank | `ConcurrentInsertionStressTest`, `EnluConcurrentInsertionStressTest` |
 
 - **Golden master.** The cited builds were run once on 48 seeded input sets (random, synthetic, degenerate, NSGA-II
@@ -24,6 +25,8 @@ the fixes, one commit each, and a cosmetic edit of `FitnessAndCdIndividual` (an 
   line ([golden-records.md](golden-records.md)).
 - **Oracle.** M. Buzdalov's [non-dominated-sorting](https://github.com/mbuzdalov/non-dominated-sorting) library (MIT,
   test dependency only) on seeded inputs with 2–8 objectives, including duplicates, ties and dominance chains.
+- **Reference model.** The same inputs, with an unlimited and with small expected sizes, inserted into each population
+  and into the model; ranks, evictions, levels, crowding distances (bit for bit) and sizes must agree.
 - **Stress.** 2, 6, 12 and 24 threads insert disjoint parts of a shuffled point set; 100 repetitions per case in
   `mvn verify`, 10 000 with `-Pstress` (about 15 minutes). Run on the cited builds, it found the three concurrency
   defects that are now fixed. Not covered yet: eviction during concurrent insertion
