@@ -7,8 +7,9 @@ records in the same format and compare them line by line; only the blocks of del
 ([Changing the records](#changing-the-records)). The records are outputs of deterministic single-threaded
 operations, not timings, so they are valid on any machine with JDK 17 or newer.
 
-All files are gzipped UTF-8 text, test resources in `inds-core/src/test/resources/org/itmo/inds/golden/` (also in the
-inds-core test-jar). Doubles are always written exactly, as the hexadecimal bit pattern
+All files are UTF-8 text (gzipped except `golden-divergences.txt`), test resources in
+`inds-core/src/test/resources/org/itmo/inds/golden/` (also in the inds-core test-jar). Doubles are always written
+exactly, as the hexadecimal bit pattern
 `Long.toHexString(Double.doubleToRawLongBits(x))`.
 
 | File | Content |
@@ -112,6 +113,15 @@ encoded in in-order (increasing first objective), which does not depend on the r
 ## Changing the records
 
 The records describe the cited code and are never changed; the recorder that produced them is not part of this
-repository. A fix that changes behaviour lists the blocks it changes in `golden-divergences.txt`, one line per fix:
-`<issue> <block labels> <input sets or *>`. Those blocks may differ; an entry that matches no differing block fails as
-stale. The fixed behaviour itself is checked by the fix's own tests.
+repository. A fix that changes behaviour lists the blocks it changes in `golden-divergences.txt`; the fixed behaviour
+itself is checked by the fix's own tests.
+
+```
+# ...                                        comment lines, ignored
+<issue> <block labels> <input sets>          one line per fix; lists comma-separated, input sets * for all
+18 CAS,CAS-oneByOne *                        e.g.: every CAS block (not the -clone ones) may differ
+```
+
+An entry covers a block if the block's label and input set (start line) are in its lists. A block may differ from its
+record only if an entry covers it. For each target, every entry that names one of its labels must cover at least one
+differing block of that target; otherwise the test fails with "stale entry".
