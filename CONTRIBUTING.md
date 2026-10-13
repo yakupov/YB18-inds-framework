@@ -13,8 +13,8 @@ Rules for changing this library, for people and coding agents alike. `CLAUDE.md`
   and the performance unchanged (JMH before and after). A defect fix has an issue (label `known-defect`) and a row in
   the known-defects table of [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md); add a test that
   shows it, then fix it in a commit of its own whose message says `Fixes #N`, and move the row to the fixes there
-  (or delete it if the fix cannot change results). The golden-master tests fail on any behaviour change, so a fix
-  also updates or replaces the affected golden records, explained in the same commit.
+  (or delete it if the fix cannot change results). Golden records are never changed: the fix lists the blocks it
+  changes in `golden-divergences.txt` ([docs/golden-records.md](docs/golden-records.md#changing-the-records)).
 - **New code**: everything else (APIs written for this repository, data loading, tests, benchmarks). The rules below
   apply to it.
 

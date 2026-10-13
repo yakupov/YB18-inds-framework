@@ -1,0 +1,2 @@
+# Golden blocks changed by deliberate fixes (docs/golden-records.md, "Changing the records").
+# <issue> <block labels> <input sets, or * for all>

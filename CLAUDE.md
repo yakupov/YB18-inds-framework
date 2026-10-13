@@ -18,8 +18,8 @@ baselines, benchmark data and benchmarks. Start with [README.md](README.md) and 
   internals (loops, data structures, array-vs-list choices, sweep / merge logic, crowding-distance math), no
   reformatting as part of other work: it is performance-tuned research code, and results must stay comparable with
   the thesis. A suspected defect is reported first; a fix comes as CONTRIBUTING.md describes (a test that shows it, a
-  commit of its own, an entry in [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md), golden records
-  updated in the same commit).
+  commit of its own, an entry in [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md), the golden blocks
+  it changes listed in `golden-divergences.txt`; golden records are never changed).
   Known defects: [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md#known-defects); open work: GitHub
   issues (`gh issue list`).
 - **Concurrent classes** (`FineLockJfbyPopulation*`, `CasJfbyPopulation`, `CoarseLockJfbyPopulation`,
@@ -71,14 +71,14 @@ mvn -pl inds-core,inds-baselines verify -Pstress   # long concurrency stress run
 
 ## Gotchas
 
-- Never read, grep or glob into `inds-benchmark-data/**` or `inds-core/src/test/resources/org/itmo/inds/golden/**`
-  (large data); listing names and sizes is fine.
+- Never read, grep or glob into `inds-benchmark-data/**` or the `*.gz` files in
+  `inds-core/src/test/resources/org/itmo/inds/golden/` (large data); listing names and sizes is fine.
 - The field names of the data model classes (`FrontStorage`, `RunConfiguration`, `Generation` / `DoublesGeneration`,
   `Front`, `DoublesAdditionProblem`) are the JSON format of the data sets: renaming one breaks loading unless
   `@SerializedName` keeps the old name. Gson cannot reflect into `java.time` on JDK 17; `DataSets` registers
   `LocalDateTimeAdapter`.
-- Golden records are outputs of the cited code and change only with a deliberate behaviour change
-  ([docs/golden-records.md](docs/golden-records.md)).
+- Golden records are outputs of the cited code and never change; a deliberate behaviour change lists its blocks in
+  `golden-divergences.txt` ([docs/golden-records.md](docs/golden-records.md)).
 - Shared test infrastructure lives in `inds-core`'s test sources and reaches the other modules through its test-jar:
   golden (`GoldenCheck`, `Replays`, `Target`; vocabulary in the `org.itmo.inds.golden` package-info), oracle
   (`OracleInputs`, `PopulationOracle`, `PopulationInvariants`, shared with the stress test), stress

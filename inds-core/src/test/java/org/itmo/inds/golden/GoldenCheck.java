@@ -6,6 +6,8 @@ import org.junit.jupiter.api.DynamicTest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * The golden-master comparison used by the golden tests of all modules (terms: package documentation): for a
  * {@link Target}, replays every input set on the ported implementation and requires the replayed blocks to equal the
- * target's blocks in the golden file, line by line. Example from {@link GoldenMasterTest}:
+ * target's blocks in the golden file, line by line, except the blocks of deliberate fixes ({@link GoldenDivergences}).
+ * Example from {@link GoldenMasterTest}:
  * <pre>{@code
  * Stream.of(
  *         GoldenCheck.test(Target.DC1, Replays.incremental(JfbSorter::new)),
@@ -69,9 +72,11 @@ final class GoldenCheck {
     }
 
     /**
-     * Compares the replayed blocks of {@code target} with its golden blocks. Fails if the golden file has no block of
-     * the target, or listing the first differing blocks (start line, line position and record kind; golden content
-     * is not printed). Skipped (JUnit assumption) if the golden files are not on the classpath.
+     * Compares the replayed blocks of {@code target} with its golden blocks. A block may differ only if an entry of
+     * {@link GoldenDivergences} covers it (a deliberate fix), and each entry that names one of the target's block
+     * labels must cover at least one differing block of the target (otherwise it is stale). Fails if the golden file
+     * has no block of the target, or listing the first problems (start line, line position and record kind; golden
+     * content is not printed). Skipped (JUnit assumption) if the golden files are not on the classpath.
      *
      * @param target the recorded target to compare with
      * @param replay replays the target's scenarios on the ported implementation
@@ -83,11 +88,13 @@ final class GoldenCheck {
                 "golden files not on the classpath: golden-master test skipped");
         final Map<String, List<String>> expected = goldenBlocks(target);
         assertFalse(expected.isEmpty(), () -> file + " has no blocks labelled " + target.blockLabels());
-        final List<String> differences = differences(expected, replayedBlocks(target, replay));
-        if (!differences.isEmpty()) {
-            final List<String> reported = differences.stream().limit(MAX_REPORTED_DIFFERENCES).toList();
-            fail(differences.size() + " blocks differ (" + file + " has " + expected.size() + " blocks of "
-                    + target + "), first ones:\n  " + String.join("\n  ", reported));
+        final List<GoldenDivergences.Entry> divergences = GoldenDivergences.entries().stream()
+                .filter(entry -> !Collections.disjoint(entry.blockLabels(), target.blockLabels())).toList();
+        final List<String> problems = problems(expected, replayedBlocks(target, replay), divergences);
+        if (!problems.isEmpty()) {
+            final List<String> reported = problems.stream().limit(MAX_REPORTED_DIFFERENCES).toList();
+            fail(problems.size() + " problems (" + file + " has " + expected.size() + " blocks of " + target
+                    + "), first ones:\n  " + String.join("\n  ", reported));
         }
     }
 
@@ -141,20 +148,34 @@ final class GoldenCheck {
     }
 
     /**
-     * @param expected golden blocks
-     * @param actual   replayed blocks
-     * @return one line per block that is missing on either side or differs, {@code <start line>: <what differs>};
-     * golden blocks first, in file order
+     * @param expected    golden blocks
+     * @param actual      replayed blocks
+     * @param divergences the divergence entries that name block labels of the target
+     * @return one line per block that is missing on either side, or differs without a divergence entry covering it,
+     * {@code <start line>: <what differs>} (golden blocks first, in file order); then one line per stale entry
      */
-    private static List<String> differences(final Map<String, List<String>> expected,
-                                            final Map<String, List<String>> actual) {
+    private static List<String> problems(final Map<String, List<String>> expected,
+                                         final Map<String, List<String>> actual,
+                                         final List<GoldenDivergences.Entry> divergences) {
         final Set<String> startLines = new LinkedHashSet<>(expected.keySet());
         startLines.addAll(actual.keySet());
         final List<String> found = new ArrayList<>();
+        final Set<GoldenDivergences.Entry> used = new HashSet<>();
         for (final String startLine : startLines) {
-            difference(expected.get(startLine), actual.get(startLine))
-                    .ifPresent(description -> found.add(startLine + ": " + description));
+            final Optional<String> difference = difference(expected.get(startLine), actual.get(startLine));
+            if (difference.isEmpty()) {
+                continue;
+            }
+            final List<GoldenDivergences.Entry> covering = divergences.stream()
+                    .filter(entry -> entry.covers(startLine)).toList();
+            if (covering.isEmpty() || !expected.containsKey(startLine) || !actual.containsKey(startLine)) {
+                found.add(startLine + ": " + difference.get());
+            } else {
+                used.addAll(covering);
+            }
         }
+        divergences.stream().filter(entry -> !used.contains(entry)).forEach(entry -> found.add(
+                entry + " in " + GoldenDivergences.FILE + ": no block of this target differs (stale entry)"));
         return found;
     }
 

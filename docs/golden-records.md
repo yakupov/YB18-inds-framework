@@ -3,7 +3,8 @@
 The golden-master tests (`inds-core`, package `org.itmo.inds.golden`) check that the ported algorithms behave exactly
 like the code cited in the thesis. The legacy builds were run once on fixed inputs by a recorder; what they returned
 and exposed was written to the *golden records*. The tests replay the same operations on the ported classes, write
-records in the same format and compare them line by line. The records are outputs of deterministic single-threaded
+records in the same format and compare them line by line; only the blocks of deliberate fixes may differ
+([Changing the records](#changing-the-records)). The records are outputs of deterministic single-threaded
 operations, not timings, so they are valid on any machine with JDK 17 or newer.
 
 All files are gzipped UTF-8 text, test resources in `inds-core/src/test/resources/org/itmo/inds/golden/` (also in the
@@ -16,9 +17,11 @@ inds-core test-jar). Doubles are always written exactly, as the hexadecimal bit 
 | `nds2018-r2019.2.txt.gz` | records of nds2018 `r2019.2`: DC, DC1, DC2, `addRankedMembers`, Level, Coarse, Fine (2019), ENLU population |
 | `nds2018-r2018.9.1-cd1.txt.gz` | records of nds2018 `r2018.9.1-cd1` (cited in thesis Ch. 4): Fine (thesis), CAS, CAS one-by-one; also the classes it shares with `r2019.2`, with identical records |
 | `nds2016.txt.gz` | records of nds2016 `master` (cited in thesis Ch. 3): 2D treap |
+| `golden-divergences.txt` | the blocks that deliberate fixes changed ([Changing the records](#changing-the-records)) |
 
 In code: `Source` (the three builds), `InputSet` / `InputsIO` (inputs), `Scenario`, `Target`, `RecordKind`,
-`RecordBuffer` (writing), `GoldenRecords` (reading), `StateEncoder` (digests and dumps).
+`RecordBuffer` (writing), `GoldenRecords` (reading), `GoldenDivergences` (the divergence list), `StateEncoder`
+(digests and dumps).
 
 ## Inputs file
 
@@ -108,7 +111,7 @@ encoded in in-order (increasing first objective), which does not depend on the r
 
 ## Changing the records
 
-The records describe the cited code and are not regenerated. If a deliberate fix changes the behaviour of a ported
-class (`CONTRIBUTING.md`), the affected blocks change; the commit that fixes the defect also updates the records it
-changes and says which blocks and why. The recorder that produced the files ran the legacy builds; it is not part of
-this repository.
+The records describe the cited code and are never changed; the recorder that produced them is not part of this
+repository. A fix that changes behaviour lists the blocks it changes in `golden-divergences.txt`, one line per fix:
+`<issue> <block labels> <input sets or *>`. Those blocks may differ; an entry that matches no differing block fails as
+stale. The fixed behaviour itself is checked by the fix's own tests.

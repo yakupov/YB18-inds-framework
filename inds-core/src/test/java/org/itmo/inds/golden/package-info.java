@@ -2,7 +2,8 @@
  * Golden-master tests: the ported algorithms must reproduce, bit for bit, what the legacy code returned and exposed on
  * fixed inputs. A recorder ran the legacy builds once; their records ("golden records") are test resources of this
  * package. The tests run the same operations on the ported classes, write records in the same format and compare
- * them line by line, legacy defects included (known defects: {@code docs/changes-from-cited-code.md}). The records are outputs of
+ * them line by line, legacy defects included (known defects: {@code docs/changes-from-cited-code.md}), except the
+ * blocks that deliberate fixes changed ({@link org.itmo.inds.golden.GoldenDivergences}). The records are outputs of
  * deterministic single-threaded operations, not timings, so they do not depend on the machine. Human-readable
  * specification of the files and their content: {@code docs/golden-records.md}.
  *
@@ -43,6 +44,8 @@
  * E <status>                                  block end: ok | exc <class> at <step> | skipped <reason>
  * }</pre>
  *     When step records and dumps are written: {@link org.itmo.inds.golden.RecordBuffer}.</li>
+ * <li>{@code golden-divergences.txt}: the blocks that deliberate fixes changed
+ *     ({@link org.itmo.inds.golden.GoldenDivergences}).</li>
  * </ul>
  * Not recorded: random queries ({@code getRandomSolutions}), {@code toString}, multi-threaded runs (covered by the
  * stress tests).
