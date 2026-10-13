@@ -12,16 +12,12 @@ baselines, benchmark data and benchmarks. Start with [README.md](README.md) and 
   algorithm classes, origin per file in [docs/provenance.md](docs/provenance.md)) from *new code*, sets the quality,
   Javadoc, formatting and test rules for new code, and says which document holds which information ("Where
   information belongs"): keep each fact in its one place when you update docs.
-- **Ported code changes only with the maintainer's approval.** Fixes, cleanups and refactorings of ported code are
-  possible, but each one needs the maintainer's explicit approval: implement it, show the diff of the ported files and
-  ask the maintainer to verify it before committing. Nothing on the side: no member renames, no "cleanups" of
-  internals (loops, data structures, array-vs-list choices, sweep / merge logic, crowding-distance math), no
-  reformatting as part of other work: it is performance-tuned research code, and results must stay comparable with
-  the thesis. A suspected defect is reported first; a fix comes as CONTRIBUTING.md describes (a test that shows it, a
-  commit of its own, an entry in [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md), the golden blocks
-  it changes listed in `golden-divergences.txt`; golden records are never changed).
-  Known defects: [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md#known-defects); open work: GitHub
-  issues (`gh issue list`).
+- **Ported code changes only with the maintainer's approval**: implement the change, show the diff of the ported
+  files, and commit only after the maintainer has verified it. Nothing on the side: no member renames, no "cleanups"
+  of internals (loops, data structures, array-vs-list choices, sweep / merge logic, crowding-distance math), no
+  reformatting; it is performance-tuned research code whose results must stay comparable with the thesis. Report a
+  suspected defect first; fix it with the steps in CONTRIBUTING.md. Known defects:
+  [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md#known-defects); open work: `gh issue list`.
 - **Concurrent classes** (`FineLockJfbyPopulation*`, `CasJfbyPopulation`, `CoarseLockJfbyPopulation`,
   `EnluPopulation`): not even "harmless" edits (`final`, diamonds, lambdas, collection-type swaps, annotation or comment
   changes, replacing `synchronized` / locks / atomics) unless approved as above; every change to them is checked with
@@ -35,7 +31,7 @@ baselines, benchmark data and benchmarks. Start with [README.md](README.md) and 
 
 ## Checking your work
 
-Run `mvn verify` after every change (legacy unit, golden-master, oracle and short stress tests; the authoritative
+Run `mvn verify` after every change (all test layers, [docs/verification.md](docs/verification.md); the authoritative
 check), and `mvn verify -Pstress` after touching a concurrent class. Review the diff as CONTRIBUTING.md asks. Do not
 rely on headless IntelliJ inspections (`inspect.sh` / `inspect.bat`): they can analyse before indexing has finished and
 then report a stale state or nothing. Static analysis in the build is planned
@@ -44,11 +40,10 @@ then report a stale state or nothing. Static analysis in the build is planned
 
 ## Performance work
 
-Benchmark numbers are machine-specific; never compare with numbers from another machine. Before changing an algorithm,
-measure the relevant benchmarks (`inds-benchmarks`) of the unchanged code on your machine, then the changed code with
-the same setup: fixed JDK, CPU affinity pinned (e.g. to the cores of one CCX), idle machine, several forks. A
-reasonable gate: at most 5 % slower or overlapping 99.9 % confidence intervals; re-run flagged results once, and if
-the unchanged code has drifted too, compare both from the same day.
+Measure the unchanged and the changed code on the same machine with the same setup
+([inds-benchmarks/README.md](inds-benchmarks/README.md#comparable-numbers)); never compare with numbers from another
+machine. Gate: at most 5 % slower or overlapping 99.9 % confidence intervals. Re-run a flagged result once, if
+possible in the reverse order: a single run can be off by 20 % on this kind of benchmark.
 
 ## Layout
 
@@ -81,8 +76,7 @@ mvn -pl inds-core,inds-baselines verify -Pstress   # long concurrency stress run
   `golden-divergences.txt` ([docs/golden-records.md](docs/golden-records.md)).
 - Shared test infrastructure lives in `inds-core`'s test sources and reaches the other modules through its test-jar:
   golden (`GoldenCheck`, `Replays`, `Target`; vocabulary in the `org.itmo.inds.golden` package-info), oracle
-  (`OracleInputs`, `ReferencePopulation` / `ModelCrossCheck`, `PopulationOracle`, `PopulationInvariants`, shared with
-  the stress test), stress
+  (`OracleInputs`, `ReferencePopulation` / `ModelCrossCheck`, `PopulationOracle`, `PopulationInvariants`), stress
   (`AbstractConcurrentInsertionStressTest`), 2D (`TwoDimTreapTraversal`). Same package names in the other module give
   access to package-private helpers. Tests reach the levels of `TwoDimTreapPopulation` by passing their own list to
   its `(Set, List)` constructor, not by reflection.
