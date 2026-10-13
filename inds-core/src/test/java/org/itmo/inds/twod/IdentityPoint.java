@@ -9,9 +9,11 @@ import javax.annotation.Nonnull;
  * coordinates are different points to the population.
  */
 final class IdentityPoint implements Individual<Object> {
+    private final Object payload;
     private final double[] objectives;
 
-    IdentityPoint(final double... objectives) {
+    IdentityPoint(final Object payload, final double... objectives) {
+        this.payload = payload;
         this.objectives = objectives;
     }
 
@@ -28,6 +30,6 @@ final class IdentityPoint implements Individual<Object> {
 
     @Override
     public Object getPayload() {
-        return null;
+        return payload;
     }
 }

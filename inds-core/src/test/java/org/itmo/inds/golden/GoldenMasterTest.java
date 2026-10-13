@@ -64,11 +64,11 @@ class GoldenMasterTest {
         int step = 0;
         try {
             final List<TwoDimTreap<Object>> levels = new ArrayList<>();
-            final TwoDimTreapPopulation<Object> population = new TwoDimTreapPopulation<>(levels);
+            final TwoDimTreapPopulation<Object> population = new TwoDimTreapPopulation<>(levels, Long.MAX_VALUE);
             for (int i = 0; i < n; ++i) {
                 step = i + 1;
                 final double[] point = input.points()[i];
-                population.addPoint(new FitnessAndCdIndividual<>(new double[]{point[0], point[1]}, null));
+                population.addIndividual(new FitnessAndCdIndividual<>(new double[]{point[0], point[1]}, null));
                 if (RecordBuffer.recordAt(step, n)) {
                     final boolean withDump = RecordBuffer.dumpAt(step, n);
                     final StateEncoder encoder = new StateEncoder(withDump);

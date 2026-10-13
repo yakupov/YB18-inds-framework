@@ -53,9 +53,9 @@ public class TwoDimInsertionBenchmark {
 
     @Setup(Level.Invocation)
     public void reset() {
-        population = new TwoDimTreapPopulation<>();
+        population = new TwoDimTreapPopulation<>(Long.MAX_VALUE);
         for (final double[] point : input.population()) {
-            population.addPoint(new FitnessAndCdIndividual<>(point, null));
+            population.addIndividual(new FitnessAndCdIndividual<>(point, null));
         }
     }
 
@@ -64,7 +64,7 @@ public class TwoDimInsertionBenchmark {
      */
     @Benchmark
     public int insert() {
-        population.addPoint(new FitnessAndCdIndividual<>(addend, null));
+        population.addIndividual(new FitnessAndCdIndividual<>(addend, null));
         return population.size();
     }
 }

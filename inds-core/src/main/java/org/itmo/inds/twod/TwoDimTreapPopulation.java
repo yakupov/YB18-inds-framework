@@ -1,56 +1,82 @@
 package org.itmo.inds.twod;
 
+import org.itmo.inds.api.FitnessAndCdIndividual;
 import org.itmo.inds.api.Individual;
+import org.itmo.inds.api.ManagedPopulation;
+import org.itmo.inds.api.NonDominationLevel;
+import org.itmo.inds.api.PopulationSnapshot;
+import org.itmo.inds.api.RankedIndividual;
 
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.NotThreadSafe;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeSet;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Incremental non-dominated sorting by the first two objectives of the points (thesis label 2D); further objectives
- * are ignored. Points with equal first two objectives share a level and a treap node ({@link TwoDimBucket}); a point
- * equal ({@code equals}) to a point already in the population is not added again. Insertion only; not thread-safe.
+ * are ignored, also by the crowding distances. Points with equal first two objectives share a level and a treap node
+ * ({@link TwoDimBucket}); a point equal ({@code equals}) to one in the population is not added again.
+ *
+ * <p>Above the expected size, an insertion evicts the worst point as Level does: of the last level, the first point
+ * (in increasing {@code x1}) with the smallest crowding distance, or the first point if the level has fewer than three.
+ * Crowding distances are computed on demand: {@link #getRandomSolutions(int)} in O(log<sup>2</sup> N) per point,
+ * {@link #getSnapshot()} in O(N) after a change, an eviction in O(size of the last level).
  *
  * @param <T> payload type of the points
  */
-public class TwoDimTreapPopulation<T> {
-    /** Debug output of every treap of an insertion's cascade: run with {@code -DprintTreaps=Y}. */
-    private static final boolean PRINT_TREAPS = "Y".equals(System.getProperty("printTreaps"));
-
+@NotThreadSafe
+public class TwoDimTreapPopulation<T> implements ManagedPopulation<T> {
     private final List<TwoDimTreap<T>> ranks;
+    private final long expectedPopSize;
     private final Random random = new Random();
-    /** Every point of the population once, in the order of insertion: random points in O(1). */
+    /** All points, for random points in O(1). */
     private final List<Individual<T>> points = new ArrayList<>();
-    /** The bucket of every coordinate pair in the population (key and value are the same bucket). */
-    private final Map<TwoDimBucket<T>, TwoDimBucket<T>> buckets = new HashMap<>();
+    /** The index of every point in {@code points}, for removal in O(1). */
+    private final Map<Individual<T>, Integer> pointIndices = new IdentityHashMap<>();
+    private final Map<Coordinates, TwoDimBucket<T>> bucketsByCoordinates = new HashMap<>();
+    /** {@code null} after a change. */
+    private PopulationSnapshot<T> snapshot;
 
     /**
-     * @return the number of points (each point once by {@code equals})
+     * The first two objectives of a point; equal iff {@link Double#compare} finds both equal.
      */
+    private record Coordinates(double x1, double x2) {
+    }
+
+    /**
+     * @param expectedPopSize the size above which an insertion evicts the worst point ({@link Long#MAX_VALUE}: never)
+     */
+    public TwoDimTreapPopulation(long expectedPopSize) {
+        this(new ArrayList<>(), expectedPopSize);
+    }
+
+    /**
+     * @param ranks           the empty list the population keeps its levels in, for callers that observe them
+     * @param expectedPopSize the size above which an insertion evicts the worst point ({@link Long#MAX_VALUE}: never)
+     */
+    public TwoDimTreapPopulation(List<TwoDimTreap<T>> ranks, long expectedPopSize) {
+        this.ranks = ranks;
+        this.expectedPopSize = expectedPopSize;
+    }
+
+    @Override
     public int size() {
         return points.size();
     }
 
-    public TwoDimTreapPopulation() {
-        this(new ArrayList<>());
-    }
-
-    /**
-     * @param ranks the empty list the population keeps its levels in (index = rank), for callers that observe them
-     */
-    public TwoDimTreapPopulation(List<TwoDimTreap<T>> ranks) {
-        this.ranks = ranks;
-    }
-
-    protected int determineRank(TwoDimBucket<T> nInd) {
+    private int rankOf(TwoDimBucket<T> nInd) {
         int currRank = 0;
         int l = 0;
         int r = ranks.size() - 1;
         while (l <= r) {
-            int i = (l + r) / 2;
+            final int i = (l + r) / 2;
             if (ranks.get(i).dominatedBySomebody(nInd)) {
                 currRank = i + 1;
                 l = i + 1;
@@ -62,27 +88,52 @@ public class TwoDimTreapPopulation<T> {
     }
 
     /**
-     * Adds a point unless an equal ({@code equals}) point is in the population.
-     *
-     * @param point the point; at least two objectives, of which the first two are used
-     * @throws IllegalArgumentException if the point has fewer than two objectives
+     * @param point at least two objectives
+     * @return the rank the point has or would have in this population
      */
-    public void addPoint(Individual<T> point) {
-        if (point.getObjectives().length < 2) {
-            throw new IllegalArgumentException("2D population: a point needs at least 2 objectives, got "
-                    + Arrays.toString(point.getObjectives()));
-        }
-        final TwoDimBucket<T> nInd = new TwoDimBucket<>(point);
-        final TwoDimBucket<T> sameCoordinates = buckets.putIfAbsent(nInd, nInd);
+    @Override
+    public int determineRank(Individual<T> point) {
+        final double[] objectives = objectivesOf(point);
+        return rankOf(new TwoDimBucket<>(objectives[0], objectives[1]));
+    }
+
+    /**
+     * @param individual at least two objectives
+     * @return the rank of the point at its insertion, also if an equal point was there already or the point is evicted
+     * right away
+     */
+    @Override
+    public int addIndividual(@Nonnull Individual<T> individual) {
+        final double[] objectives = objectivesOf(individual);
+        final TwoDimBucket<T> nInd = new TwoDimBucket<>(individual);
+        final TwoDimBucket<T> sameCoordinates =
+                bucketsByCoordinates.putIfAbsent(new Coordinates(objectives[0], objectives[1]), nInd);
         if (sameCoordinates != null) {
-            if (sameCoordinates.add(point)) {
-                points.add(point);
+            final int rank = rankOf(sameCoordinates);
+            if (sameCoordinates.add(individual)) {
+                added(individual);
             }
-            return;
+            return rank;
         }
-        points.add(point);
-        int rank = determineRank(nInd);
-        //System.err.println(rank + "_" + nInd.toString() + "_" + ranks.size());
+        final int rank = insert(nInd);
+        added(individual);
+        return rank;
+    }
+
+    private void added(Individual<T> individual) {
+        pointIndices.put(individual, points.size());
+        points.add(individual);
+        snapshot = null;
+        if (points.size() > expectedPopSize) {
+            removeWorst();
+        }
+    }
+
+    /**
+     * The cited insertion of a bucket with new coordinates.
+     */
+    private int insert(TwoDimBucket<T> nInd) {
+        final int rank = rankOf(nInd);
         final TwoDimTreap<T> nTreap = new TwoDimTreap<>(nInd, random.nextInt(), null, null);
 
         if (rank >= ranks.size()) {
@@ -99,27 +150,16 @@ public class TwoDimTreapPopulation<T> {
                     break;
                 }
 
-                printTreap(cNext, PRINT_TREAPS);
-                printTreap(ranks.get(rank + i), PRINT_TREAPS);
-
-                TwoDimTreap.Treaps<T> t1 = ranks.get(rank + i).splitX(minP);
+                final TwoDimTreap.Treaps<T> t1 = ranks.get(rank + i).splitX(minP);
                 TwoDimTreap.Treaps<T> tr = new TwoDimTreap.Treaps<>();
                 if (t1.r != null) {
                     tr = t1.r.splitY(minP);
                 }
 
-                printTreap(t1.l, PRINT_TREAPS);
-                printTreap(t1.r, PRINT_TREAPS);
-                printTreap(tr.l, PRINT_TREAPS);
-                printTreap(tr.r, PRINT_TREAPS);
-
                 TwoDimTreap<T> res = TwoDimTreap.merge(t1.l, cNext);
-                printTreap(res, PRINT_TREAPS);
                 res = TwoDimTreap.merge(res, tr.r);
-                printTreap(res, PRINT_TREAPS);
                 ranks.set(rank + i, res);
                 cNext = tr.l;
-                printTreap(cNext, PRINT_TREAPS);
 
                 if (cNext == null) {
                     break;
@@ -128,105 +168,205 @@ public class TwoDimTreapPopulation<T> {
                 i++;
             }
         }
+        return rank;
     }
 
-    /**
-     * Local helper for print-based debugging
-     */
-    private void printTreap(TwoDimTreap<T> cNext, boolean shouldPrint) {
-        if (shouldPrint) {
-            System.err.println(cNext);
-        }
-    }
-
-    public static class IndWithRank<T> {
-        final Individual<T> ind;
-        final int rank;
-
-        public IndWithRank(Individual<T> ind, int rank) {
-            super();
-            this.ind = ind;
-            this.rank = rank;
-        }
-
-        public String toString() {
-            return "Rank = " + rank + ", value = " + ind;
-        }
-    }
-
-    public IndWithRank<T> getRandWithRank() {
-        if (points.isEmpty()) {
-            throw new RuntimeException("Can't get random individual from empty population");
-        }
-        final Individual<T> randInd = points.get(random.nextInt(points.size()));
-        return new IndWithRank<>(randInd, detRankOfExPoint(randInd));
-    }
-
-    /**
-     * @throws IllegalArgumentException if {@code ind} is {@code null} or not in the population
-     */
-    protected int detRankOfExPoint(Individual<T> ind) {
-        final TwoDimBucket<T> bucket = ind == null ? null : bucketOf(ind);
-        if (bucket == null) {
-            throw new IllegalArgumentException("Requested rank of existing point, but point is not in " +
-                    "the population " + ind);
-        }
-        return detRankOfExPoint(bucket);
-    }
-
-    /**
-     * @return the bucket that contains {@code point}, or {@code null}
-     */
-    private TwoDimBucket<T> bucketOf(Individual<T> point) {
-        if (point.getObjectives().length < 2) {
-            return null;
-        }
+    private static double[] objectivesOf(Individual<?> point) {
         final double[] objectives = point.getObjectives();
-        final TwoDimBucket<T> bucket = buckets.get(new TwoDimBucket<T>(objectives[0], objectives[1]));
-        return bucket != null && bucket.contains(point) ? bucket : null;
+        if (objectives.length < 2) {
+            throw new IllegalArgumentException("2D population: a point needs at least 2 objectives, got "
+                    + Arrays.toString(objectives));
+        }
+        return objectives;
     }
 
-    private int detRankOfExPoint(TwoDimBucket<T> ind) {
-        int r = ranks.size() - 1;
-        int l = 0;
-        int result = -1;
-        while (l != r) {
-            int curr = (l + r)/2;
-            if (r == l + 1) {
-                curr = l;
-                boolean dominated = ranks.get(curr).dominatedBySomebody(ind);
-                boolean dominates = ranks.get(curr).dominatesSomebody(ind);
-                if (!dominates && !dominated)
-                    return result < 0 ? curr : Math.min(curr, result);
+    private TwoDimBucket<T> bucketOf(Individual<T> point) {
+        final double[] objectives = point.getObjectives();
+        return bucketsByCoordinates.get(new Coordinates(objectives[0], objectives[1]));
+    }
 
-                curr = r;
-                dominated = ranks.get(curr).dominatedBySomebody(ind);
-                dominates = ranks.get(curr).dominatesSomebody(ind);
-                if (!dominates && !dominated)
-                    return result < 0 ? curr : Math.min(curr, result);
-            } else {
-                boolean dominated = ranks.get(curr).dominatedBySomebody(ind);
-                boolean dominates = ranks.get(curr).dominatesSomebody(ind);
-                if (!dominates && !dominated) {
-                    result = result < 0 ? curr : Math.min(curr, result);
-                    r = curr;
-                } else if (dominates)
-                    r = curr;
-                else
-                    l = curr;
+    private void removeWorst() {
+        final List<Individual<T>> members = members(ranks.get(ranks.size() - 1));
+        int worst = 0;
+        if (members.size() >= 3) {
+            final double[] crowdingDistances = crowdingDistances(members);
+            for (int i = 1; i < members.size(); ++i) {
+                if (crowdingDistances[worst] > crowdingDistances[i]) {
+                    worst = i;
+                }
             }
         }
-        boolean dominated = ranks.get(l).dominatedBySomebody(ind);
-        boolean dominates = ranks.get(l).dominatesSomebody(ind);
-        if (!dominates && !dominated) {
-            result = result < 0 ? l : Math.min(l, result);
-        }
+        removeFromLastLevel(members.get(worst));
+    }
 
-        if (result >= 0) {
-            return result;
+    /**
+     * Removing a point of the last level changes no other point's level.
+     */
+    private void removeFromLastLevel(Individual<T> point) {
+        final TwoDimBucket<T> bucket = bucketOf(point);
+        final int index = pointIndices.remove(point);
+        final int lastIndex = points.size() - 1;
+        if (index != lastIndex) {
+            final Individual<T> moved = points.get(lastIndex);
+            points.set(index, moved);
+            pointIndices.put(moved, index);
         }
+        points.remove(lastIndex);
+        if (bucket.remove(point)) {
+            bucketsByCoordinates.remove(new Coordinates(bucket.getX1(), bucket.getX2()));
+            final int lastRank = ranks.size() - 1;
+            final TwoDimTreap<T> level = ranks.get(lastRank).remove(bucket);
+            if (level == null) {
+                ranks.remove(lastRank);
+            } else {
+                ranks.set(lastRank, level);
+            }
+        }
+        snapshot = null;
+    }
 
-        throw new RuntimeException("Can't determine rank for " + ind);
+    /**
+     * @return the levels with their members in increasing {@code x1} and their crowding distances; kept until the next
+     * change
+     */
+    @Override
+    @Nonnull
+    public PopulationSnapshot<T> getSnapshot() {
+        if (snapshot == null) {
+            final List<NonDominationLevel<T>> levels = new ArrayList<>(ranks.size());
+            for (final TwoDimTreap<T> level : ranks) {
+                final List<Individual<T>> members = members(level);
+                final double[] crowdingDistances = crowdingDistances(members);
+                final List<Individual<T>> withCrowdingDistances = new ArrayList<>(members.size());
+                for (int i = 0; i < members.size(); ++i) {
+                    final Individual<T> member = members.get(i);
+                    withCrowdingDistances.add(new FitnessAndCdIndividual<>(member.getObjectives(),
+                            crowdingDistances[i], member.getPayload()));
+                }
+                levels.add(new TwoDimLevel<>(withCrowdingDistances));
+            }
+            snapshot = new PopulationSnapshot<>(levels, points.size());
+        }
+        return snapshot;
+    }
+
+    /**
+     * @return the points of a level in increasing {@code x1}; iterative, because a treap can be deep
+     */
+    private static <T> List<Individual<T>> members(TwoDimTreap<T> level) {
+        final List<Individual<T>> result = new ArrayList<>();
+        final List<TwoDimTreap<T>> stack = new ArrayList<>();
+        TwoDimTreap<T> current = level;
+        while (current != null || !stack.isEmpty()) {
+            while (current != null) {
+                stack.add(current);
+                current = current.left;
+            }
+            current = stack.remove(stack.size() - 1);
+            result.addAll(current.x.getMembers());
+            current = current.right;
+        }
+        return result;
+    }
+
+    /**
+     * @param members the members of a level in increasing {@code x1}
+     */
+    private static double[] crowdingDistances(List<? extends Individual<?>> members) {
+        final int last = members.size() - 1;
+        final double[] first = members.get(0).getObjectives();
+        final double[] end = members.get(last).getObjectives();
+        final double[] result = new double[members.size()];
+        result[0] = Double.POSITIVE_INFINITY;
+        result[last] = Double.POSITIVE_INFINITY;
+        for (int i = 1; i < last; ++i) {
+            result[i] = crowdingDistance(members.get(i - 1).getObjectives(), members.get(i + 1).getObjectives(),
+                    first, end);
+        }
+        return result;
+    }
+
+    /**
+     * The crowding distance of an inner member of a level, with the operations of {@code SortedObjectives.calculateCD}
+     * (bit-identical results); an objective without range in the level (all members with equal coordinates)
+     * contributes 0, not NaN.
+     *
+     * @param first the objectives of the level's first member (smallest {@code x1}, largest {@code x2})
+     * @param last  the objectives of its last member
+     */
+    private static double crowdingDistance(double[] previous, double[] next, double[] first, double[] last) {
+        double crowdingDistance = 0;
+        if (first[0] != last[0]) {
+            crowdingDistance += (next[0] - previous[0]) * (1 / (last[0] - first[0]));
+        }
+        if (first[1] != last[1]) {
+            crowdingDistance += (previous[1] - next[1]) * (1 / (first[1] - last[1]));
+        }
+        return crowdingDistance;
+    }
+
+    /**
+     * Distinct random points with the ranks and crowding distances of {@link #getSnapshot()}, without building one.
+     */
+    @Override
+    @Nonnull
+    public List<RankedIndividual<T>> getRandomSolutions(int count) {
+        if (count < 0) {
+            throw new IllegalArgumentException("Negative number of random solutions requested");
+        }
+        final int actualCount = Math.min(count, points.size());
+        final ThreadLocalRandom threadRandom = ThreadLocalRandom.current();
+        final TreeSet<Integer> indices = new TreeSet<>();
+        while (indices.size() < actualCount) {
+            indices.add(threadRandom.nextInt(0, points.size()));
+        }
+        final List<RankedIndividual<T>> result = new ArrayList<>(actualCount);
+        for (final int index : indices) {
+            final Individual<T> point = points.get(index);
+            final TwoDimBucket<T> bucket = bucketOf(point);
+            final int rank = rankOf(bucket);
+            final double crowdingDistance = crowdingDistance(ranks.get(rank), bucket, bucket.indexOf(point));
+            result.add(new RankedIndividual<>(point.getObjectives(), crowdingDistance, rank, point.getPayload()));
+        }
+        return result;
+    }
+
+    /**
+     * @return the crowding distance of member {@code index} of {@code bucket}, from the neighbours in {@code level}
+     */
+    private double crowdingDistance(TwoDimTreap<T> level, TwoDimBucket<T> bucket, int index) {
+        final TwoDimBucket<T> firstBucket = level.getMin();
+        final TwoDimBucket<T> lastBucket = level.getMax();
+        final int lastIndex = bucket.size() - 1;
+        if (index == 0 && bucket == firstBucket || index == lastIndex && bucket == lastBucket) {
+            return Double.POSITIVE_INFINITY;
+        }
+        final TwoDimBucket<T> previous = index > 0 ? bucket : level.predecessor(bucket);
+        final TwoDimBucket<T> next = index < lastIndex ? bucket : level.successor(bucket);
+        return crowdingDistance(coordinates(previous), coordinates(next), coordinates(firstBucket),
+                coordinates(lastBucket));
+    }
+
+    private static double[] coordinates(TwoDimBucket<?> bucket) {
+        return new double[]{bucket.getX1(), bucket.getX2()};
+    }
+
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    @Override
+    public TwoDimTreapPopulation<T> clone() {
+        final TwoDimTreapPopulation<T> copy = new TwoDimTreapPopulation<>(expectedPopSize);
+        final Map<TwoDimBucket<T>, TwoDimBucket<T>> bucketCopies = new IdentityHashMap<>();
+        for (final Map.Entry<Coordinates, TwoDimBucket<T>> entry : bucketsByCoordinates.entrySet()) {
+            final TwoDimBucket<T> bucketCopy = entry.getValue().copy();
+            bucketCopies.put(entry.getValue(), bucketCopy);
+            copy.bucketsByCoordinates.put(entry.getKey(), bucketCopy);
+        }
+        for (final TwoDimTreap<T> level : ranks) {
+            copy.ranks.add(level.copy(bucketCopies));
+        }
+        copy.points.addAll(points);
+        copy.pointIndices.putAll(pointIndices);
+        return copy;
     }
 
     public String toString() {

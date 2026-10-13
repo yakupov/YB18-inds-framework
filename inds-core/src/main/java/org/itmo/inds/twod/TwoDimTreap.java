@@ -1,5 +1,7 @@
 package org.itmo.inds.twod;
 
+import java.util.Map;
+
 public class TwoDimTreap<T> {
     public static class Treaps<T> {
         TwoDimTreap<T> l, r;
@@ -91,15 +93,6 @@ public class TwoDimTreap<T> {
         return res;
     }
 
-    public boolean dominatesSomebody(TwoDimBucket<T> nInd) {
-        Treaps<T> split = splitX(nInd);
-        if (split.l != null && nInd.compareDom(split.l.getMax()) < 0)
-            return true;
-        if (split.r != null && nInd.compareDom(split.r.getMin()) < 0)
-            return true;
-        return false;
-    }
-
     public boolean dominatedBySomebody(TwoDimBucket<T> nInd) {
         Treaps<T> split = splitX(nInd);
         //System.err.println("DBS: " + split);
@@ -138,6 +131,62 @@ public class TwoDimTreap<T> {
         while (r.right != null)
             r = r.right;
         return r.x;
+    }
+
+    /**
+     * @return the bucket with the largest {@code x1} smaller than {@code key}'s, or {@code null}
+     */
+    public TwoDimBucket<T> predecessor(TwoDimBucket<?> key) {
+        TwoDimBucket<T> result = null;
+        TwoDimTreap<T> node = this;
+        while (node != null) {
+            if (node.x.compareX1(key) < 0) {
+                result = node.x;
+                node = node.right;
+            } else {
+                node = node.left;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @return the bucket with the smallest {@code x1} larger than {@code key}'s, or {@code null}
+     */
+    public TwoDimBucket<T> successor(TwoDimBucket<?> key) {
+        TwoDimBucket<T> result = null;
+        TwoDimTreap<T> node = this;
+        while (node != null) {
+            if (node.x.compareX1(key) > 0) {
+                result = node.x;
+                node = node.left;
+            } else {
+                node = node.right;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @return this treap without the node of {@code bucket}, sharing the other nodes; {@code null} if none are left
+     */
+    TwoDimTreap<T> remove(TwoDimBucket<T> bucket) {
+        final int byX1 = x.compareX1(bucket);
+        if (byX1 == 0) {
+            return merge(left, right);
+        }
+        return byX1 < 0
+                ? new TwoDimTreap<>(x, y, left, right.remove(bucket))
+                : new TwoDimTreap<>(x, y, left.remove(bucket), right);
+    }
+
+    /**
+     * @return a treap of the same shape and priorities whose nodes hold the copies of the buckets
+     */
+    TwoDimTreap<T> copy(Map<TwoDimBucket<T>, TwoDimBucket<T>> bucketCopies) {
+        return new TwoDimTreap<>(bucketCopies.get(x), y,
+                left == null ? null : left.copy(bucketCopies),
+                right == null ? null : right.copy(bucketCopies));
     }
 
     public String toString() {

@@ -7,42 +7,29 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * The content of one treap node: the points of the population with the same coordinates {@code (x1, x2)} (the first
- * two objectives, minimized), stored once each by {@code equals}. The coordinates are copied into the bucket, so the
- * treap never reads the points' objective arrays. Buckets are equal ({@code equals}, {@code hashCode}) iff their
- * coordinates are, so the population finds the bucket of a point in a hash map. A bucket without points is a search key
- * (see {@link TwoDimTreap#getMinP()}).
- *
- * <p>Not thread-safe; the members can be added while the bucket is in a treap (the treap orders by coordinates only).
+ * The content of a treap node: the points with the same coordinates {@code (x1, x2)} (the first two objectives), each
+ * once by {@code equals}. A bucket without points is a search key.
  *
  * @param <T> payload type of the points
  */
 public final class TwoDimBucket<T> {
     private final double x1, x2;
-    /** The first member; {@code null} for a search key. */
-    private final Individual<T> first;
-    /**
-     * All members in the order of insertion, created with the second one: most buckets hold one point and need no
-     * list. Lookup by {@code equals} scans it.
-     */
+    /** The member while there is at most one; then {@code all} is {@code null}. */
+    private Individual<T> first;
+    /** Created with the second member, which most buckets never get. */
     private List<Individual<T>> all;
 
-    /**
-     * @param first the first member; at least two objectives
-     */
     TwoDimBucket(Individual<T> first) {
-        this.x1 = first.getObjectives()[0];
-        this.x2 = first.getObjectives()[1];
+        this(first.getObjectives()[0], first.getObjectives()[1]);
         this.first = first;
     }
 
     /**
-     * A search key without members.
+     * A search key.
      */
     TwoDimBucket(double x1, double x2) {
         this.x1 = x1;
         this.x2 = x2;
-        this.first = null;
     }
 
     public double getX1() {
@@ -54,7 +41,7 @@ public final class TwoDimBucket<T> {
     }
 
     /**
-     * @return the members in the order of insertion (a read-only view)
+     * @return the members in the order of insertion (read-only)
      */
     public List<Individual<T>> getMembers() {
         if (all != null) {
@@ -63,17 +50,16 @@ public final class TwoDimBucket<T> {
         return first == null ? Collections.emptyList() : Collections.singletonList(first);
     }
 
-    /**
-     * @return whether a member equals {@code individual}
-     */
+    public int size() {
+        return all != null ? all.size() : first == null ? 0 : 1;
+    }
+
     boolean contains(Individual<T> individual) {
         return all != null ? all.contains(individual) : individual.equals(first);
     }
 
     /**
-     * Adds a point with the same coordinates unless an equal point is a member already.
-     *
-     * @return whether the point was added
+     * @return whether the point was added: false if an equal point is a member
      */
     boolean add(Individual<T> individual) {
         if (contains(individual)) {
@@ -81,10 +67,49 @@ public final class TwoDimBucket<T> {
         }
         if (all == null) {
             all = new ArrayList<>(2);
-            all.add(first);
+            if (first != null) {
+                all.add(first);
+                first = null;
+            }
         }
         all.add(individual);
         return true;
+    }
+
+    /**
+     * @return the index of {@code member} (the same object) in {@link #getMembers()}, or -1
+     */
+    int indexOf(Individual<T> member) {
+        if (all == null) {
+            return member == first ? 0 : -1;
+        }
+        for (int i = 0; i < all.size(); ++i) {
+            if (all.get(i) == member) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * @return whether the bucket is empty now
+     */
+    boolean remove(Individual<T> member) {
+        if (all == null) {
+            first = null;
+            return true;
+        }
+        all.remove(indexOf(member));
+        return all.isEmpty();
+    }
+
+    TwoDimBucket<T> copy() {
+        final TwoDimBucket<T> copy = new TwoDimBucket<>(x1, x2);
+        copy.first = first;
+        if (all != null) {
+            copy.all = new ArrayList<>(all);
+        }
+        return copy;
     }
 
     public int compareX1(TwoDimBucket<?> o) {
@@ -96,29 +121,13 @@ public final class TwoDimBucket<T> {
     }
 
     /**
-     * @return the sum of the comparisons of both coordinates (not normalized): negative iff this bucket's points
-     * dominate {@code o}'s, positive iff {@code o}'s dominate these, zero if the coordinates are equal or neither
-     * dominates
+     * @return negative iff this bucket's points dominate {@code o}'s, positive iff {@code o}'s dominate these, zero
+     * otherwise (not normalized)
      */
     public int compareDom(TwoDimBucket<?> o) {
-        int xc = Double.compare(x1, o.x1);
-        int yc = Double.compare(x2, o.x2);
+        final int xc = Double.compare(x1, o.x1);
+        final int yc = Double.compare(x2, o.x2);
         return xc + yc;
-    }
-
-    /**
-     * Buckets are equal iff their coordinates are ({@link Double#compare}), whatever their members.
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TwoDimBucket<?> that)) return false;
-        return Double.compare(x1, that.x1) == 0 && Double.compare(x2, that.x2) == 0;
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * Double.hashCode(x1) + Double.hashCode(x2);
     }
 
     @Override

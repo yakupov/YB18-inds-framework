@@ -72,9 +72,15 @@ The sorters are stateless and shared. DC1 / DC2 (`performIncrementalNds`) insert
 sorted, ranked array and return a new one; `performNds` sorts its argument in place. The levels use
 `addRankedMembers`, which assumes that no addend is dominated by a member of the level.
 
-The 2D population (`TwoDimTreapPopulation`) is separate: each level is a persistent treap ordered by the first
-objective; an insertion cuts the changed contiguous segment out of each affected level with two splits and moves it
-on. It supports insertion and rank queries only (no removal, no crowding distance) and is not a `ManagedPopulation`.
+The 2D population (`TwoDimTreapPopulation`) works differently: each level is a persistent treap ordered by the
+first objective; an insertion cuts the changed contiguous segment out of each affected level with two splits and moves
+it on. It sorts by the first two objectives of the points. A treap node holds a `TwoDimBucket`: its coordinates and
+the points that share them; a hash map from coordinates to buckets finds duplicates, and a list of all points gives
+random points in O(1). Crowding distances (first two objectives) are not stored: `getRandomSolutions` computes them
+from a point's neighbours in its level and the level's extremes, O(log<sup>2</sup> N) per point (as the steady-state
+NSGA-II of GECCO 2015); `getSnapshot()` builds all levels with their distances in O(N) and keeps them until the next
+change. Above the expected size, an insertion evicts the worst point of the last level (rule as in Level, O(size of the
+last level)); points of other levels are never removed. Not thread-safe.
 
 ## Data model and loader (inds-testdata)
 
@@ -110,7 +116,7 @@ and round-robin split of the points) with new class names. Parameters and usage:
 | `golden` | golden-master replay: `GoldenMasterTest` (inds-core), `EnluGoldenMasterTest` (inds-baselines); infrastructure and vocabulary in the package's `package-info`; records: `src/test/resources/org/itmo/inds/golden/`, format in [golden-records.md](golden-records.md) |
 | `oracle` | `Oracle` (the independent sorter), `OracleInputs` (seeded inputs), `PopulationInvariants` (the expected state of a population), `PopulationOracle` (insert and compare), `OracleCrossCheckTest` |
 | `stress` | `AbstractConcurrentInsertionStressTest` (harness) with one subclass per module |
-| `twod`, `baselines.enlu` | oracle cross-checks of the 2D population and the ENLU baselines; `TwoDimTreapPopulationTest` (input checks, fixed defects) |
+| `twod`, `baselines.enlu` | the 2D population against a simple reference model (`ReferenceTwoDimPopulation`: oracle ranks, crowding distances and eviction by definition) and the ENLU oracle cross-checks; `TwoDimTreapPopulationTest` |
 | `testdata` | data-set catalogue checks (`DataSetsTest`), golden inputs vs. data files, the Gson adapter |
 | `benchmarks` (inds-benchmarks) | benchmark inputs and every measured operation against the oracle |
 

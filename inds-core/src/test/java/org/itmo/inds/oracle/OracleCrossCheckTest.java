@@ -10,6 +10,7 @@ import org.itmo.inds.population.FineLockJfbyPopulationRankHint;
 import org.itmo.inds.population.JfbyPopulation;
 import org.itmo.inds.sorting.IncrementalJfbSorter;
 import org.itmo.inds.sorting.JfbSorter;
+import org.itmo.inds.twod.TwoDimTreapPopulation;
 import org.itmo.inds.util.RankedPopulation;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -31,7 +32,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Unlike the golden-master tests, these check correctness, not sameness with the cited code.
  */
 class OracleCrossCheckTest {
-    private record PopulationUnderTest(String name, Supplier<ManagedPopulation<Integer>> factory) {
+    /**
+     * @param maxObjectives the largest number of objectives the population sorts by (2D: 2); inputs with more are
+     *                      skipped
+     */
+    private record PopulationUnderTest(String name, Supplier<ManagedPopulation<Integer>> factory, int maxObjectives) {
+        PopulationUnderTest(final String name, final Supplier<ManagedPopulation<Integer>> factory) {
+            this(name, factory, Integer.MAX_VALUE);
+        }
+
         @Override
         @Nonnull
         public String toString() {
@@ -50,9 +59,12 @@ class OracleCrossCheckTest {
                 new PopulationUnderTest("Fine", () -> new FineLockJfbyPopulation<>(Long.MAX_VALUE)),
                 new PopulationUnderTest("Fine-RankHint", () -> new FineLockJfbyPopulationRankHint<>(Long.MAX_VALUE)),
                 new PopulationUnderTest("CAS", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, false)),
-                new PopulationUnderTest("CAS-oneByOne", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, true)));
+                new PopulationUnderTest("CAS-oneByOne", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, true)),
+                new PopulationUnderTest("2D", () -> new TwoDimTreapPopulation<>(Long.MAX_VALUE), 2));
         return populations.stream()
-                .flatMap(population -> cases().map(inputCase -> Arguments.of(population, inputCase)));
+                .flatMap(population -> cases()
+                        .filter(inputCase -> inputCase.points()[0].length <= population.maxObjectives())
+                        .map(inputCase -> Arguments.of(population, inputCase)));
     }
 
     /**

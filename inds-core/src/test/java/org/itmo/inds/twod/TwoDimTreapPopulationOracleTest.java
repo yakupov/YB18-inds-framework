@@ -1,111 +1,96 @@
 package org.itmo.inds.twod;
 
-import org.itmo.inds.api.FitnessAndCdIndividual;
 import org.itmo.inds.api.Individual;
-import org.itmo.inds.oracle.Oracle;
+import org.itmo.inds.api.NonDominationLevel;
+import org.itmo.inds.api.RankedIndividual;
 import org.itmo.inds.oracle.OracleInputs;
-import org.itmo.inds.oracle.PopulationOracle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Oracle cross-checks of the 2D treap population on the inputs of {@link OracleInputs} with two objectives: before
- * each insertion, the rank {@code determineRank} computes for the new point ({@code addPoint} returns nothing); at the
- * {@link PopulationOracle#isCheckpoint checkpoints}, the level of every point so far and {@code size()}; at the end,
- * {@code detRankOfExPoint} of every point. Each input runs twice ({@link PointEquality}): with points equal by
- * coordinates (the population keeps one of equal points) and with points equal only to themselves (the population
- * keeps all of them, points with equal coordinates in one bucket). Points with equal coordinates have equal oracle
- * ranks.
+ * The 2D treap population against {@link ReferenceTwoDimPopulation} on the inputs of {@link OracleInputs} with two
+ * objectives, with points equal only to themselves (so points with equal coordinates are kept, in one bucket), without
+ * and with eviction. Points equal by coordinates are covered by the shared {@code OracleCrossCheckTest}.
  */
 class TwoDimTreapPopulationOracleTest {
-    /**
-     * How the input points are made into {@link Individual}s, which decides which of them the population keeps.
-     */
-    enum PointEquality {
-        /** {@link FitnessAndCdIndividual}: equal iff the coordinates are; one of equal points is kept. */
-        COORDINATES {
-            @Override
-            Individual<Object> point(final double[] objectives) {
-                return new FitnessAndCdIndividual<>(objectives, null);
-            }
-        },
-        /** Equal only to itself: every point is kept, points with equal coordinates share a bucket. */
-        IDENTITY {
-            @Override
-            Individual<Object> point(final double[] objectives) {
-                return new IdentityPoint(objectives);
-            }
-        };
-
-        abstract Individual<Object> point(double[] objectives);
-    }
-
     static Stream<Arguments> cases() {
         return OracleInputs.cases().stream()
                 .filter(inputCase -> inputCase.points()[0].length == 2)
-                .flatMap(inputCase -> Arrays.stream(PointEquality.values())
-                        .map(equality -> Arguments.of(inputCase, equality)));
-    }
-
-    @ParameterizedTest(name = "TwoDimTreapPopulation {0}, points equal by {1}")
-    @MethodSource("cases")
-    void levelsMatchOracle(final OracleInputs.Case inputCase, final PointEquality equality) {
-        final double[][] points = inputCase.points();
-        final int n = points.length;
-        final List<Individual<Object>> added = new ArrayList<>();
-        final List<TwoDimTreap<Object>> levels = new ArrayList<>();
-        final TwoDimTreapPopulation<Object> population = new TwoDimTreapPopulation<>(levels);
-        final Set<Individual<Object>> kept = new HashSet<>();
-        for (int i = 0; i < n; ++i) {
-            final int step = i + 1;
-            final int[] oracleRanks = Oracle.ranks(Arrays.copyOf(points, step));
-            final Individual<Object> point = equality.point(points[i]);
-            assertEquals(oracleRanks[i], population.determineRank(new TwoDimBucket<>(point)),
-                    "rank of the new point at step " + step);
-            population.addPoint(point);
-            added.add(point);
-            kept.add(point);
-            if (PopulationOracle.isCheckpoint(step, n)) {
-                assertLevelsMatch(levels, kept.size(), added, oracleRanks, step);
-                assertEquals(kept.size(), population.size(), "size() after step " + step);
-            }
-        }
-        // detRankOfExPoint (rank of a point already in the population, used by getRandWithRank) at the end
-        final int[] oracleRanks = Oracle.ranks(points);
-        for (int j = 0; j < n; ++j) {
-            assertEquals(oracleRanks[j], population.detRankOfExPoint(added.get(j)), "detRankOfExPoint of point " + j);
-        }
+                .flatMap(inputCase -> LongStream.of(Long.MAX_VALUE, 1, 3, 10, inputCase.points().length / 3)
+                        .filter(expectedSize -> expectedSize > 0)
+                        .distinct()
+                        .mapToObj(expectedSize -> Arguments.of(inputCase, expectedSize)));
     }
 
     /**
-     * Asserts that the levels hold {@code keptCount} points, each once, and every point added so far (or the kept point
-     * equal to it) in the level of its oracle rank.
+     * After every insertion: the rank {@code determineRank} computes before it and {@code addIndividual} returns,
+     * {@code size()}, the snapshot levels (members, order, crowding distances), and {@code getRandomSolutions} for all
+     * points (ranks and crowding distances computed from the treaps).
      */
-    private static void assertLevelsMatch(final List<TwoDimTreap<Object>> levels, final int keptCount,
-                                          final List<Individual<Object>> added, final int[] oracleRanks,
-                                          final int step) {
-        final Map<Individual<Object>, Integer> levelOf = new HashMap<>();
-        for (int levelIndex = 0; levelIndex < levels.size(); ++levelIndex) {
-            for (final Individual<Object> member : TwoDimTreapTraversal.inOrderPoints(levels.get(levelIndex))) {
-                assertNull(levelOf.put(member, levelIndex), "point in two levels, step " + step);
+    @ParameterizedTest(name = "TwoDimTreapPopulation {0}, expected size {1}")
+    @MethodSource("cases")
+    void matchesReference(final OracleInputs.Case inputCase, final long expectedSize) {
+        final TwoDimTreapPopulation<Object> population = new TwoDimTreapPopulation<>(expectedSize);
+        final ReferenceTwoDimPopulation reference = new ReferenceTwoDimPopulation(expectedSize);
+        final double[][] points = inputCase.points();
+        for (int i = 0; i < points.length; ++i) {
+            final int step = i + 1;
+            final Individual<Object> point = new IdentityPoint(i, points[i]);
+            final int expectedRank = reference.rankOf(point);
+            assertEquals(expectedRank, population.determineRank(point), "determineRank before step " + step);
+            assertEquals(expectedRank, population.addIndividual(point), "addIndividual at step " + step);
+            reference.add(point);
+            assertEquals(reference.size(), population.size(), "size() after step " + step);
+            assertSameLevels(reference.levels(), population.getSnapshot().getLevels(), step);
+            assertRandomSolutionsMatch(reference.levels(), population.getRandomSolutions(population.size()), step);
+        }
+    }
+
+    private static void assertSameLevels(final List<List<Individual<Object>>> expected,
+                                         final List<NonDominationLevel<Object>> actual, final int step) {
+        assertEquals(expected.size(), actual.size(), "number of levels after step " + step);
+        for (int rank = 0; rank < expected.size(); ++rank) {
+            final List<Individual<Object>> members = actual.get(rank).getMembers();
+            assertEquals(payloads(expected.get(rank)), payloads(members), "level " + rank + " after step " + step);
+            final double[] crowdingDistances = ReferenceTwoDimPopulation.crowdingDistances(expected.get(rank));
+            assertEquals(Arrays.stream(crowdingDistances).boxed().toList(),
+                    members.stream().map(Individual::getCrowdingDistance).toList(),
+                    "crowding distances of level " + rank + " after step " + step);
+        }
+    }
+
+    private static void assertRandomSolutionsMatch(final List<List<Individual<Object>>> expected,
+                                                   final List<RankedIndividual<Object>> solutions, final int step) {
+        final Map<Object, RankedIndividual<Object>> byPayload = new HashMap<>();
+        for (final RankedIndividual<Object> solution : solutions) {
+            byPayload.put(solution.getPayload(), solution);
+        }
+        for (int rank = 0; rank < expected.size(); ++rank) {
+            final double[] crowdingDistances = ReferenceTwoDimPopulation.crowdingDistances(expected.get(rank));
+            for (int i = 0; i < expected.get(rank).size(); ++i) {
+                final Object payload = expected.get(rank).get(i).getPayload();
+                final RankedIndividual<Object> solution = byPayload.remove(payload);
+                assertNotNull(solution, "point " + payload + " missing from the random solutions, step " + step);
+                assertEquals(rank, solution.getRank(), "rank of point " + payload + ", step " + step);
+                assertEquals(crowdingDistances[i], solution.getCrowdingDistance(),
+                        "crowding distance of point " + payload + ", step " + step);
             }
         }
-        assertEquals(keptCount, levelOf.size(), "points in levels after step " + step);
-        for (int j = 0; j < step; ++j) {
-            assertEquals(oracleRanks[j], levelOf.get(added.get(j)), "level of point " + j + " after step " + step);
-        }
+        assertEquals(Map.of(), byPayload, "random solutions that are not in the population, step " + step);
+    }
+
+    private static List<Object> payloads(final List<Individual<Object>> members) {
+        return members.stream().map(Individual::getPayload).toList();
     }
 }

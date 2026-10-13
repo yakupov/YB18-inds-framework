@@ -27,7 +27,7 @@ Labels follow the thesis.
 | Coarse | Level behind a global lock: the asynchronous baseline (GECCO 2018) | `CoarseLockJfbyPopulation` |
 | Fine | One lock per level, hand over hand (GECCO 2018). Two versions: as in the thesis, and the 2019 revision that retries from a rank hint | `FineLockJfbyPopulation`, `FineLockJfbyPopulationRankHint` |
 | CAS | Lock-free levels via compare-and-set with time-stamping (GECCO 2018) | `CasJfbyPopulation` |
-| 2D | Levels stored in treaps; O(N) worst-case insertion for two objectives (CEC 2015). Insertion and rank queries only | `TwoDimTreapPopulation` |
+| 2D | Levels stored in treaps; O(N) worst-case insertion, sorting by the first two objectives (CEC 2015); crowding distances on demand (GECCO 2015) | `TwoDimTreapPopulation` |
 
 **Baselines:**
 

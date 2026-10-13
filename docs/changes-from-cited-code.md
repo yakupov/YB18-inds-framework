@@ -39,7 +39,8 @@ three are present in the cited versions; none shows up single-threaded.
 ([`6f44d41`](https://github.com/yakupov/YB18-inds-framework/commit/6f44d41)). `TwoDimTreapPopulation.detRankOfExPoint`
 (used by `getRandWithRank` and `validate`) rejected rank 0 in the check after its binary search, which is reached only
 when the search is skipped, i.e. with exactly one level: every call threw. Fix: accept rank 0. Results with two or more
-levels are unchanged.
+levels are unchanged. Since then, the method is gone: the rank of a point in the population is the rank
+`determineRank` computes for it.
 
 ## Known defects
 
@@ -50,6 +51,7 @@ should be fixed has an issue.
 |---|---|---|
 | Level, Coarse | `size()` undercounts and eviction is skipped when an insertion pushes a whole level down | [#1](https://github.com/yakupov/YB18-inds-framework/issues/1) |
 | Level, Coarse, Fine | `clone()` throws (Level, Coarse) or returns a copy that shares state with the original (Fine) | [#2](https://github.com/yakupov/YB18-inds-framework/issues/2) |
+| Level, Coarse, Fine, CAS | the inner members of a level whose members share one objective value get a NaN crowding distance | [#17](https://github.com/yakupov/YB18-inds-framework/issues/17) |
 | CAS | retry loops swallow index errors of the sorting and crowding-distance code (endless retry); a removed last level is waited for by spinning | [#3](https://github.com/yakupov/YB18-inds-framework/issues/3) |
 | CAS | the logical clock (`AtomicLong`) has no overflow handling (`todo` in the code) | none: 2⁶³ ticks are out of reach |
 | Fine, CAS | `getSnapshot()` is not linearizable: points moving between levels can be missing, and `size()` can disagree with the snapshot during insertions | none: inherent in the lock / CAS design ([architecture.md](architecture.md)) |
@@ -69,6 +71,11 @@ should be fixed has an issue.
 - 2D works on the library's `Individual` instead of its own point type (`Double2DIndividual`), which also counted
   comparisons in a static counter; this library does not count them. Points are ranked by their first two
   objectives. As in the cited code, a point equal to one in the population is not added again; points that are
-  different but have equal coordinates (the cited code had no such points) share a treap node and a level.
+  different but have equal coordinates (the cited code had no such points) share a treap node and a level. The
+  insertion is the cited one; on top, the population is a `ManagedPopulation` (the cited one was insertion-only with
+  `getRandWithRank`): crowding distances over the first two objectives (Level's formula, except that an objective
+  without range in a level contributes 0 instead of NaN,
+  [#17](https://github.com/yakupov/YB18-inds-framework/issues/17)), random solutions, snapshots, `clone`, and eviction
+  above an expected size with Level's rule.
 - Not ported: the NSGA-II code (it depends on the LGPL MOEA Framework), the data-set generators, vendored third-party
   code, unused experiments.
