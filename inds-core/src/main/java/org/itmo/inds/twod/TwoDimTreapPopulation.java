@@ -33,22 +33,27 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 @NotThreadSafe
 public class TwoDimTreapPopulation<T> implements ManagedPopulation<T> {
-    private final List<TwoDimTreap<T>> ranks;
-    private final long expectedPopSize;
-    private final Random random = new Random();
-    /** All points, for random points in O(1). */
-    private final List<Individual<T>> points = new ArrayList<>();
-    /** The index of every point in {@code points}, for removal in O(1). */
-    private final Map<Individual<T>, Integer> pointIndices = new IdentityHashMap<>();
-    private final Map<Coordinates, TwoDimBucket<T>> bucketsByCoordinates = new HashMap<>();
-    /** {@code null} after a change. */
-    private PopulationSnapshot<T> snapshot;
-
-    /**
-     * The first two objectives of a point; equal iff {@link Double#compare} finds both equal.
-     */
     private record Coordinates(double x1, double x2) {
     }
+
+    private final Random random = new Random();
+
+    /*
+     * The state is stored redundantly on purpose; every point is in all of these:
+     * ranks - one treap per level, ordered by x1; a node holds a TwoDimBucket (the points with the same first two
+     *         objectives); split / merge / node removal in expected O(log N) per level
+     * bucketsByCoordinates - the bucket of each coordinate pair, O(1): duplicates on insertion, lookups by point
+     * points - all points, O(1) random choice
+     * pointIndices - the index of each point in points, O(1) removal from points (eviction)
+     */
+    private final List<TwoDimTreap<T>> ranks;
+    private final long expectedPopSize;
+    private final Map<Coordinates, TwoDimBucket<T>> bucketsByCoordinates = new HashMap<>();
+    private final List<Individual<T>> points = new ArrayList<>();
+    private final Map<Individual<T>, Integer> pointIndices = new IdentityHashMap<>();
+
+    /** {@code null} after a change. */
+    private PopulationSnapshot<T> snapshot;
 
     /**
      * @param expectedPopSize the size above which an insertion evicts the worst point ({@link Long#MAX_VALUE}: never)

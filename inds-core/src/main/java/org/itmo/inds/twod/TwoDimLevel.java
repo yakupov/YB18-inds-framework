@@ -34,7 +34,7 @@ final class TwoDimLevel<T> implements NonDominationLevel<T> {
      * @throws UnsupportedOperationException always
      */
     @Override
-    public MemberAdditionResult addMembers(@Nonnull List<Individual<T>> addends) {
+    public MemberAdditionResult<T, NonDominationLevel<T>> addMembers(@Nonnull List<Individual<T>> addends) {
         throw new UnsupportedOperationException("A level of a 2D population snapshot is read-only");
     }
 

@@ -5,21 +5,16 @@ import java.util.Map;
 public class TwoDimTreap<T> {
     public static class Treaps<T> {
         TwoDimTreap<T> l, r;
-        public Treaps() {};
-        public Treaps(TwoDimTreap<T> l, TwoDimTreap<T> r) {
-            super();
-            this.l = l;
-            this.r = r;
-        }
+
+        public Treaps() {}
 
         public String toString() {
-            return "l=" + String.valueOf(l) + ", r=" + String.valueOf(r);
+            return "l=" + l + ", r=" + r;
         }
     }
 
     public TwoDimBucket<T> x;
     public int y;
-
     public TwoDimTreap<T> left;
     public TwoDimTreap<T> right;
 
@@ -35,16 +30,16 @@ public class TwoDimTreap<T> {
         if (r == null) return l;
 
         if (l.y > r.y) {
-            TwoDimTreap<T> newR = merge(l.right, r);
+            final TwoDimTreap<T> newR = merge(l.right, r);
             return new TwoDimTreap<>(l.x, l.y, l.left, newR);
         } else {
-            TwoDimTreap<T> newL = merge(l, r.left);
+            final TwoDimTreap<T> newL = merge(l, r.left);
             return new TwoDimTreap<>(r.x, r.y, newL, r.right);
         }
     }
 
     public Treaps<T> splitX(TwoDimBucket<T> x) {
-        Treaps<T> res = new Treaps<>();
+        final Treaps<T> res = new Treaps<>();
         Treaps<T> t = new Treaps<>();
         if (this.x.compareX1(x) < 0) {
             if (right == null) {
@@ -63,7 +58,6 @@ public class TwoDimTreap<T> {
             }
             res.r = new TwoDimTreap<>(this.x, y, t.r, right);
         }
-        //System.err.println("SPL: " + String.valueOf(this.x) + "_" + String.valueOf(left) + "_" + String.valueOf(right) + " : " + res.toString());
         return res;
     }
 
@@ -71,7 +65,7 @@ public class TwoDimTreap<T> {
      * same as split X - members of r have greater x1 than members of l
      */
     public Treaps<T> splitY(TwoDimBucket<T> x) {
-        Treaps<T> res = new Treaps<>();
+        final Treaps<T> res = new Treaps<>();
         Treaps<T> t = new Treaps<>();
         if (this.x.compareX2(x) >= 0) {
             if (right == null) {
@@ -94,15 +88,11 @@ public class TwoDimTreap<T> {
     }
 
     public boolean dominatedBySomebody(TwoDimBucket<T> nInd) {
-        Treaps<T> split = splitX(nInd);
-        //System.err.println("DBS: " + split);
-        //System.err.println("_DBS: " + this);
-
-        if (split.l != null && nInd.compareDom(split.l.getMax()) > 0)
+        final Treaps<T> split = splitX(nInd);
+        if (split.l != null && nInd.compareDom(split.l.getMax()) > 0) {
             return true;
-        if (split.r != null && nInd.compareDom(split.r.getMin()) > 0)
-            return true;
-        return false;
+        }
+        return split.r != null && nInd.compareDom(split.r.getMin()) > 0;
     }
 
     /**
@@ -111,25 +101,29 @@ public class TwoDimTreap<T> {
      */
     public TwoDimBucket<T> getMinP() {
         TwoDimTreap<T> l = this;
-        while (l.left != null)
+        while (l.left != null) {
             l = l.left;
+        }
         TwoDimTreap<T> r = this;
-        while (r.right != null)
+        while (r.right != null) {
             r = r.right;
+        }
         return new TwoDimBucket<>(l.x.getX1(), r.x.getX2());
     }
 
     public TwoDimBucket<T> getMin() {
         TwoDimTreap<T> l = this;
-        while (l.left != null)
+        while (l.left != null) {
             l = l.left;
+        }
         return l.x;
     }
 
     public TwoDimBucket<T> getMax() {
         TwoDimTreap<T> r = this;
-        while (r.right != null)
+        while (r.right != null) {
             r = r.right;
+        }
         return r.x;
     }
 
@@ -190,16 +184,18 @@ public class TwoDimTreap<T> {
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
         toString(sb);
         return sb.toString();
     }
 
-    protected void toString(StringBuilder sb) {
-        sb.append("[" + x.toString() + "]; ");
-        if (left != null)
+    private void toString(StringBuilder sb) {
+        sb.append("[").append(x.toString()).append("]; ");
+        if (left != null) {
             left.toString(sb);
-        if (right != null)
+        }
+        if (right != null) {
             right.toString(sb);
+        }
     }
 }
