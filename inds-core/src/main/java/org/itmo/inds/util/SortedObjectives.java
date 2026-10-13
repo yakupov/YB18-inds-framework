@@ -214,9 +214,11 @@ public class SortedObjectives<T extends Individual<P>, P> {
             cd[index[0]] = Double.POSITIVE_INFINITY;
             cd[index[index.length - 1]] = Double.POSITIVE_INFINITY;
 
-            final double inverseDelta = 1 / (coord[coord.length - 1] - coord[0]);
-            for (int j = 1; j < targetSize - 1; j++) {
-                cd[index[j]] += (coord[j + 1] - coord[j - 1]) * inverseDelta;
+            if (coord[coord.length - 1] != coord[0]) { // an objective without range contributes 0, not NaN
+                final double inverseDelta = 1 / (coord[coord.length - 1] - coord[0]);
+                for (int j = 1; j < targetSize - 1; j++) {
+                    cd[index[j]] += (coord[j + 1] - coord[j - 1]) * inverseDelta;
+                }
             }
         }
 

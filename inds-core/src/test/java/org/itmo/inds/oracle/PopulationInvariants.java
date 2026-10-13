@@ -13,7 +13,8 @@ import java.util.Optional;
  * The expected state of a population after a set of points was inserted, each as an individual whose payload is its
  * index in that set. Populations keep a set of points (a point equal to a present one by objective vector is not
  * added), so the invariants are about distinct points: each is present exactly once, carrying the payload of one of
- * its copies and its unchanged objectives, in the level given by its {@link Oracle} rank.
+ * its copies and its unchanged objectives, in the level given by its {@link Oracle} rank, with a crowding distance
+ * that is not NaN.
  */
 public final class PopulationInvariants {
     private final double[][] points;
@@ -47,7 +48,7 @@ public final class PopulationInvariants {
     /**
      * @param levels the levels of the population, rank 0 first
      * @return a description of the first violated invariant, or empty if the levels hold every distinct point once,
-     * in its oracle rank
+     * in its oracle rank, with a crowding distance that is not NaN
      */
     public Optional<String> levelsViolation(final List<? extends NonDominationLevel<Integer>> levels) {
         final int[] copiesSeen = new int[distinctCount];
@@ -85,6 +86,9 @@ public final class PopulationInvariants {
         }
         if (oracleRanks[id] != levelIndex) {
             return Optional.of("point " + id + " in level " + levelIndex + ", oracle rank " + oracleRanks[id]);
+        }
+        if (Double.isNaN(member.getCrowdingDistance())) {
+            return Optional.of("point " + id + " has crowding distance NaN");
         }
         return Optional.empty();
     }
