@@ -18,12 +18,12 @@ Each fix is a commit of its own with a test that failed before it. The golden-ma
 | Level, Coarse | an insertion that pushes a whole level down was not counted and skipped eviction: `size()` too small, the population above its expected size, `toRankedPopulation()` threw | count it and check eviction like any insertion | [#1](https://github.com/yakupov/YB18-inds-framework/issues/1) |
 | Level, Coarse, Fine | `clone()` threw (Level, Coarse) or returned a copy sharing the level list with the original (Fine; inserting into it could hang) | copy the levels into a list of the copy's own; Coarse returns a Coarse | [#2](https://github.com/yakupov/YB18-inds-framework/issues/2) |
 | Level, Coarse, Fine, CAS, ENLU | members of a level sharing one objective value got crowding distance NaN (never evicted, broke comparisons) | an objective without range adds 0, as in 2D | [#17](https://github.com/yakupov/YB18-inds-framework/issues/17) |
+| CAS | `size()` counted insertions, not members, once eviction started | decrement it on eviction | [#18](https://github.com/yakupov/YB18-inds-framework/issues/18) |
 
 ## Known defects
 
 | Where | Defect | Issue |
 |---|---|---|
-| CAS | `size()` counts insertions, not members, once eviction starts | [#18](https://github.com/yakupov/YB18-inds-framework/issues/18) |
 | CAS | retry loops swallow index errors (endless retry); a removed last level is waited for by spinning | [#3](https://github.com/yakupov/YB18-inds-framework/issues/3) |
 | CAS | `clone()` throws a `NullPointerException` if another thread removes the last level meanwhile | [#19](https://github.com/yakupov/YB18-inds-framework/issues/19) |
 | CAS | the logical clock (`AtomicLong`) has no overflow handling | none: 2⁶³ ticks are out of reach |

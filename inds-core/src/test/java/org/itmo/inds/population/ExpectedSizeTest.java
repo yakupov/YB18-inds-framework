@@ -22,7 +22,11 @@ class ExpectedSizeTest {
     static Stream<Arguments> populations() {
         return Stream.of(
                 Arguments.of("Level", (LongFunction<ManagedPopulation<Integer>>) JfbyPopulation::new),
-                Arguments.of("Coarse", (LongFunction<ManagedPopulation<Integer>>) CoarseLockJfbyPopulation::new));
+                Arguments.of("Coarse", (LongFunction<ManagedPopulation<Integer>>) CoarseLockJfbyPopulation::new),
+                Arguments.of("CAS", (LongFunction<ManagedPopulation<Integer>>)
+                        expected -> new CasJfbyPopulation<>((int) expected, false)),
+                Arguments.of("CAS-oneByOne", (LongFunction<ManagedPopulation<Integer>>)
+                        expected -> new CasJfbyPopulation<>((int) expected, true)));
     }
 
     /**

@@ -60,7 +60,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
 
     private final Map<Individual<T>, Boolean> presentIndividuals = new ConcurrentHashMap<>();
     private final Lock addRemoveLevelLock = new ReentrantLock();
-    private final AtomicInteger size = new AtomicInteger(0); //Cannot actually be decreased
+    private final AtomicInteger size = new AtomicInteger(0);
 
     private final JfbSorter sorter = new JfbSorter();
     private final int expectedPopulationSize; //Members will not be deleted if the size is less or equal to this value
@@ -141,6 +141,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                             } else {
                                 final Individual<T> rs = lastLevel.getMembers().get(0);
                                 presentIndividuals.remove(rs);
+                                size.decrementAndGet();
                                 return rs;
                             }
                         }
@@ -157,6 +158,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                     if (casPublish(nonDominationLevels.get(lastLevelIndex),
                             lastLevelRef, new LevelRef(time.incrementAndGet(), newLevel))) {
                         presentIndividuals.remove(removedIndividual);
+                        size.decrementAndGet();
                         return removedIndividual;
                     }
                 }
