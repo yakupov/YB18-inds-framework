@@ -36,23 +36,12 @@ own defaults are 12, 4 and 3.
 ### Limitations
 
 Exact reproduction of the figures is not a goal of this library; the cited repositories remain available for it.
-Re-running the figures here differs from the original measurements in two ways:
+Re-running the figures here differs from the original measurements:
 
-- **Different code for DC, DC1, DC2, Level and ENLU.** The figures measured the 2016 implementations (nds2016,
-  `IncrementalPPSN`) and a levels-only ENLU sorter; this library has the later re-implementations of DC, DC1, DC2
-  and Level (nds2018), the code of thesis Chapter 4, and ENLU as a population. Its Level is a full population that
-  also maintains crowding distances and de-duplicates points (the 2016 Level only sorted); the ENLU population
-  (`ENLU`) does the same, so Level against ENLU is a like-for-like comparison here, but not the one of the figures
-  ([changes-from-cited-code.md](changes-from-cited-code.md#structure)). The 2D population is the measured code
-  itself.
-- **Compiled vs. interpreted code.** The original harness (nds2016 `PPSN2016Test`) rebuilt the structures of all
-  algorithms for all ten generations before every measured insertion (about 0.5 s), so a fork ran the measured insertion
-  only 40–70 times, below the JIT compiler's threshold: the ENLU sorter and Level were measured as interpreted code
-  (only Level's inner dominance loop got compiled), the 2D treap as compiled code, because the setup itself inserts its
-  points (observed with `-XX:+PrintCompilation`). This library's benchmarks rebuild only the measured structure and
-  average thousands of insertions per iteration, so every algorithm is measured compiled. The microsecond-scale
-  orderings of the figures (2D fastest for two objectives, Level against ENLU) are therefore not expected to reproduce;
-  the millisecond-scale DC, DC1 and DC2 are much less affected.
+| Difference | The figures | This library | Effect |
+|---|---|---|---|
+| Code | 2016 implementations of DC, DC1, DC2, Level (nds2016) and a levels-only ENLU sorter | the Chapter 4 code (nds2018); Level and ENLU as populations that also keep crowding distances | Level against ENLU is like for like here, not as in the figures ([structure](changes-from-cited-code.md#structure)); 2D is the measured code |
+| Measurement | the harness rebuilt all structures before every insertion, so Level and the ENLU sorter ran interpreted (40–70 runs per fork, observed with `-XX:+PrintCompilation`), 2D compiled | only the measured structure is rebuilt; every algorithm runs compiled | the microsecond-scale orderings (2D fastest for two objectives, Level against ENLU) are not expected to reproduce; DC, DC1, DC2 (milliseconds) much less affected |
 
 ### Example
 
@@ -81,7 +70,5 @@ Conclusions of the thesis that a re-run with this library should reproduce in sh
   most on ZDT, as the number of levels drops;
 - DC2 is at most slightly faster than DC1.
 
-The thesis's further conclusions on the microsecond scale (across the 180 configurations of Figures 21–24 Level was
-significantly faster than the ENLU sorter in 119, slower in 31, indistinguishable in 30; with two objectives 2D was
-much faster than all other algorithms) depend on the original code and measurement conditions (see
-[Limitations](#limitations)).
+The microsecond-scale conclusions (Level faster than the ENLU sorter in 119 of 180 configurations, slower in 31; 2D
+much faster for two objectives) depend on the original code and measurement ([Limitations](#limitations)).
