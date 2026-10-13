@@ -4,20 +4,25 @@ Rules for changing this library, for people and coding agents alike. `CLAUDE.md`
 
 ## Two kinds of code
 
-- **Ported code**: the algorithm classes copied from the legacy repositories cited in the thesis (origin per file in
-  [docs/provenance.md](docs/provenance.md)). They were ported byte-identical to the cited code apart from `package` /
-  `import` lines and class renames, so that results remain comparable with the thesis; the cited repositories keep the
-  original. Any change to ported code (a fix, a cleanup, a refactoring) needs the maintainer's explicit approval after
-  reviewing its diff; nothing changes on the side of other work (no reformatting, renames or "simplifications" of
-  performance-tuned code). A refactoring keeps the golden-master tests (`org.itmo.inds.golden`) passing unchanged
-  and the performance unchanged (JMH before and after). A defect fix has an issue (label `known-defect`) and a row in
-  the known-defects table of [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md); add a test that
-  shows it, then fix it in a commit of its own whose message says `Fixes #N`, and move the row to the fixes there
-  (or delete it if the fix cannot change results). Golden records are never changed: the fix lists the blocks it
-  changes in `golden-divergences.txt` ([docs/golden-records.md](docs/golden-records.md#changing-the-records)), and
-  changes the reference model (`ReferencePopulation`) if it changes a rule.
+- **Ported code**: the algorithm classes copied from the cited repositories (origin per file in
+  [docs/provenance.md](docs/provenance.md)), byte-identical apart from `package` / `import` lines and class renames,
+  so that results stay comparable with the thesis. Any change to it needs the maintainer's explicit approval after
+  reviewing its diff, and nothing changes on the side of other work (no reformatting, renames or "simplifications" of
+  performance-tuned code). A refactoring keeps the golden-master tests passing unchanged and the performance unchanged
+  (JMH before and after).
 - **New code**: everything else (APIs written for this repository, data loading, tests, benchmarks). The rules below
   apply to it.
+
+A defect of ported code is fixed in these steps:
+
+1. An issue (label `known-defect`) and a row in the known-defects table of
+   [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md).
+2. A test that fails without the fix.
+3. The fix, approved by the maintainer, in a commit of its own whose message says `Fixes #N`.
+4. In the same commit: the golden blocks it changes listed in `golden-divergences.txt`
+   ([docs/golden-records.md](docs/golden-records.md#changing-the-records); the records themselves never change), the
+   reference model (`ReferencePopulation`) changed if a rule changes, and the row moved to the fixes table (or deleted
+   if the fix cannot change results).
 
 ## Code quality of new code
 
@@ -56,8 +61,9 @@ threading. Types and non-trivial methods have it, with `@param` / `@return` / `@
 self-explanatory constants, trivial accessors and obvious private helpers need none. Project-specific terms are defined
 once, in the package's `package-info.java`, and used consistently. Documentation refers only to things in this
 repository and is written for its readers: no references to how the code came about (plans, checkpoints, task or
-review labels); explain the point itself, or link to the user-facing docs. Javadoc is no substitute for structure: if it has to explain a string or a muddled parameter, fix the code.
-Test methods get a one-line description when their name does not say what is checked.
+review labels); explain the point itself, or link to the user-facing docs. Javadoc is no substitute for structure: if
+it has to explain a string or a muddled parameter, fix the code. Test methods get a one-line description when their
+name does not say what is checked.
 
 ## Formatting
 
@@ -87,9 +93,8 @@ runs and the benchmarks are run by hand.
 
 ## Performance
 
-Benchmark numbers are machine-specific. Before changing an algorithm, measure the relevant benchmarks of the unchanged
-code on your machine, then compare with the same setup afterwards (fixed JDK, CPU pinning, an otherwise idle
-machine).
+Before changing an algorithm, measure the relevant benchmarks of the unchanged code on your machine, then compare with
+the same setup afterwards ([inds-benchmarks/README.md](inds-benchmarks/README.md#comparable-numbers)).
 
 ## Benchmark data
 
@@ -118,81 +123,12 @@ what its name says.
 | terms and thesis labels of a package | its `package-info.java` |
 | the contract of a type or method | its Javadoc |
 | rules for changing the code | this file; agent-specific notes in `CLAUDE.md` |
+| publishing a release | [docs/releasing.md](docs/releasing.md) |
 
-Typical updates: a defect found in ported code → an issue (`known-defect`) and a row in the known-defects table of
-`changes-from-cited-code.md`; the defect fixed → a commit with `Fixes #N` (closes the issue), the row moves to the
-fixes (or is deleted if the fix cannot change results), and `verification.md` changes if the checks or their results
-do. Commit messages refer to issues by number; old messages refer to the former roadmap IDs F1–F23, which
+Commit messages refer to issues by number; old messages refer to the former roadmap IDs F1–F23, which
 [#16](https://github.com/yakupov/YB18-inds-framework/issues/16) maps to issues and commits.
 
 ## Licenses
 
 MIT only: no source derived from LGPL / GPL code (e.g. MOEA Framework) and no third-party code without a clear
 license; third-party libraries only as Maven dependencies with MIT-compatible licenses.
-
-## Releasing
-
-Published to Maven Central under the group id `io.github.yakupov`: `inds-parent` (POM only), `inds-core` and
-`inds-baselines`, each with sources and Javadoc. The test data and benchmark modules and `inds-core`'s test-jar
-(golden records, test infrastructure) are not published. A release on Central is permanent: check before publishing.
-
-### One-time setup (maintainer only)
-
-1. **Central account.** Sign in to [central.sonatype.com](https://central.sonatype.com) with the GitHub account
-   `yakupov`; the namespace `io.github.yakupov` is verified with it. Generate a user token (a username and password
-   pair, not the login) for each place that uploads: one for `~/.m2/settings.xml` (server id `central`) if releasing
-   by hand, one for GitHub.
-2. **Signing key.** Central requires an OpenPGP signature (`.asc`) for every file and checks it against the public key
-   on a key server. The maintainer's key has a signing subkey for CI, so the primary key never leaves the
-   maintainer's machine:
-
-   ```bash
-   gpg --quick-add-key <FINGERPRINT> rsa4096 sign 2y                 # signing subkey, 2 years
-   gpg --keyserver keyserver.ubuntu.com --send-keys <FINGERPRINT>   # publish the key with the new subkey
-   gpg --armor --export-secret-subkeys <SUBKEY_ID>!                 # only that subkey (note the "!")
-   ```
-
-   If the subkey leaks, revoke it (`gpg --edit-key <FINGERPRINT>`, `key <n>`, `revkey`), send the key again and add a
-   new one.
-3. **GitHub environment.** Settings → Environments → New environment `release`: required reviewer `yakupov`;
-   deployment branches: selected branches, `main`; environment secrets `CENTRAL_TOKEN_USERNAME`,
-   `CENTRAL_TOKEN_PASSWORD` (the token for GitHub), `GPG_PRIVATE_KEY` (the exported subkey, armored text),
-   `GPG_PASSPHRASE`. Jobs of other branches and pull requests never see these secrets.
-
-### Release `X.Y.Z` from GitHub Actions
-
-1. Actions → **Release** → Run workflow on `main`: `version` `X.Y.Z`; `next` defaults to `X.Y+1.0-SNAPSHOT`.
-   `dry-run` builds and bundles without signing, uploading or pushing, and shows the release notes in the run summary.
-2. The workflow ([release.yml](.github/workflows/release.yml)) checks the inputs and that the tag is new, runs
-   `mvn verify` unless CI has already passed on the same commit (start the release after CI is green to save the
-   run), then waits for approval (environment `release`). After approval it commits "Release X.Y.Z" (POM versions and
-   the version in the README's dependency snippet), builds and signs the three artifacts, bundles them, uploads the
-   bundle ([scripts/central-upload.py](scripts/central-upload.py)) and waits until Central has validated it. Only then
-   it tags `vX.Y.Z`, commits the next development version and pushes both commits and the tag to `main` in one atomic
-   push (as `github-actions[bot]`), and creates a draft GitHub release whose notes list the issues closed (as
-   completed) since the previous release. It fails without uploading if `main` moved after the start.
-3. Publish the validated deployment on central.sonatype.com (Publish → Deployments → Publish), or drop it. Then edit
-   the draft release notes on GitHub (a sentence per user-visible change; drop issues that are not changes) and
-   publish them. After a drop, delete the tag and the draft release, or release the next version.
-
-### Release by hand (fallback)
-
-```bash
-mvn verify                                                    # all tests, on the code to release
-mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false
-git commit -am "Release X.Y.Z" && git tag -a vX.Y.Z -m "Release X.Y.Z"
-mvn -Prelease -Dmaven.test.skip=true -pl .,inds-core,inds-baselines deploy   # signs; writes target/central-staging
-python scripts/central-bundle.py target/central-staging target/central-bundle.zip
-```
-
-The `release` profile deploys into the local directory `target/central-staging`, not to a server, and refuses to run
-without `-Dmaven.test.skip=true` (that switch also keeps `inds-core`'s test-jar out). `central-bundle.py` checks that
-every POM and jar has its signature and checksums and zips them with the layout Central expects. Upload
-`target/central-bundle.zip` on central.sonatype.com (Publish → Publish Component), or with `central-upload.py` (token
-in `CENTRAL_TOKEN_USERNAME` / `CENTRAL_TOKEN_PASSWORD`); wait for the validation, check the three components and
-publish. Then push the commit and the tag, and set the next development version
-(`mvn versions:set -DnewVersion=X.Y+1.0-SNAPSHOT -DgenerateBackupPoms=false`, commit, push).
-
-Sonatype's `central-publishing-maven-plugin` is not used: on Windows with Maven 3.10 it writes zip entries with
-backslashes and puts resolver files into the bundle, which Central rejects. The scripts build and upload the same
-bundle on every platform.

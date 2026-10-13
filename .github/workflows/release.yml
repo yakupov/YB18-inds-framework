@@ -8,7 +8,7 @@
 #    main in one atomic push, and create a draft GitHub release whose notes list the issues closed since the previous
 #    release.
 # Publishing on Central stays manual: central.sonatype.com -> Publish -> Deployments -> Publish (or Drop); then publish
-# the draft GitHub release. Steps, secrets and the manual fallback: CONTRIBUTING.md, "Releasing".
+# the draft GitHub release. Steps, secrets and the manual fallback: docs/releasing.md.
 name: Release
 
 on:

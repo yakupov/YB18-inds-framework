@@ -117,7 +117,8 @@ Benchmarks, parameters, more examples and how to get comparable numbers:
   re-run the Chapter 3 figures
 - [provenance.md](docs/provenance.md): the origin of every ported file
 - [golden-records.md](docs/golden-records.md): format of the golden-master records
-- [CONTRIBUTING.md](CONTRIBUTING.md): rules for changing the code
+- [CONTRIBUTING.md](CONTRIBUTING.md): rules for changing the code; [releasing.md](docs/releasing.md): publishing a
+  release
 - [Issues](https://github.com/yakupov/YB18-inds-framework/issues): open work (defects to fix, improvements, ideas);
   [releases](https://github.com/yakupov/YB18-inds-framework/releases): what changed in each version
 
