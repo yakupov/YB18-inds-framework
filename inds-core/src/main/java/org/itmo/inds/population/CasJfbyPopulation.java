@@ -35,7 +35,8 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
          */
         volatile long publishedTs = Long.MAX_VALUE;
         /**
-         * Whether another level follows (or is being added behind) this level: eviction must not touch it.
+         * True if a level follows this one or is being added behind it. Eviction cuts only the last level, which is
+         * the one that is not sealed. Levels are sealed and unsealed under {@code addRemoveLevelLock}.
          */
         final boolean sealed;
 
@@ -49,6 +50,11 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
             this.sealed = sealed;
         }
 
+        /**
+         * Records the time taken after the CAS that made this version visible.
+         *
+         * @return this
+         */
         LevelRef published(long ts) {
             publishedTs = ts;
             return this;
@@ -66,17 +72,14 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
     private final CopyOnWriteArrayList<AtomicReference<LevelRef>> nonDominationLevels;
     private final AtomicLong time = new AtomicLong(0); //todo: process overflow
     /**
-     * Number of eviction steps (each removes a level or a member of the last level) finished so far, incremented after
-     * the step changed the levels. An insertion justifies the rank of its points by the level before it
-     * ({@link #justify}); eviction can remove that level or its members, so the justification is checked again if this
-     * number changed since it was established.
-     * <p>
-     * Eviction touches only the last level, which is the only level that is not sealed ({@link LevelRef#sealed}): a
-     * level is sealed, under {@link #addRemoveLevelLock}, before a level is added behind it, and unsealed after the level
-     * behind it was removed.
+     * Counts finished eviction steps (a level or a member of the last level removed). An insertion checks the rank of
+     * its points again ({@link #justify}) if the count changed since the rank was determined.
      */
     private final AtomicLong evictionEpoch = new AtomicLong(0);
 
+    /**
+     * Addends split by whether the level before their rank dominates them.
+     */
     private record Justification<E>(List<E> justified, List<E> unjustified) {
     }
 
@@ -180,7 +183,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
 
                     final JfbyNonDominationLevel<T> newLevel = removeIndividualFromLevel(lastLevel, removedIndividual, sorter);
 
-                    //The CAS succeeds only if the level was not sealed since it was read: it is still the last one
+                    //succeeds only if the level is still unsealed, that is, still the last one
                     if (casPublish(nonDominationLevels.get(lastLevelIndex),
                             lastLevelRef, new LevelRef(time.incrementAndGet(), newLevel))) {
                         evictionEpoch.incrementAndGet();
@@ -249,13 +252,9 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
     }
 
     /**
-     * The addends of an insertion step are justified for the rank if each is dominated by a member of the level before
-     * the rank (the last level if the rank is not below the level count; nothing is needed before level 0). Eviction
-     * removes the last level and members of it, so it can remove what the rank was justified by: the points then belong
-     * to a lower rank. A level that is still there cannot lose a member to eviction while the level after it exists,
-     * so a justification that holds when the level after it is changed, holds for the change.
-     *
-     * @return the addends split by whether the level before the rank dominates them
+     * Splits the addends by whether the level before the rank (the last level if the rank is not below the level count)
+     * dominates them. Eviction can remove that level or its members, which lowers the rank of the points. Nothing is
+     * needed before level 0.
      */
     private Justification<Individual<T>> justify(final List<Individual<T>> addends, final int rank) {
         final int previous = Math.min(rank, nonDominationLevels.size()) - 1;
@@ -276,10 +275,9 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
     }
 
     /**
-     * Inserts points whose rank is not justified any more as new points, each with its own rank.
+     * Inserts the points again as new points, each with its own rank.
      *
-     * @return the rank of the first level that the insertion of {@code original} changed, null if it is not among the
-     * points
+     * @return the rank of the first level changed by the insertion of {@code original}, null if it is not among the points
      */
     private Integer reinsert(final List<Individual<T>> points, final Individual<T> original) {
         Integer originalFirstModifiedLevelRank = null;
@@ -391,12 +389,10 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
     }
 
     /**
-     * With {@link #addRemoveLevelLock} held: makes the last level sealed, so that eviction leaves it alone. If
-     * {@code addends} is given and an eviction step finished since {@code justifiedEpoch}, the last level must still
-     * dominate all addends when it is sealed (the seal is a CAS on the version that was checked); otherwise nothing is
-     * sealed.
+     * With the lock held: seals the last level. If {@code addends} is given and an eviction step finished since
+     * {@code justifiedEpoch}, the last level must still dominate all of them; the sealing CAS commits that check.
      *
-     * @return false if the addends are not all dominated by the last level
+     * @return false (nothing sealed) if it does not
      */
     private boolean sealLastLevel(final List<Individual<T>> addends, final long justifiedEpoch) {
         while (true) {
@@ -421,8 +417,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
     }
 
     /**
-     * With {@link #addRemoveLevelLock} held, after the level behind the level at the index was removed: the level is the
-     * last one again.
+     * With the lock held, after the level behind the one at the index was removed: it is the last level again.
      */
     private void unseal(final int index) {
         if (index < 0) {

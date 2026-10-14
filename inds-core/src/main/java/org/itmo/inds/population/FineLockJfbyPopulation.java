@@ -32,9 +32,8 @@ public class FineLockJfbyPopulation<T> implements ManagedPopulation<T> {
 
     private final AtomicInteger size = new AtomicInteger(0);
     /**
-     * Number of eviction steps (each removes a level or members of the last level) finished so far. An insertion
-     * computes its rank without locks; if an eviction step finished meanwhile, the rank may be too deep
-     * ({@link #rankIsTooDeep}).
+     * Counts finished eviction steps. An insertion checks its rank ({@link #rankIsTooDeep}) if the count changed since
+     * it computed the rank without locks.
      */
     private final AtomicLong evictionEpoch = new AtomicLong(0);
     private final CopyOnWriteArrayList<JfbyNonDominationLevel<T>> nonDominationLevels;
@@ -263,11 +262,9 @@ public class FineLockJfbyPopulation<T> implements ManagedPopulation<T> {
     }
 
     /**
-     * With the lock of {@code rank} (or the add-level lock if the rank is not below the level count) held: whether the
-     * level before the rank (the last level if the rank is not below the level count) does not dominate the point. That
-     * happens if eviction removed the levels or members that the lock-free rank was computed from. Eviction proceeds
-     * from the last level, so it cannot reach a level before one whose lock is held, and the result cannot change while
-     * the lock is held. Called only if an eviction step finished since the rank was computed.
+     * True if the level before the rank (the last level when appending) does not dominate the point: eviction removed
+     * what the rank was computed from. Call with the lock held, after an eviction step finished since the rank was
+     * computed.
      */
     private boolean rankIsTooDeep(final int rank, final Individual<T> addend) {
         final int previous = Math.min(rank, nonDominationLevels.size()) - 1;
