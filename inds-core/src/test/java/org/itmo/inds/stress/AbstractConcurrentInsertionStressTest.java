@@ -39,12 +39,13 @@ import static org.junit.jupiter.api.Assertions.fail;
  * <li>Without eviction (unlimited expected size) the population afterwards must satisfy the
  * {@link PopulationInvariants} (every distinct point present exactly once, in its oracle rank), have non-dominated
  * levels and a consistent size.
- * <li>With eviction (small expected sizes) the final ranks are not determined by the points, so only invariants that
- * hold in every interleaving are checked: no hang or exception, every remaining point is an inserted one and present
- * once, levels are non-empty and non-dominated, {@code size()} agrees with the snapshot, and the size is at least the
- * expected size and, after one more insertion without contention, at most the expected size times the population's
+ * <li>With eviction (small expected sizes) the remaining points are not determined by the inserted ones, so the checks
+ * are the invariants that hold in every interleaving: no hang or exception, every remaining point is an inserted one
+ * and present once, levels are non-empty and non-dominated, the level of every point is its rank among the remaining
+ * points (oracle), {@code size()} agrees with the snapshot, and the size is at least the expected size and, after one
+ * more insertion without contention, at most the expected size times the population's
  * {@link PopulationUnderTest#maxSizeFactor() factor}. (Fine skips an eviction pass while another one runs, so its
- * size may exceed the bound until the next insertion.)
+ * size may exceed the bound until the next insertion.) The checks are the same for all populations.
  * </ul>
  * <p>
  * Repetitions per case: {@code -Dinds.stress.repetitions} (default 100; 10 000 with {@code -Pstress}); points per
@@ -83,12 +84,10 @@ public abstract class AbstractConcurrentInsertionStressTest {
      * @param maxSizeFactor the population holds at most {@code expected size * maxSizeFactor} points after an
      *                      insertion without contention: 1 if every insertion above the expected size evicts, the
      *                      deletion threshold if eviction works in batches
-     * @param nonDominatedWithEviction whether the levels are checked for non-domination after concurrent insertion
-     *                      with eviction; false for populations known to violate it
      */
     public record PopulationUnderTest(String name, Supplier<ManagedPopulation<Integer>> factory,
                                       LongFunction<ManagedPopulation<Integer>> boundedFactory,
-                                      double maxSizeFactor, boolean nonDominatedWithEviction) {
+                                      double maxSizeFactor) {
         @Override
         @Nonnull
         public String toString() {
@@ -260,14 +259,13 @@ public abstract class AbstractConcurrentInsertionStressTest {
         final double[][] points = points(repetition);
         final ManagedPopulation<Integer> population = populationUnderTest.boundedFactory().apply(expectedSize);
         return insertConcurrently(pool, population, points, threads, repetition)
-                .or(() -> insertLastPointAndCheck(population, points, expectedSize, populationUnderTest,
-                        repetition));
+                .or(() -> insertLastPointAndCheck(population, points, expectedSize,
+                        populationUnderTest.maxSizeFactor(), repetition));
     }
 
     private static Optional<Failure> insertLastPointAndCheck(final ManagedPopulation<Integer> population,
                                                              final double[][] points, final long expectedSize,
-                                                             final PopulationUnderTest populationUnderTest,
-                                                             final int repetition) {
+                                                             final double maxSizeFactor, final int repetition) {
         final double[][] inserted = Arrays.copyOf(points, points.length + 1);
         inserted[points.length] = lastPoint(points, repetition);
         try {
@@ -275,7 +273,7 @@ public abstract class AbstractConcurrentInsertionStressTest {
         } catch (final RuntimeException e) {
             return Optional.of(new Failure(FailureKind.EXCEPTION, "insertion after the workers threw " + e));
         }
-        return evictionViolation(population, inserted, expectedSize, populationUnderTest)
+        return evictionViolation(population, inserted, expectedSize, maxSizeFactor)
                 .map(description -> new Failure(FailureKind.INVARIANT, description));
     }
 
@@ -395,15 +393,39 @@ public abstract class AbstractConcurrentInsertionStressTest {
      */
     private static Optional<String> evictionViolation(final ManagedPopulation<Integer> population,
                                                       final double[][] inserted, final long expectedSize,
-                                                      final PopulationUnderTest populationUnderTest) {
+                                                      final double maxSizeFactor) {
         final PopulationSnapshot<Integer> snapshot = population.getSnapshot();
         final List<NonDominationLevel<Integer>> levels = snapshot.getLevels();
         final int[] memberCount = new int[1];
         return remainingPointsViolation(levels, inserted, memberCount)
-                .or(() -> populationUnderTest.nonDominatedWithEviction()
-                        ? dominatedMemberViolation(levels) : Optional.empty())
+                .or(() -> dominatedMemberViolation(levels))
+                .or(() -> rankViolation(levels))
                 .or(() -> evictionSizeViolation(population.size(), snapshot.getSize(), memberCount[0],
-                        distinctCount(inserted), expectedSize, populationUnderTest.maxSizeFactor()));
+                        distinctCount(inserted), expectedSize, maxSizeFactor));
+    }
+
+    /**
+     * Checks that the level index of every remaining point is its rank among the remaining points (oracle).
+     */
+    private static Optional<String> rankViolation(final List<NonDominationLevel<Integer>> levels) {
+        final List<double[]> remaining = new ArrayList<>();
+        final List<Integer> levelIndices = new ArrayList<>();
+        final List<Integer> ids = new ArrayList<>();
+        for (int levelIndex = 0; levelIndex < levels.size(); ++levelIndex) {
+            for (final Individual<Integer> member : levels.get(levelIndex).getMembers()) {
+                remaining.add(member.getObjectives());
+                levelIndices.add(levelIndex);
+                ids.add(member.getPayload());
+            }
+        }
+        final int[] ranks = Oracle.ranks(remaining.toArray(new double[0][]));
+        for (int i = 0; i < ranks.length; ++i) {
+            if (ranks[i] != levelIndices.get(i)) {
+                return Optional.of("point " + ids.get(i) + " is in level " + levelIndices.get(i)
+                        + ", its rank among the remaining points is " + ranks[i]);
+            }
+        }
+        return Optional.empty();
     }
 
     /**

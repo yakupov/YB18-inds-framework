@@ -30,9 +30,11 @@ the fixes, one commit each, and a cosmetic edit of `FitnessAndCdIndividual` (an 
 - **Stress.** 2, 6, 12 and 24 threads insert disjoint parts of a shuffled point set; 100 repetitions per case in
   `mvn verify`, 10 000 with `-Pstress` (about 15 minutes). Run on the cited builds, it found the three concurrency
   defects that are now fixed. A second scenario inserts concurrently into populations with expected sizes 5 and 50
-  (20 repetitions per case, 1 000 with `-Pstress`) and checks only what holds in every interleaving: no hang or
-  exception, remaining points are inserted ones and present once, non-dominated levels, consistent size, size within
-  the expected-size bounds. Crowding distances of the evicted points and exact ranks are not checked there.
+  (20 repetitions per case, 1 000 with `-Pstress`) and checks, for every population alike, what holds in every
+  interleaving: no hang or exception, remaining points are inserted ones and present once, non-dominated levels, the
+  level of each point is its rank among the remaining points, consistent size, size within the expected-size bounds.
+  Crowding distances of the evicted points are not checked there. Run on the cited Fine code, it found the defect in
+  [changes-from-cited-code.md](changes-from-cited-code.md#fixes).
 
 ## 3. Performance
 

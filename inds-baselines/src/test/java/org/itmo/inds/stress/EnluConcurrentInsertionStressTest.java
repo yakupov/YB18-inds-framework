@@ -12,6 +12,6 @@ class EnluConcurrentInsertionStressTest extends AbstractConcurrentInsertionStres
     @Override
     protected List<PopulationUnderTest> populations() {
         return List.of(new PopulationUnderTest("ENLU", () -> new EnluPopulation<>(Long.MAX_VALUE),
-                EnluPopulation::new, 1, true));
+                EnluPopulation::new, 1));
     }
 }

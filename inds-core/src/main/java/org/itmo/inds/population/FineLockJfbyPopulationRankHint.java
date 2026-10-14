@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,6 +31,12 @@ public class FineLockJfbyPopulationRankHint<T> implements ManagedPopulation<T> {
     private final JfbSorter sorter;
 
     private final AtomicInteger size = new AtomicInteger(0);
+    /**
+     * Number of eviction steps (each removes a level or members of the last level) finished so far. An insertion
+     * computes its rank without locks; if an eviction step finished meanwhile, the rank may be too deep
+     * ({@link #rankIsTooDeep}).
+     */
+    private final AtomicLong evictionEpoch = new AtomicLong(0);
     private final CopyOnWriteArrayList<JfbyNonDominationLevel<T>> nonDominationLevels;
     private final Map<Individual<T>, Boolean> presentIndividuals = new ConcurrentHashMap<>();
 
@@ -158,6 +165,7 @@ public class FineLockJfbyPopulationRankHint<T> implements ManagedPopulation<T> {
                             nonDominationLevels.set(lastLevelIndex, newLevel);
                         }
 
+                        evictionEpoch.incrementAndGet(); //after the levels are changed, before the locks are released
                     } finally {
                         lastLevelLock.unlock();
                         addLevelLock.unlock();
@@ -212,11 +220,18 @@ public class FineLockJfbyPopulationRankHint<T> implements ManagedPopulation<T> {
         }
 
         int rank = -1;
+        long epoch = 0;
         while (true) { //TODO: under remove level lock? ReentrantReadWriteLock?
+            if (rank < 0) {
+                epoch = evictionEpoch.get(); //before the lock-free rank computation
+            }
             rank = determineRank(addend, rank);
             final Lock lock = acquireLock(rank);
             try {
-                if (rank >= nonDominationLevels.size() && lock == addLevelLock) {
+                if (epoch != evictionEpoch.get() && rankIsTooDeep(rank, addend)) {
+                    lock.unlock();
+                    rank = -1; //compute the rank again, without the hint
+                } else if (rank >= nonDominationLevels.size() && lock == addLevelLock) {
                     break;
                 } else if (!nonDominationLevels.get(rank).dominatedByAnyPointOfThisLayer(addend)) {
                     break;
@@ -231,6 +246,7 @@ public class FineLockJfbyPopulationRankHint<T> implements ManagedPopulation<T> {
         //Locked current level or all level addition
 
         if (rank >= nonDominationLevels.size()) {
+            rank = nonDominationLevels.size();
             final List<Individual<T>> individuals = Collections.singletonList(addend);
             final JfbyNonDominationLevel<T> level = new JfbyNonDominationLevel<>(
                     sorter,
@@ -271,6 +287,18 @@ public class FineLockJfbyPopulationRankHint<T> implements ManagedPopulation<T> {
         massRemoveWorst();
 
         return rank;
+    }
+
+    /**
+     * With the lock of {@code rank} (or the add-level lock if the rank is not below the level count) held: whether the
+     * level before the rank (the last level if the rank is not below the level count) does not dominate the point. That
+     * happens if eviction removed the levels or members that the rank was computed from. Eviction proceeds from the
+     * last level, so it cannot reach a level before one whose lock is held, and the result cannot change while the lock
+     * is held. Called only if an eviction step finished since the rank was computed without the hint.
+     */
+    private boolean rankIsTooDeep(final int rank, final Individual<T> addend) {
+        final int previous = Math.min(rank, nonDominationLevels.size()) - 1;
+        return previous >= 0 && !nonDominationLevels.get(previous).dominatedByAnyPointOfThisLayer(addend);
     }
 
     private Lock acquireLock(int rank) {
