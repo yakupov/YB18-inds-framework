@@ -50,6 +50,13 @@ a same-day run of the legacy build to separate machine drift from code changes.
 | Same | ENLU population | 12 / 12 |
 | Single-point insertion, ZDT1 (2 objectives) | 2D | 3 / 3 |
 
+The fixes for insertion with eviction ([#20](https://github.com/yakupov/YB18-inds-framework/issues/20)) were measured
+the same way against the code before them (same build, 2 rounds, 12 logical processors): the concurrent insertion
+benchmark (Fine both, CAS both, 3, 6, 12 threads) differs by −1.3 % to +1.6 % with overlapping confidence intervals,
+Coarse and Level, which did not change, by −1.1 % to +0.6 %. With eviction on every insertion (expected size 4 500,
+CAS) the difference is −1.2 % to +2.5 % for 1 to 24 threads, and with batch eviction in Fine (expected size 3 000) −1.9 %
+to +1.1 %.
+
 The benchmark module (`inds-benchmarks`) builds bit-identical inputs and agrees with the measurements of the cited
 code (79 of 81 within tolerance, the other two drift). The numbers are specific to that machine; to check a change,
 measure before and after on yours (CONTRIBUTING.md, "Performance").
