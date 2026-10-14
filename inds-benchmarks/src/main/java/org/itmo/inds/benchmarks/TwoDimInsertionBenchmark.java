@@ -1,7 +1,7 @@
 package org.itmo.inds.benchmarks;
 
 import org.itmo.inds.api.FitnessAndCdIndividual;
-import org.itmo.inds.twod.TwoDimTreapPopulation;
+import org.itmo.inds.api.ManagedPopulation;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -40,7 +40,7 @@ public class TwoDimInsertionBenchmark {
 
     private BenchmarkInput input;
     private double[] addend;
-    private TwoDimTreapPopulation<Object> population;
+    private ManagedPopulation<Void> population;
 
     @Setup(Level.Trial)
     public void prepare() {
@@ -53,7 +53,7 @@ public class TwoDimInsertionBenchmark {
 
     @Setup(Level.Invocation)
     public void reset() {
-        population = new TwoDimTreapPopulation<>(Long.MAX_VALUE);
+        population = EmptyPopulation.TWO_DIM.create();
         for (final double[] point : input.population()) {
             population.addIndividual(new FitnessAndCdIndividual<>(point, null));
         }

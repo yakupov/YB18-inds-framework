@@ -36,7 +36,7 @@ public class TwoDimSequenceBenchmark {
     static final int SEEDS = 10;
 
     @Param
-    public TwoDimSequenceAlgorithm algorithm;
+    public EmptyPopulation algorithm;
 
     @Param
     public SyntheticProblem problem;
@@ -64,7 +64,7 @@ public class TwoDimSequenceBenchmark {
 
     @Setup(Level.Invocation)
     public void reset() {
-        population = algorithm.createPopulation();
+        population = algorithm.create();
     }
 
     /**

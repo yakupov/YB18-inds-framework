@@ -7,12 +7,11 @@ import org.itmo.inds.twod.TwoDimTreapPopulation;
 import java.util.function.Supplier;
 
 /**
- * The algorithms of {@link TwoDimSequenceBenchmark} (thesis Chapter 2): each inserts points one at a time into an
- * empty population.
+ * Populations without a size limit that start empty, for the benchmarks that fill them themselves.
  */
-public enum TwoDimSequenceAlgorithm {
+public enum EmptyPopulation {
     /**
-     * 2D: levels stored in treaps.
+     * 2D: levels stored in treaps (two objectives only).
      */
     TWO_DIM(() -> new TwoDimTreapPopulation<>(Long.MAX_VALUE)),
     /**
@@ -22,14 +21,14 @@ public enum TwoDimSequenceAlgorithm {
 
     private final Supplier<ManagedPopulation<Void>> factory;
 
-    TwoDimSequenceAlgorithm(final Supplier<ManagedPopulation<Void>> factory) {
+    EmptyPopulation(final Supplier<ManagedPopulation<Void>> factory) {
         this.factory = factory;
     }
 
     /**
-     * @return a new empty population without a size limit
+     * @return a new empty population
      */
-    ManagedPopulation<Void> createPopulation() {
+    ManagedPopulation<Void> create() {
         return factory.get();
     }
 }

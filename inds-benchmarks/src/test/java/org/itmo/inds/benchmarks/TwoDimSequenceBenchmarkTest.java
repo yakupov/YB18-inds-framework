@@ -17,14 +17,14 @@ class TwoDimSequenceBenchmarkTest {
     private static final int SIZE = 250;
 
     static Stream<Arguments> algorithmsAndProblems() {
-        return Arrays.stream(TwoDimSequenceAlgorithm.values())
+        return Arrays.stream(EmptyPopulation.values())
                 .flatMap(algorithm -> Arrays.stream(SyntheticProblem.values())
                         .map(problem -> Arguments.of(algorithm, problem)));
     }
 
     @ParameterizedTest(name = "{0} {1}")
     @MethodSource("algorithmsAndProblems")
-    void populationHoldsTheDistinctPoints(final TwoDimSequenceAlgorithm algorithm, final SyntheticProblem problem) {
+    void populationHoldsTheDistinctPoints(final EmptyPopulation algorithm, final SyntheticProblem problem) {
         final TwoDimSequenceBenchmark benchmark = new TwoDimSequenceBenchmark();
         benchmark.algorithm = algorithm;
         benchmark.problem = problem;

@@ -13,7 +13,7 @@
  *     <td>{@code snapshot} (two objectives)</td></tr>
  * <tr><td>{@link org.itmo.inds.benchmarks.TwoDimSequenceBenchmark}</td>
  *     <td>inserting all points of a synthetic problem into an empty population (thesis Chapter 2)</td>
- *     <td>{@code algorithm} ({@link org.itmo.inds.benchmarks.TwoDimSequenceAlgorithm}: 2D, ENLU), {@code problem}
+ *     <td>{@code algorithm} ({@link org.itmo.inds.benchmarks.EmptyPopulation}: 2D, ENLU), {@code problem}
  *         ({@link org.itmo.inds.testdata.SyntheticProblem}), {@code size}</td></tr>
  * <tr><td>{@link org.itmo.inds.benchmarks.ConcurrentInsertionBenchmark}</td>
  *     <td>inserting a sequence of points with several threads (thesis Chapter 4)</td>

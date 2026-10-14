@@ -3,7 +3,6 @@ package org.itmo.inds.benchmarks;
 import org.itmo.inds.api.FitnessAndCdIndividual;
 import org.itmo.inds.api.Individual;
 import org.itmo.inds.api.ManagedPopulation;
-import org.itmo.inds.baselines.enlu.EnluPopulation;
 import org.itmo.inds.population.JfbyNonDominationLevel;
 import org.itmo.inds.sorting.IncrementalJfbSorter;
 import org.itmo.inds.sorting.JfbSorter;
@@ -146,7 +145,7 @@ public enum InsertionAlgorithm {
 
     @SuppressWarnings("unchecked")
     private static PreparedInsertion enluPopulation(final BenchmarkInput input) {
-        final ManagedPopulation<Void> template = new EnluPopulation<>(Long.MAX_VALUE);
+        final ManagedPopulation<Void> template = EmptyPopulation.ENLU.create();
         for (final Individual<Void> individual : individuals(input)) {
             template.addIndividual(individual);
         }
