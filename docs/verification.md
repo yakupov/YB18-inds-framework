@@ -29,12 +29,9 @@ the fixes, one commit each, and a cosmetic edit of `FitnessAndCdIndividual` (an 
   and into the model; ranks, evictions, levels, crowding distances (bit for bit) and sizes must agree.
 - **Stress.** 2, 6, 12 and 24 threads insert disjoint parts of a shuffled point set; 100 repetitions per case in
   `mvn verify`, 10 000 with `-Pstress` (about 15 minutes). Run on the cited builds, it found the three concurrency
-  defects that are now fixed. A second scenario inserts concurrently into populations with expected sizes 5 and 50
-  (20 repetitions per case, 1 000 with `-Pstress`) and checks, for every population alike, what holds in every
-  interleaving: no hang or exception, remaining points are inserted ones and present once, non-dominated levels, the
-  level of each point is its rank among the remaining points, consistent size, size within the expected-size bounds.
-  Crowding distances of the evicted points are not checked there. Run on the cited Fine code, it found the defect in
-  [changes-from-cited-code.md](changes-from-cited-code.md#fixes).
+  defects that are now fixed. A second scenario inserts into populations with expected sizes 5 and 50 (eviction; 20
+  repetitions per case, 1 000 with `-Pstress`) and checks the same invariants for every population, including the
+  rank of each remaining point; it found the defects of [#20](https://github.com/yakupov/YB18-inds-framework/issues/20).
 
 ## 3. Performance
 
@@ -49,13 +46,7 @@ a same-day run of the legacy build to separate machine drift from code changes.
 | Single-point insertion into NSGA-II snapshots and synthetic sets (thesis Ch. 3) | DC, DC1, DC2, Level | 47 / 48; the remaining one is drift (the same-day legacy run moved the same way) |
 | Same | ENLU population | 12 / 12 |
 | Single-point insertion, ZDT1 (2 objectives) | 2D | 3 / 3 |
-
-The fixes for insertion with eviction ([#20](https://github.com/yakupov/YB18-inds-framework/issues/20)) were measured
-the same way against the code before them (same build, 2 rounds, 12 logical processors): the concurrent insertion
-benchmark (Fine both, CAS both, 3, 6, 12 threads) differs by −1.3 % to +1.6 % with overlapping confidence intervals,
-Coarse and Level, which did not change, by −1.1 % to +0.6 %. With eviction on every insertion (expected size 4 500,
-CAS) the difference is −1.2 % to +2.5 % for 1 to 24 threads, and with batch eviction in Fine (expected size 3 000) −1.9 %
-to +1.1 %.
+| Concurrent insertion, also with eviction on every insertion; the fixes of #20 against the code before them | Fine (both), CAS (both), Coarse | within ±2.5 % |
 
 The benchmark module (`inds-benchmarks`) builds bit-identical inputs and agrees with the measurements of the cited
 code (79 of 81 within tolerance, the other two drift). The numbers are specific to that machine; to check a change,

@@ -1,7 +1,7 @@
 # Changes from the cited code
 
 What can make results of this library differ from the code the thesis cites ([provenance.md](provenance.md)): fixes,
-known defects and structural differences. Everything else is in the commit history and the
+known limitations and structural differences. Everything else is in the commit history and the
 [release notes](https://github.com/yakupov/YB18-inds-framework/releases); performance: [verification.md](verification.md).
 
 ## Fixes
@@ -19,17 +19,18 @@ Each fix is a commit of its own with a test that failed before it. The golden-ma
 | Level, Coarse, Fine | `clone()` threw (Level, Coarse) or returned a copy sharing the level list with the original (Fine; inserting into it could hang) | copy the levels into a list of the copy's own; Coarse returns a Coarse | [#2](https://github.com/yakupov/YB18-inds-framework/issues/2) |
 | Level, Coarse, Fine, CAS, ENLU | members of a level sharing one objective value got crowding distance NaN (never evicted, broke comparisons) | an objective without range adds 0, as in 2D | [#17](https://github.com/yakupov/YB18-inds-framework/issues/17) |
 | CAS | `size()` counted insertions, not members, once eviction started | decrement it on eviction | [#18](https://github.com/yakupov/YB18-inds-framework/issues/18) |
-| Fine, both versions | concurrent insertions with eviction: a point placed one or more levels too deep (its rank computed without locks, before eviction removed the levels or members that it was computed from), and after later insertions in the level of a point that dominates it; up to 7 % of the stress runs with 24 threads and an expected size of 50 | an eviction step increments a counter; an insertion that finds it changed since it computed the rank checks under its lock that the level before dominates the point (the last level when it appends a level) and recomputes the rank otherwise; an appended level reports its real rank | [#20](https://github.com/yakupov/YB18-inds-framework/issues/20) |
-| CAS, both modes | concurrent insertions with eviction: a point placed one or more levels too deep (eviction removed the members that its rank, or the rank of points pushed down by it, was justified by, between two steps of the insertion), and eviction of a member from a level behind which another level had been appended meanwhile; up to 1.3 % of the stress runs with 12 and 24 threads | a level is sealed (a flag of its version) before a level is added behind it, and unsealed after that level is removed; removing a member publishes only an unsealed level, so it cannot cut a level that has a successor, still without a lock; an eviction step increments a counter, and an insertion that finds it changed since it justified its rank checks that the level before dominates its points (the last level when it adds levels, committed by the sealing CAS), and inserts the points that it does not dominate again | [#20](https://github.com/yakupov/YB18-inds-framework/issues/20) |
+| Fine, both versions | concurrent insertions with eviction: a point placed too deep because its rank, computed without locks, went stale; sometimes in the level of a point that dominates it (up to 7 % of the stress runs) | an eviction counter; if it changed, check under the lock that the level before the rank dominates the point | [#20](https://github.com/yakupov/YB18-inds-framework/issues/20) |
+| CAS, both modes | the same (up to 1.3 % of the stress runs), and eviction of a member from a level that already had a successor | levels are sealed before one is added behind them and only the unsealed last level is evicted; the same counter and check, points that fail it are inserted again | [#20](https://github.com/yakupov/YB18-inds-framework/issues/20) |
 | CAS | `clone()` threw a `NullPointerException` if another thread removed the last level meanwhile | skip the reference of a level being removed, as `getSnapshot()` does | [#19](https://github.com/yakupov/YB18-inds-framework/issues/19) |
 
-## Known defects
+## Known limitations
 
-| Where | Defect | Issue |
+Defects that are not fixed yet are GitHub issues labelled `known-defect`.
+
+| Where | Limitation | Why it stays |
 |---|---|---|
-| CAS | retry loops swallow index errors (endless retry); a removed last level is waited for by spinning | [#3](https://github.com/yakupov/YB18-inds-framework/issues/3) |
-| CAS | the logical clock (`AtomicLong`) has no overflow handling | none: 2⁶³ ticks are out of reach |
-| Fine, CAS | `getSnapshot()` is not linearizable: during insertions, moving points can be missing and `size()` can disagree with the snapshot | none: inherent in the design ([architecture.md](architecture.md)) |
+| Fine, CAS | the counters (the CAS clock, the eviction counters; 64 bits) are never reset | 2⁶³ increments are out of reach; the eviction counters are only compared for inequality |
+| Fine, CAS | `getSnapshot()` is not linearizable: during insertions, moving points can be missing and `size()` can disagree with the snapshot | inherent in the design ([architecture.md](architecture.md)) |
 
 Where the members of a level share a value in an objective, their order in the crowding-distance computation, and so
 which of them count as extremes or neighbours, depends on the insertion order. The cited work does not specify it;

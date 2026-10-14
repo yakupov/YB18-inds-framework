@@ -16,8 +16,9 @@ baselines, benchmark data and benchmarks. Start with [README.md](README.md) and 
   files, and commit only after the maintainer has verified it. Nothing on the side: no member renames, no "cleanups"
   of internals (loops, data structures, array-vs-list choices, sweep / merge logic, crowding-distance math), no
   reformatting; it is performance-tuned research code whose results must stay comparable with the thesis. Report a
-  suspected defect first; fix it with the steps in CONTRIBUTING.md. Known defects:
-  [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md#known-defects); open work: `gh issue list`.
+  suspected defect first; fix it with the steps in CONTRIBUTING.md. Known defects are issues labelled `known-defect`
+  (`gh issue list`); known limitations:
+  [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md#known-limitations).
 - **Concurrent classes** (`FineLockJfbyPopulation*`, `CasJfbyPopulation`, `CoarseLockJfbyPopulation`,
   `EnluPopulation`): not even "harmless" edits (`final`, diamonds, lambdas, collection-type swaps, annotation or comment
   changes, replacing `synchronized` / locks / atomics) unless approved as above; every change to them is checked with

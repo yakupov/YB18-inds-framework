@@ -15,38 +15,19 @@ machine and JDK.
 
 ## Thesis Chapter 2, synthetic tests (Figures 15–19)
 
-**Data:** none stored. `SyntheticProblem` generates the five problems (`SQUARE`, `PARALLEL`, `DIAG1`, `DIAG2`,
-`PARPER`) from the description in Section 2.3.1; the original generator code was not found. The random problems take a
-seed; the order of `PARPER` is read off the figure (N = 24). `TwoDimSequenceBenchmark` inserts all N points one by one
-into an empty population and measures the total time, for the 2D population and ENLU, N = 250 … 4 000. The benchmark
-cycles through 10 seeds of the random problems instead of the thesis's 100 runs. The thesis also compared the number of
-comparisons and the plain fast non-dominated sorting; neither is reproduced here.
+`SyntheticProblem` generates the five problems of Section 2.3.1 (`SQUARE`, `PARALLEL`, `DIAG1`, `DIAG2`, `PARPER`). The
+original generators were not found: they are recreated from the text, and the order of `PARPER` is read off Figure 19.
+`TwoDimSequenceBenchmark` inserts all N points one by one into an empty 2D population and into ENLU, N = 250 … 4 000
+(10 seeds of the random problems instead of 100 runs; the comparison counts and the plain fast non-dominated sorting
+are not reproduced).
 
 ```bash
-java -jar inds-benchmarks/target/benchmarks.jar "TwoDimSequenceBenchmark" -rf json -rff chapter2.json  # about 20 minutes
+java -jar inds-benchmarks/target/benchmarks.jar "TwoDimSequenceBenchmark"   # about 20 minutes
 ```
 
-Total time in ms (average over the runs, 99.9 % confidence intervals within 7 % of the value; JDK 17.0.10, AMD Ryzen 9
-7900X3D, JVM pinned to logical processors 0–11, machine idle, 2 forks of 5 warm-up and 5 measurement iterations):
-
-| Problem | Algorithm | N = 250 | 500 | 1 000 | 2 000 | 4 000 |
-|---|---|---|---|---|---|---|
-| `SQUARE` | 2D | 0.12 | 0.29 | 0.78 | 2.1 | 5.3 |
-| | ENLU | 0.81 | 2.4 | 7.8 | 23 | 70 |
-| `PARALLEL` | 2D | 0.07 | 0.17 | 0.38 | 0.87 | 2.0 |
-| | ENLU | 0.68 | 2.6 | 9.7 | 38 | 163 |
-| `DIAG1` | 2D | 0.02 | 0.04 | 0.11 | 0.26 | 0.76 |
-| | ENLU | 0.03 | 0.06 | 0.12 | 0.28 | 0.69 |
-| `DIAG2` | 2D | 0.45 | 1.8 | 7.2 | 30 | 132 |
-| | ENLU | 4.7 | 19 | 77 | 300 | 1 186 |
-| `PARPER` | 2D | 0.11 | 0.32 | 0.97 | 3.1 | 11 |
-| | ENLU | 2.3 | 9.2 | 38 | 152 | 627 |
-
-The shapes of the thesis are reproduced: 2D beats ENLU on `SQUARE` and `PARALLEL`; the two are about equal on `DIAG1`
-(the best case of ENLU); 2D is quadratic in total on `DIAG2` (linear per insertion, the worst case for it) and ENLU is
-about nine times slower there; on `PARPER` ENLU is far behind (57 times at N = 4 000). One difference: the thesis finds
-ENLU cubic in total on `PARPER` (more than 3·10⁹ comparisons at N = 4 000); here it is quadratic. The ENLU measured
-here is the population of the Chapter 4 code, not the levels-only sorter of the thesis ([Limitations](#limitations)).
+The shapes of the figures are reproduced (2D faster on `SQUARE`, `PARALLEL` and `PARPER`, equal to ENLU on `DIAG1`,
+quadratic in total on `DIAG2`), with one difference: ENLU is quadratic in total on `PARPER`, the thesis finds it cubic.
+The ENLU here is the population of the Chapter 4 code, not the levels-only sorter ([Limitations](#limitations)).
 
 ## Thesis Chapter 3 (Figures 21–24)
 

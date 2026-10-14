@@ -15,14 +15,13 @@ Rules for changing this library, for people and coding agents alike. `CLAUDE.md`
 
 A defect of ported code is fixed in these steps:
 
-1. An issue (label `known-defect`) and a row in the known-defects table of
-   [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md).
+1. An issue (label `known-defect`).
 2. A test that fails without the fix.
 3. The fix, approved by the maintainer, in a commit of its own whose message says `Fixes #N`.
 4. In the same commit: the golden blocks it changes listed in `golden-divergences.txt`
    ([docs/golden-records.md](docs/golden-records.md#changing-the-records); the records themselves never change), the
-   reference model (`ReferencePopulation`) changed if a rule changes, and the row moved to the fixes table (or deleted
-   if the fix cannot change results).
+   reference model (`ReferencePopulation`) changed if a rule changes, and a row in the fixes table of
+   [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md) (none if the fix cannot change results).
 
 ## Code quality of new code
 
@@ -113,7 +112,7 @@ what its name says.
 | how it works: modules, packages, API, how each population works, data model, test layout | [docs/architecture.md](docs/architecture.md) |
 | open work: defects to fix, improvements, ideas; one issue per piece of work, with its gate (the checks it has to pass); labels `known-defect` (defect of the cited code), `bug` (defect of new code), `enhancement`, `build`, `data`, `research` | [GitHub issues](https://github.com/yakupov/YB18-inds-framework/issues) |
 | what changed in a release | [GitHub release notes](https://github.com/yakupov/YB18-inds-framework/releases), drafted by the Release workflow from the issues closed since the previous release |
-| how the code differs from the cited code where it can change results: fixes, known defects (each with its issue or the reason it has none), structural changes that matter for comparisons | [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md) |
+| how the code differs from the cited code where it can change results: fixes, known limitations (each with its reason), structural changes that matter for comparisons | [docs/changes-from-cited-code.md](docs/changes-from-cited-code.md) |
 | how sameness with the cited code is checked, and the results | [docs/verification.md](docs/verification.md) |
 | running the benchmarks: parameters, examples, comparable numbers | [inds-benchmarks/README.md](inds-benchmarks/README.md) |
 | which thesis experiment uses which data and benchmark, and how to re-run it | [docs/reproducibility.md](docs/reproducibility.md) |
