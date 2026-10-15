@@ -150,53 +150,93 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
     @Nullable
     Individual<T> intRemoveWorst() {
         while (true) {
-            try {
-                final int lastLevelIndex = nonDominationLevels.size() - 1;
-                final LevelRef lastLevelRef = nonDominationLevels.get(lastLevelIndex).get();
-                if (lastLevelRef == null || lastLevelRef.sealed) { //being removed, or a level is being added behind it
-                    continue;
-                }
-                final JfbyNonDominationLevel<T> lastLevel = lastLevelRef.level;
-                if (lastLevel.getMembers().size() <= 1) {
-                    try {
-                        addRemoveLevelLock.lock();
-                        if (lastLevelIndex == nonDominationLevels.size() - 1 &&
-                                nonDominationLevels.get(lastLevelIndex).compareAndSet(lastLevelRef, null)) {
-                            nonDominationLevels.remove(lastLevelIndex);
-                            unseal(lastLevelIndex - 1);
-                            evictionEpoch.incrementAndGet();
-                            if (lastLevel.getMembers().isEmpty()) {
-                                return null;
-                            } else {
-                                final Individual<T> rs = lastLevel.getMembers().get(0);
-                                presentIndividuals.remove(rs);
-                                size.decrementAndGet();
-                                return rs;
-                            }
-                        }
-                    } finally {
-                        addRemoveLevelLock.unlock();
-                    }
-                } else {
-                    final Individual<T> removedIndividual = getWorstCDIndividual(lastLevel);
-                    if (removedIndividual == null)
-                        return null;
-
-                    final JfbyNonDominationLevel<T> newLevel = removeIndividualFromLevel(lastLevel, removedIndividual, sorter);
-
-                    //succeeds only if the level is still unsealed, that is, still the last one
-                    if (casPublish(nonDominationLevels.get(lastLevelIndex),
-                            lastLevelRef, new LevelRef(time.incrementAndGet(), newLevel))) {
+            final int lastLevelIndex = nonDominationLevels.size() - 1;
+            if (lastLevelIndex < 0) { //no level at the moment: the population is being filled or emptied by other threads
+                awaitLevelChange();
+                continue;
+            }
+            final LevelRef lastLevelRef = levelAt(lastLevelIndex);
+            if (lastLevelRef == null || lastLevelRef.sealed) { //removed, or a level is being added behind it
+                awaitLevelChange();
+                continue;
+            }
+            final JfbyNonDominationLevel<T> lastLevel = lastLevelRef.level;
+            if (lastLevel.getMembers().size() <= 1) {
+                try {
+                    addRemoveLevelLock.lock();
+                    if (lastLevelIndex == nonDominationLevels.size() - 1 &&
+                            nonDominationLevels.get(lastLevelIndex).compareAndSet(lastLevelRef, null)) {
+                        nonDominationLevels.remove(lastLevelIndex);
+                        unseal(lastLevelIndex - 1);
                         evictionEpoch.incrementAndGet();
-                        presentIndividuals.remove(removedIndividual);
-                        size.decrementAndGet();
-                        return removedIndividual;
+                        if (lastLevel.getMembers().isEmpty()) {
+                            return null;
+                        } else {
+                            final Individual<T> rs = lastLevel.getMembers().get(0);
+                            presentIndividuals.remove(rs);
+                            size.decrementAndGet();
+                            return rs;
+                        }
                     }
+                } finally {
+                    addRemoveLevelLock.unlock();
                 }
-            } catch (ArrayIndexOutOfBoundsException ignored) {
-                //retry
+            } else {
+                final Individual<T> removedIndividual = getWorstCDIndividual(lastLevel);
+                if (removedIndividual == null)
+                    return null;
+
+                final JfbyNonDominationLevel<T> newLevel = removeIndividualFromLevel(lastLevel, removedIndividual, sorter);
+
+                //succeeds only if the level is still unsealed, that is, still the last one
+                if (casPublish(lastLevelIndex, lastLevelRef, new LevelRef(time.incrementAndGet(), newLevel))) {
+                    evictionEpoch.incrementAndGet();
+                    presentIndividuals.remove(removedIndividual);
+                    size.decrementAndGet();
+                    return removedIndividual;
+                }
             }
         }
+    }
+
+    /**
+     * @return the reference of the level at the index, null if there is no such level because it was removed
+     */
+    @Nullable
+    private AtomicReference<LevelRef> levelSlot(final int index) {
+        try {
+            return nonDominationLevels.get(index);
+        } catch (final IndexOutOfBoundsException e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return the current version of the level at the index, null if the level was removed or is being removed
+     */
+    @Nullable
+    private LevelRef levelAt(final int index) {
+        final AtomicReference<LevelRef> slot = levelSlot(index);
+        return slot == null ? null : slot.get();
+    }
+
+    /**
+     * Publishes {@code update} as the next version of the level at the index if it is still {@code expected}.
+     *
+     * @return false if it is not, or if the level was removed
+     */
+    private boolean casPublish(final int index, final LevelRef expected, final LevelRef update) {
+        final AtomicReference<LevelRef> slot = levelSlot(index);
+        return slot != null && casPublish(slot, expected, update);
+    }
+
+    /**
+     * Waits until the thread that removes a level or adds levels has released the lock, that is, the levels are
+     * consistent again.
+     */
+    private void awaitLevelChange() {
+        addRemoveLevelLock.lock();
+        addRemoveLevelLock.unlock();
     }
 
     @Override
@@ -210,19 +250,15 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
         int lastNonDominating = r + 1;
         while (l <= r) {
             final int test = (l + r) / 2;
-            try {
-                final LevelRef levelRef = nonDominationLevels.get(test).get();
-                if (levelRef == null) {
-                    r--;
-                } else if (!levelRef.level.dominatedByAnyPointOfThisLayer(point)) {
-                    //Racy, but that's OK
-                    lastNonDominating = test;
-                    r = test - 1;
-                } else {
-                    l = test + 1;
-                }
-            } catch (ArrayIndexOutOfBoundsException e) {
+            final LevelRef levelRef = levelAt(test);
+            if (levelRef == null) { //removed or being removed
                 r--;
+            } else if (!levelRef.level.dominatedByAnyPointOfThisLayer(point)) {
+                //Racy, but that's OK
+                lastNonDominating = test;
+                r = test - 1;
+            } else {
+                l = test + 1;
             }
         }
 
@@ -262,7 +298,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
         if (previous < 0) {
             return new Justification<>(addends, new ArrayList<>());
         }
-        final LevelRef previousLevelRef = nonDominationLevels.get(previous).get();
+        final LevelRef previousLevelRef = levelAt(previous);
         final List<Individual<T>> justified = new ArrayList<>();
         final List<Individual<T>> unjustified = new ArrayList<>();
         for (final Individual<T> addend : addends) {
@@ -303,83 +339,81 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
         List<Individual<T>> addends = new LinkedList<>();
         addends.add(originalAddend);
         while (!addends.isEmpty()) {
-            try {
-                final long epoch = evictionEpoch.get();
-                if (epoch != justifiedEpoch) { //an eviction step finished since the rank was justified
-                    final Justification<Individual<T>> justification = justify(addends, rank);
-                    justifiedEpoch = epoch;
-                    if (!justification.unjustified().isEmpty()) {
-                        addends = justification.justified();
-                        final Integer reinsertedFirstModifiedLevelRank = reinsert(justification.unjustified(), originalAddend);
-                        if (firstModifiedLevelRank == null) {
-                            firstModifiedLevelRank = reinsertedFirstModifiedLevelRank;
-                        }
-                        continue;
+            final long epoch = evictionEpoch.get();
+            if (epoch != justifiedEpoch) { //an eviction step finished since the rank was justified
+                final Justification<Individual<T>> justification = justify(addends, rank);
+                justifiedEpoch = epoch;
+                if (!justification.unjustified().isEmpty()) {
+                    addends = justification.justified();
+                    final Integer reinsertedFirstModifiedLevelRank = reinsert(justification.unjustified(), originalAddend);
+                    if (firstModifiedLevelRank == null) {
+                        firstModifiedLevelRank = reinsertedFirstModifiedLevelRank;
+                    }
+                    continue;
+                }
+            }
+            if (rank >= nonDominationLevels.size()) {
+                if (tryToAddLevels(addends, rank, justifiedEpoch)) {
+                    if (firstModifiedLevelRank == null) {
+                        return rank;
+                    } else {
+                        return firstModifiedLevelRank;
                     }
                 }
-                if (rank >= nonDominationLevels.size()) {
-                    if (tryToAddLevels(addends, rank, justifiedEpoch)) {
+            } else {
+                final LevelRef levelRef = levelAt(rank);
+                if (levelRef == null) { //removed or being removed
+                    awaitLevelChange();
+                    continue;
+                }
+                final JfbyNonDominationLevel<T> level = levelRef.level;
+                if (ts > levelRef.publishedTs) {
+                    final NonDominationLevel.MemberAdditionResult<T, JfbyNonDominationLevel<T>> mar = level.addMembers(addends);
+                    if (casPublish(rank, levelRef, new LevelRef(time.incrementAndGet(), mar.getModifiedLevel(), levelRef.sealed))) {
                         if (firstModifiedLevelRank == null) {
-                            return rank;
-                        } else {
-                            return firstModifiedLevelRank;
+                            firstModifiedLevelRank = rank;
                         }
+                        ++rank;
+                        addends = mar.getEvictedMembers();
                     }
                 } else {
-                    final LevelRef levelRef = nonDominationLevels.get(rank).get();
-                    if (levelRef == null) {
-                        continue;
-                    }
-                    final JfbyNonDominationLevel<T> level = levelRef.level;
-                    if (ts > levelRef.publishedTs) {
-                        final NonDominationLevel.MemberAdditionResult<T, JfbyNonDominationLevel<T>> mar = level.addMembers(addends);
-                        if (casPublish(nonDominationLevels.get(rank), levelRef, new LevelRef(time.incrementAndGet(), mar.getModifiedLevel(), levelRef.sealed))) {
-                            if (firstModifiedLevelRank == null) {
-                                firstModifiedLevelRank = rank;
-                            }
-                            ++rank;
-                            addends = mar.getEvictedMembers();
-                        }
-                    } else {
-                        final Individual[] allMembers = lexMerge(addends, level.getMembers());
-                        final int[] ranks = sorter.performNds(allMembers);
-                        final List<Individual<T>> nextAddends = new ArrayList<>();
-                        final Set<Individual<T>> addendsSet = new HashSet<>(addends);
-                        final List<Individual<T>> actualAddends = new ArrayList<>(addends.size());
-                        final List<Individual<T>> actualRemovals = new ArrayList<>();
-                        for (int i = 0; i < allMembers.length; ++i) {
-                            if (ranks[i] == 0) {
-                                if (addendsSet.contains(allMembers[i])) {
-                                    //noinspection unchecked
-                                    actualAddends.add(allMembers[i]);
-                                }
-                            } else {
+                    final Individual[] allMembers = lexMerge(addends, level.getMembers());
+                    final int[] ranks = sorter.performNds(allMembers);
+                    final List<Individual<T>> nextAddends = new ArrayList<>();
+                    final Set<Individual<T>> addendsSet = new HashSet<>(addends);
+                    final List<Individual<T>> actualAddends = new ArrayList<>(addends.size());
+                    final List<Individual<T>> actualRemovals = new ArrayList<>();
+                    for (int i = 0; i < allMembers.length; ++i) {
+                        if (ranks[i] == 0) {
+                            if (addendsSet.contains(allMembers[i])) {
                                 //noinspection unchecked
-                                nextAddends.add(allMembers[i]);
-                                if (!addendsSet.contains(allMembers[i])) {
-                                    //noinspection unchecked
-                                    actualRemovals.add(allMembers[i]);
-                                }
+                                actualAddends.add(allMembers[i]);
+                            }
+                        } else {
+                            //noinspection unchecked
+                            nextAddends.add(allMembers[i]);
+                            if (!addendsSet.contains(allMembers[i])) {
+                                //noinspection unchecked
+                                actualRemovals.add(allMembers[i]);
                             }
                         }
+                    }
 
-                        final SortedObjectives<Individual<T>, T> nso = level.getSortedObjectives().update(
-                                actualAddends,
-                                actualRemovals,
-                                (i, d) -> new FitnessAndCdIndividual<>(i.getObjectives(), d, i.getPayload())
-                        );
+                    final SortedObjectives<Individual<T>, T> nso = level.getSortedObjectives().update(
+                            actualAddends,
+                            actualRemovals,
+                            (i, d) -> new FitnessAndCdIndividual<>(i.getObjectives(), d, i.getPayload())
+                    );
 
-                        final JfbyNonDominationLevel<T> newLevel = new JfbyNonDominationLevel<>(sorter, nso.getLexSortedPop(), nso);
-                        if (casPublish(nonDominationLevels.get(rank), levelRef, new LevelRef(time.incrementAndGet(), newLevel, levelRef.sealed))) {
-                            if (firstModifiedLevelRank == null) {
-                                firstModifiedLevelRank = rank;
-                            }
-                            addends = nextAddends;
-                            ++rank;
+                    final JfbyNonDominationLevel<T> newLevel = new JfbyNonDominationLevel<>(sorter, nso.getLexSortedPop(), nso);
+                    if (casPublish(rank, levelRef, new LevelRef(time.incrementAndGet(), newLevel, levelRef.sealed))) {
+                        if (firstModifiedLevelRank == null) {
+                            firstModifiedLevelRank = rank;
                         }
+                        addends = nextAddends;
+                        ++rank;
                     }
                 }
-            } catch (ArrayIndexOutOfBoundsException ignored) {
             }
         }
 
@@ -471,72 +505,70 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
         List<Individual<T>> addends = new ArrayList<>();
         addends.add(addend);
         while (!addends.isEmpty()) {
-            try {
-                final long epoch = evictionEpoch.get();
-                if (epoch != justifiedEpoch) { //an eviction step finished since the rank was justified
-                    final Justification<Individual<T>> justification = justify(addends, rank);
-                    justifiedEpoch = epoch;
-                    if (!justification.unjustified().isEmpty()) {
-                        addends = justification.justified();
-                        final Integer reinsertedFirstModifiedLevelRank = reinsert(justification.unjustified(), addend);
-                        if (firstModifiedLevelRank == null) {
-                            firstModifiedLevelRank = reinsertedFirstModifiedLevelRank;
-                        }
-                        continue;
+            final long epoch = evictionEpoch.get();
+            if (epoch != justifiedEpoch) { //an eviction step finished since the rank was justified
+                final Justification<Individual<T>> justification = justify(addends, rank);
+                justifiedEpoch = epoch;
+                if (!justification.unjustified().isEmpty()) {
+                    addends = justification.justified();
+                    final Integer reinsertedFirstModifiedLevelRank = reinsert(justification.unjustified(), addend);
+                    if (firstModifiedLevelRank == null) {
+                        firstModifiedLevelRank = reinsertedFirstModifiedLevelRank;
+                    }
+                    continue;
+                }
+            }
+            if (rank >= nonDominationLevels.size()) {
+                if (tryToAddLevels(addends, rank, justifiedEpoch)) {
+                    if (firstModifiedLevelRank == null) {
+                        return rank;
+                    } else {
+                        return firstModifiedLevelRank;
                     }
                 }
-                if (rank >= nonDominationLevels.size()) {
-                    if (tryToAddLevels(addends, rank, justifiedEpoch)) {
-                        if (firstModifiedLevelRank == null) {
-                            return rank;
-                        } else {
-                            return firstModifiedLevelRank;
-                        }
-                    }
-                } else {
-                    final LevelRef levelRef = nonDominationLevels.get(rank).get();
-                    if (levelRef == null) {
-                        continue;
-                    }
-                    final Individual[] allMembers = lexMerge(addends, levelRef.level.getMembers());
-                    final int[] ranks = sorter.performNds(allMembers);
-                    final List<Individual<T>> nextAddends = new ArrayList<>();
-                    for (int i = 0; i < allMembers.length; ++i) {
-                        if (ranks[i] != 0) {
-                            nextAddends.add(allMembers[i]);
-                        }
-                    }
-
-                    final Set<Individual<T>> addendsSet = new HashSet<>(addends);
-                    final List<Individual<T>> removed = new ArrayList<>(nextAddends.size());
-                    for (Individual<T> nextAddend : nextAddends) {
-                        if (addendsSet.contains(nextAddend)) {
-                            addendsSet.remove(nextAddend);
-                        } else {
-                            removed.add(nextAddend);
-                        }
-                    }
-
-                    final List<Individual<T>> addendsList = new ArrayList<>(addendsSet.size());
-                    addendsList.addAll(addendsSet);
-                    addendsList.sort(AscLexSortComparator.getInstance());
-
-                    final SortedObjectives<Individual<T>, T> nso = levelRef.level.getSortedObjectives().update(
-                            addendsList,
-                            removed,
-                            (i, d) -> new FitnessAndCdIndividual<>(i.getObjectives(), d, i.getPayload())
-                    );
-
-                    final JfbyNonDominationLevel<T> newLevel = new JfbyNonDominationLevel<>(sorter, nso.getLexSortedPop(), nso);
-                    if (casPublish(nonDominationLevels.get(rank), levelRef, new LevelRef(time.incrementAndGet(), newLevel, levelRef.sealed))) {
-                        if (firstModifiedLevelRank == null) {
-                            firstModifiedLevelRank = rank;
-                        }
-                        addends = nextAddends;
-                        ++rank;
+            } else {
+                final LevelRef levelRef = levelAt(rank);
+                if (levelRef == null) { //removed or being removed
+                    awaitLevelChange();
+                    continue;
+                }
+                final Individual[] allMembers = lexMerge(addends, levelRef.level.getMembers());
+                final int[] ranks = sorter.performNds(allMembers);
+                final List<Individual<T>> nextAddends = new ArrayList<>();
+                for (int i = 0; i < allMembers.length; ++i) {
+                    if (ranks[i] != 0) {
+                        nextAddends.add(allMembers[i]);
                     }
                 }
-            } catch (ArrayIndexOutOfBoundsException ignored) {
+
+                final Set<Individual<T>> addendsSet = new HashSet<>(addends);
+                final List<Individual<T>> removed = new ArrayList<>(nextAddends.size());
+                for (Individual<T> nextAddend : nextAddends) {
+                    if (addendsSet.contains(nextAddend)) {
+                        addendsSet.remove(nextAddend);
+                    } else {
+                        removed.add(nextAddend);
+                    }
+                }
+
+                final List<Individual<T>> addendsList = new ArrayList<>(addendsSet.size());
+                addendsList.addAll(addendsSet);
+                addendsList.sort(AscLexSortComparator.getInstance());
+
+                final SortedObjectives<Individual<T>, T> nso = levelRef.level.getSortedObjectives().update(
+                        addendsList,
+                        removed,
+                        (i, d) -> new FitnessAndCdIndividual<>(i.getObjectives(), d, i.getPayload())
+                );
+
+                final JfbyNonDominationLevel<T> newLevel = new JfbyNonDominationLevel<>(sorter, nso.getLexSortedPop(), nso);
+                if (casPublish(rank, levelRef, new LevelRef(time.incrementAndGet(), newLevel, levelRef.sealed))) {
+                    if (firstModifiedLevelRank == null) {
+                        firstModifiedLevelRank = rank;
+                    }
+                    addends = nextAddends;
+                    ++rank;
+                }
             }
         }
         return firstModifiedLevelRank;
