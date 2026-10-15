@@ -25,9 +25,10 @@ are not reproduced).
 java -jar inds-benchmarks/target/benchmarks.jar "TwoDimSequenceBenchmark"   # about 20 minutes
 ```
 
-The shapes of the figures are reproduced (2D faster on `SQUARE`, `PARALLEL` and `PARPER`, equal to ENLU on `DIAG1`,
-quadratic in total on `DIAG2`), with one difference: ENLU is quadratic in total on `PARPER`, the thesis finds it cubic.
-The ENLU here is the population of the Chapter 4 code, not the levels-only sorter ([Limitations](#limitations)).
+The shapes of the figures are reproduced: 2D is faster than ENLU on `SQUARE`, `PARALLEL` and `PARPER`, about equal on
+`DIAG1`, quadratic in total on `DIAG2`, and ENLU is cubic in total on `PARPER` (its dominance tests grow by ×7.4 when N
+doubles, at N = 4 000). The order of `PARPER` matters: with the diagonals from the biggest x down ENLU is only
+quadratic.
 
 ## Thesis Chapter 3 (Figures 21–24)
 

@@ -74,11 +74,12 @@ public enum SyntheticProblem {
     /**
      * The "parallel-perpendicular" problem: N/6 points on each of the lines {@code y = x + 5} and {@code y = x − 5}
      * (abscissa below N/6), N/3 points on each of the lines {@code y = N/3 − x − 4} and {@code y = N/3 − x − 6}
-     * (abscissa below N/3), built to make ENLU spend quadratic time on every second insertion.
+     * (abscissa below N/3), built to make ENLU spend quadratic time per insertion.
      * <p>
-     * Order, as in the thesis figure (N = 24): the line {@code y = N/3 − x − 4} by growing abscissa, then the line
-     * {@code y = N/3 − x − 6} by growing abscissa, then the two diagonals alternately ({@code y = x − 5} first) from
-     * the biggest abscissa down.
+     * Order (the thesis shows it only in a figure, where the lines come first): the line {@code y = N/3 − x − 4} by
+     * growing abscissa, then the line {@code y = N/3 − x − 6} by growing abscissa, then the two diagonals alternately
+     * ({@code y = x − 5} first) from the smallest abscissa up: every diagonal point then pushes a range of the two lines
+     * down at once, which makes the total work of ENLU cubic. From the biggest abscissa down it is quadratic.
      */
     PARPER(false) {
         @Override
@@ -92,7 +93,7 @@ public enum SyntheticProblem {
                     points[next++] = point(x, perpendicularLength - x - offset);
                 }
             }
-            for (int x = diagonalLength - 1; x >= 0; --x) {
+            for (int x = 0; x < diagonalLength; ++x) {
                 points[next++] = point(x, x - 5);
                 points[next++] = point(x, x + 5);
             }

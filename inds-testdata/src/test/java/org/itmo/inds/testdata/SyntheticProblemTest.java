@@ -51,6 +51,15 @@ class SyntheticProblemTest {
     }
 
     @Test
+    void parperDiagonalsFollowTheTwoLinesAndStartFromTheSmallestX() {
+        final double[][] points = SyntheticProblem.PARPER.points(24, 0);
+        assertArrayEquals(new double[]{0, -5}, points[16]);
+        assertArrayEquals(new double[]{0, 5}, points[17]);
+        assertArrayEquals(new double[]{3, -2}, points[22]);
+        assertArrayEquals(new double[]{3, 8}, points[23]);
+    }
+
+    @Test
     void parperHasTheFourLinesWithTheirCounts() {
         final int[] counts = new int[4];
         for (final double[] point : SyntheticProblem.PARPER.points(N, 0)) {
