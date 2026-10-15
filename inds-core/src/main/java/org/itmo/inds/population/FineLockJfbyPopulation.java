@@ -121,7 +121,7 @@ public class FineLockJfbyPopulation<T> implements ManagedPopulation<T> {
                             if (lastLevel.getMembers().isEmpty()) {
                                 System.err.println("Empty last ND level! Levels = " + nonDominationLevels);
                             } else {
-                                for (Individual individual : lastLevel.getMembers()) {
+                                for (Individual<T> individual : lastLevel.getMembers()) {
                                     presentIndividuals.remove(individual);
                                 }
                             }
@@ -129,7 +129,7 @@ public class FineLockJfbyPopulation<T> implements ManagedPopulation<T> {
                         } else {
                             final double[] cd = new double[lastLevel.getMembers().size()];
                             int i = 0;
-                            for (Individual cdIndividual : lastLevel.getMembers()) {
+                            for (Individual<T> cdIndividual : lastLevel.getMembers()) {
                                 cd[i++] = cdIndividual.getCrowdingDistance();
                             }
                             final double cdThreshold = new QuickSelect().getKthElement(cd, remaining);
@@ -145,14 +145,9 @@ public class FineLockJfbyPopulation<T> implements ManagedPopulation<T> {
                                 }
                             }
                             if (newMembers.isEmpty()) {
-                                System.err.println("Empty members generated");
-                                System.out.println(cdThreshold);
-                                System.out.println(Arrays.toString(cd));
-                                throw new RuntimeException(remaining + "<" + lastLevel.getMembers().size());
+                                throw new RuntimeException("Inconsistent state: remaining " + remaining +
+                                        "<" + lastLevel.getMembers().size());
                             }
-
-//                            System.err.println("Level: " + lastLevel.getMembers());
-//                            System.err.println("Removin': " + removals);
 
                             final SortedObjectives<Individual<T>, T> nso = lastLevel.getSortedObjectives().update(
                                     Collections.emptyList(),

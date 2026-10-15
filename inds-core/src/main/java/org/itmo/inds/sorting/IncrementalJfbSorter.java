@@ -12,6 +12,7 @@ import static org.itmo.inds.util.Utils.dominates;
 /**
  * Can perform NDS only on a sorted population with one new point (or a contiguous set of points with the same rank)
  */
+@SuppressWarnings("rawtypes")
 @ThreadSafe
 public class IncrementalJfbSorter extends JfbSorter {
     @Override

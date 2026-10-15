@@ -61,6 +61,7 @@ public class JfbyPopulation<T> implements ManagedPopulation<T> {
     /**
      * A copy of {@code original}: copies of its levels, the same sorter and expected size.
      */
+    @SuppressWarnings("CopyConstructorMissesField")
     JfbyPopulation(@Nonnull final JfbyPopulation<T> original) {
         this(copies(original.nonDominationLevels), original.sorter, original.expectedPopSize);
     }

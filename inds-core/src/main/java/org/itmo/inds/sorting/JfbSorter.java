@@ -26,7 +26,7 @@ import static org.itmo.inds.util.Utils.dominates;
  * langid       = {english}
  * }
  */
-@SuppressWarnings({"UnnecessaryReturnStatement", "Convert2streamapi"})
+@SuppressWarnings({"UnnecessaryReturnStatement", "Convert2streamapi", "rawtypes"})
 @ThreadSafe
 public class JfbSorter { //todo: extract interface
     @SuppressWarnings("WeakerAccess")
@@ -62,7 +62,7 @@ public class JfbSorter { //todo: extract interface
         }
 
         final int dim = addendObjectives.length;
-        @SuppressWarnings("unchecked") final Individual[] newPop = new Individual[sortedPop.length + 1];
+        final Individual[] newPop = new Individual[sortedPop.length + 1];
         final int[] newRanks = new int[ranks.length + 1];
         final List<Integer> hSet = new ArrayList<>(ranks.length);
         //final List<Integer> lSet = new ArrayList<>(ranks.length);
@@ -163,9 +163,7 @@ public class JfbSorter { //todo: extract interface
                                                           List<Individual<T>> addends,
                                                           @SuppressWarnings("SameParameterValue") int rankHint) { //todo: UT
         final double[] ultimateAddend = new double[addends.get(0).getObjectives().length];
-        for (int i = 0; i < ultimateAddend.length; ++i) {
-            ultimateAddend[i] = Double.POSITIVE_INFINITY;
-        }
+        Arrays.fill(ultimateAddend, Double.POSITIVE_INFINITY);
         for (Individual addend : addends) {
             final double[] obj = addend.getObjectives();
             for (int i = 0; i < ultimateAddend.length; ++i) {
@@ -284,7 +282,7 @@ public class JfbSorter { //todo: extract interface
     void sweepA(Individual[] pop, int[] ranks, List<Integer> workingSet) {
         if (debugEnabled) {
             assert (pop.length == ranks.length);
-            assert (workingSet.size() > 0 && workingSet.size() <= pop.length);
+            assert (!workingSet.isEmpty() && workingSet.size() <= pop.length);
         }
 
         final TreeSet<IndexedIndividual> secondCoordSet = new TreeSet<>();

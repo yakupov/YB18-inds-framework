@@ -5,6 +5,7 @@ import org.itmo.inds.api.Individual;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Comparator;
 
+@SuppressWarnings("rawtypes")
 @ThreadSafe
 public class AscLexSortComparator implements Comparator<Individual> {
     private final static AscLexSortComparator instance = new AscLexSortComparator();

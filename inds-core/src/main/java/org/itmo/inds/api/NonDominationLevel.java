@@ -36,7 +36,7 @@ public interface NonDominationLevel<T> {
      * @param addends New points
      * @return A set of evicted points that should be moved to the next level
      */
-    MemberAdditionResult addMembers(@Nonnull List<Individual<T>> addends);
+    MemberAdditionResult<T, ? extends NonDominationLevel<T>> addMembers(@Nonnull List<Individual<T>> addends);
 
     /**
      * @return true if {@code point} is dominated by any member of this layer

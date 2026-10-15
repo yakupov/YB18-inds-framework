@@ -24,11 +24,10 @@ public class PopulationSnapshot<T> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PopulationSnapshot that = (PopulationSnapshot) o;
-        return size == that.size &&
-                Objects.equals(levels, that.levels);
+        if (o == null || getClass() != o.getClass())
+            return false;
+        PopulationSnapshot<?> that = (PopulationSnapshot<?>) o;
+        return size == that.size && Objects.equals(levels, that.levels);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package org.itmo.inds.api;
 
-import org.itmo.inds.api.RankedIndividual;
 import org.itmo.inds.util.AscLexSortComparator;
 import org.itmo.inds.util.RankedPopulation;
 
@@ -101,13 +100,13 @@ public interface ManagedPopulation<T> extends Cloneable {
         return lastNonDominating;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     default RankedPopulation<Individual<T>> toRankedPopulation() {
         final PopulationSnapshot<T> popSnap = getSnapshot();
 
         final Individual[] pop;
         final int[] sortedRanks;
         if (popSnap.getSize() > 0) {
-            //noinspection unchecked
             pop = new Individual[popSnap.getSize()];
             final int[] ranks = new int[popSnap.getSize()];
             int j = 0;
@@ -126,7 +125,6 @@ public interface ManagedPopulation<T> extends Cloneable {
             pop = null;
             sortedRanks = null;
         }
-        //noinspection unchecked
-        return new RankedPopulation<>(pop, sortedRanks);
+        return new RankedPopulation<Individual<T>>(pop, sortedRanks);
     }
 }

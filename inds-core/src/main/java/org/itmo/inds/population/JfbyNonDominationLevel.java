@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.itmo.inds.util.Utils.dominates;
 
@@ -92,9 +91,9 @@ public class JfbyNonDominationLevel<T> implements NonDominationLevel<T> {
     }
 
     @Override
-    public boolean dominatedByAnyPointOfThisLayer(@Nonnull Individual point) {
+    public boolean dominatedByAnyPointOfThisLayer(@Nonnull Individual<T> point) {
         final double[] pointObj = point.getObjectives();
-        for (Individual member : members) {
+        for (Individual<T> member : members) {
             final double[] memberObj = member.getObjectives();
             if (memberObj[0] > pointObj[0])
                 break;
@@ -116,6 +115,6 @@ public class JfbyNonDominationLevel<T> implements NonDominationLevel<T> {
         return "members=" + members.stream()
                 .map(Individual::getObjectives)
                 .map(Arrays::toString)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

@@ -94,11 +94,7 @@ public class Utils {
                     worstIndividual = individual;
                 }
             }
-            if (worstIndividual != null) {
-                return worstIndividual;
-            } else {
-                return null;
-            }
+            return worstIndividual;
         }
     }
 }

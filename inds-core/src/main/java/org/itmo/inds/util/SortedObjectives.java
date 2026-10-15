@@ -3,7 +3,10 @@ package org.itmo.inds.util;
 import org.itmo.inds.api.Individual;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.BiFunction;
 
 import static org.itmo.inds.util.Utils.lexCompare;
@@ -144,8 +147,7 @@ public class SortedObjectives<T extends Individual<P>, P> {
         while (iPop < lexSortedPop.size()) {
             if (iRem < removedIndices.length && removedIndices[iRem] == iPop) {
                 ++iRem;
-                //++iPop;
-                indexCorrector[iPop++] = Integer.MIN_VALUE; //FIXME: shitty magic
+                indexCorrector[iPop++] = Integer.MIN_VALUE;
             } else if (iAdd < addendIndices.length && addendIndices[iAdd] <= iAdd + iPop - iRem) {
                 ++iAdd;
             } else {

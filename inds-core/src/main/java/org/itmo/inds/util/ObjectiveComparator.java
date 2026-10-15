@@ -4,7 +4,7 @@ import org.itmo.inds.api.Individual;
 
 import java.util.Comparator;
 
-public class ObjectiveComparator implements Comparator<Individual> {
+public class ObjectiveComparator implements Comparator<Individual<?>> {
 	private final int objective;
 
 	/**

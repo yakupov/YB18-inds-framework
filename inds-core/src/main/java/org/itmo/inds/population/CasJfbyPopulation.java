@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static org.itmo.inds.util.Utils.*;
 
+@SuppressWarnings("rawtypes")
 @ThreadSafe
 public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
     private class LevelRef {
@@ -70,7 +71,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
     }
 
     private final CopyOnWriteArrayList<AtomicReference<LevelRef>> nonDominationLevels;
-    private final AtomicLong time = new AtomicLong(0); //todo: process overflow
+    private final AtomicLong time = new AtomicLong(0);
     /**
      * Counts finished eviction steps (a level or a member of the last level removed). An insertion checks the rank of
      * its points again ({@link #justify}) if the count changed since the rank was determined.
@@ -203,7 +204,7 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
         return size.get();
     }
 
-    private int determineMinimalPossibleRank(Individual point) {
+    private int determineMinimalPossibleRank(Individual<T> point) {
         int l = 0;
         int r = nonDominationLevels.size() - 1;
         int lastNonDominating = r + 1;
@@ -342,15 +343,12 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                     } else {
                         final Individual[] allMembers = lexMerge(addends, level.getMembers());
                         final int[] ranks = sorter.performNds(allMembers);
-                        final List<Individual<T>> newCurrLevelMembers = new ArrayList<>();
                         final List<Individual<T>> nextAddends = new ArrayList<>();
                         final Set<Individual<T>> addendsSet = new HashSet<>(addends);
                         final List<Individual<T>> actualAddends = new ArrayList<>(addends.size());
                         final List<Individual<T>> actualRemovals = new ArrayList<>();
                         for (int i = 0; i < allMembers.length; ++i) {
                             if (ranks[i] == 0) {
-                                //noinspection unchecked
-                                newCurrLevelMembers.add(allMembers[i]);
                                 if (addendsSet.contains(allMembers[i])) {
                                     //noinspection unchecked
                                     actualAddends.add(allMembers[i]);
@@ -447,7 +445,6 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                     while (levels.size() <= ranks[i]) {
                         levels.add(new ArrayList<>());
                     }
-                    //noinspection unchecked
                     levels.get(ranks[i]).add(members[i]);
                 }
                 boolean first = true;
@@ -503,14 +500,9 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                     }
                     final Individual[] allMembers = lexMerge(addends, levelRef.level.getMembers());
                     final int[] ranks = sorter.performNds(allMembers);
-                    final List<Individual<T>> newCurrLevelMembers = new ArrayList<>();
                     final List<Individual<T>> nextAddends = new ArrayList<>();
                     for (int i = 0; i < allMembers.length; ++i) {
-                        if (ranks[i] == 0) {
-                            //noinspection unchecked
-                            newCurrLevelMembers.add(allMembers[i]);
-                        } else {
-                            //noinspection unchecked
+                        if (ranks[i] != 0) {
                             nextAddends.add(allMembers[i]);
                         }
                     }
@@ -563,8 +555,8 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
                 result[ai + mi] = mList.get(mi);
                 ++mi;
             } else {
-                final Individual m = mList.get(mi);
-                final Individual a = aList.get(ai);
+                final Individual<T> m = mList.get(mi);
+                final Individual<T> a = aList.get(ai);
                 if (lexCompare(m.getObjectives(), a.getObjectives(), a.getObjectives().length) <= 0) {
                     result[ai + mi] = m;
                     ++mi;
@@ -594,19 +586,16 @@ public class CasJfbyPopulation<T> implements ManagedPopulation<T> {
         return new CasJfbyPopulation<>(list, expectedPopulationSize, useOneByOneSorting);
     }
 
-    @SuppressWarnings("StringBufferReplaceableByString")
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("CJFBYPopulation{");
-        sb.append("nonDominationLevels=").append(nonDominationLevels);
-        sb.append(", time=").append(time);
-        sb.append(", presentIndividuals=").append(presentIndividuals);
-        sb.append(", addRemoveLevelLock=").append(addRemoveLevelLock);
-        sb.append(", size=").append(size);
-        sb.append(", sorter=").append(sorter);
-        sb.append(", expectedPopulationSize=").append(expectedPopulationSize);
-        sb.append(", useOneByOneSorting=").append(useOneByOneSorting);
-        sb.append('}');
-        return sb.toString();
+        return "CJFBYPopulation{" + "nonDominationLevels=" + nonDominationLevels +
+                ", time=" + time +
+                ", presentIndividuals=" + presentIndividuals +
+                ", addRemoveLevelLock=" + addRemoveLevelLock +
+                ", size=" + size +
+                ", sorter=" + sorter +
+                ", expectedPopulationSize=" + expectedPopulationSize +
+                ", useOneByOneSorting=" + useOneByOneSorting +
+                '}';
     }
 }
