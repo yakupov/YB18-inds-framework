@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeSet;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.random.RandomGenerator;
 
 /**
  * Incremental non-dominated sorting by the first two objectives of the points (thesis label 2D); further objectives
@@ -312,18 +312,18 @@ public class TwoDimTreapPopulation<T> implements ManagedPopulation<T> {
 
     /**
      * Distinct random points with the ranks and crowding distances of {@link #getSnapshot()}, without building one.
+     * The result is in the order of an internal list of all points, which is neither by rank nor by insertion.
      */
     @Override
     @Nonnull
-    public List<RankedIndividual<T>> getRandomSolutions(int count) {
+    public List<RankedIndividual<T>> getRandomSolutions(int count, @Nonnull RandomGenerator random) {
         if (count < 0) {
             throw new IllegalArgumentException("Negative number of random solutions requested");
         }
         final int actualCount = Math.min(count, points.size());
-        final ThreadLocalRandom threadRandom = ThreadLocalRandom.current();
         final TreeSet<Integer> indices = new TreeSet<>();
         while (indices.size() < actualCount) {
-            indices.add(threadRandom.nextInt(0, points.size()));
+            indices.add(random.nextInt(0, points.size()));
         }
         final List<RankedIndividual<T>> result = new ArrayList<>(actualCount);
         for (final int index : indices) {

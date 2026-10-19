@@ -37,7 +37,7 @@ class OracleCrossCheckTest {
      * @param maxObjectives the largest number of objectives the population sorts by (2D: 2); inputs with more are
      *                      skipped
      */
-    private record PopulationUnderTest(String name, Supplier<ManagedPopulation<Integer>> factory, int maxObjectives) {
+    record PopulationUnderTest(String name, Supplier<ManagedPopulation<Integer>> factory, int maxObjectives) {
         PopulationUnderTest(final String name, final Supplier<ManagedPopulation<Integer>> factory) {
             this(name, factory, Integer.MAX_VALUE);
         }
@@ -68,18 +68,28 @@ class OracleCrossCheckTest {
      * @return every population of inds-core with every input case of at least three points
      */
     static Stream<Arguments> cloneCases() {
-        return casesOf(Stream.of(
+        return casesOf(allPopulations())
+                .filter(arguments -> ((OracleInputs.Case) arguments.get()[1]).points().length >= 3);
+    }
+
+    /**
+     * @return every population of inds-core, without eviction
+     */
+    static Stream<PopulationUnderTest> allPopulations() {
+        return Stream.of(
                 new PopulationUnderTest("Level", () -> new JfbyPopulation<>(Long.MAX_VALUE)),
                 new PopulationUnderTest("Coarse", () -> new CoarseLockJfbyPopulation<>(Long.MAX_VALUE)),
                 new PopulationUnderTest("Fine", () -> new FineLockJfbyPopulation<>(Long.MAX_VALUE)),
                 new PopulationUnderTest("Fine-RankHint", () -> new FineLockJfbyPopulationRankHint<>(Long.MAX_VALUE)),
                 new PopulationUnderTest("CAS", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, false)),
                 new PopulationUnderTest("CAS-oneByOne", () -> new CasJfbyPopulation<>(Integer.MAX_VALUE, true)),
-                TWO_DIM))
-                .filter(arguments -> ((OracleInputs.Case) arguments.get()[1]).points().length >= 3);
+                TWO_DIM);
     }
 
-    private static Stream<Arguments> casesOf(final Stream<PopulationUnderTest> populations) {
+    /**
+     * @return each population with each input case it can sort
+     */
+    static Stream<Arguments> casesOf(final Stream<PopulationUnderTest> populations) {
         return populations.flatMap(population -> cases()
                 .filter(inputCase -> inputCase.points()[0].length <= population.maxObjectives())
                 .map(inputCase -> Arguments.of(population, inputCase)));
@@ -89,7 +99,7 @@ class OracleCrossCheckTest {
      * @return the points as individuals (copies of the arrays) whose payloads are their indices
      */
     @SuppressWarnings("unchecked")
-    private static Individual<Integer>[] individuals(final double[][] points) {
+    static Individual<Integer>[] individuals(final double[][] points) {
         final Individual<Integer>[] individuals = new Individual[points.length];
         for (int i = 0; i < points.length; ++i) {
             individuals[i] = new FitnessAndCdIndividual<>(points[i].clone(), i);

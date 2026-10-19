@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.random.RandomGenerator;
 
 @SuppressWarnings("unused")
 public interface ManagedPopulation<T> extends Cloneable {
@@ -45,6 +46,20 @@ public interface ManagedPopulation<T> extends Cloneable {
      */
     @Nonnull
     default List<RankedIndividual<T>> getRandomSolutions(int count) {
+        return getRandomSolutions(count, ThreadLocalRandom.current());
+    }
+
+    /**
+     * Draws distinct members uniformly at random. The order of the result is implementation-specific: this default
+     * implementation returns the members by rank, and within a level in level order.
+     *
+     * @param count  max. number of solutions to return
+     * @param random the source of the random indices; used by the calling thread only
+     * @return list with min(population size, count) distinct random solutions
+     * @throws IllegalArgumentException if {@code count} is negative
+     */
+    @Nonnull
+    default List<RankedIndividual<T>> getRandomSolutions(int count, @Nonnull RandomGenerator random) {
         if (count < 0) {
             throw new IllegalArgumentException("Negative number of random solutions requested");
         }
@@ -52,7 +67,6 @@ public interface ManagedPopulation<T> extends Cloneable {
         final PopulationSnapshot<T> popSnap = getSnapshot();
 
         final int actualCount = Math.min(count, popSnap.getSize());
-        final ThreadLocalRandom random = ThreadLocalRandom.current();
         final TreeSet<Integer> indices = new TreeSet<>();
         while (indices.size() < actualCount) {
             indices.add(random.nextInt(0, popSnap.getSize()));

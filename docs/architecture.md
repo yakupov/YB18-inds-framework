@@ -43,6 +43,10 @@ public interface ManagedPopulation<T> extends Cloneable {
 }
 ```
 
+`getRandomSolutions(count)` draws distinct members with their ranks and crowding distances from `ThreadLocalRandom`;
+`getRandomSolutions(count, random)` takes the caller's generator instead, so that a single-threaded run is
+reproducible from a seed. The order of the result is not specified (the level-based populations return it by rank).
+
 A population has an *expected size*. Above it, `addIndividual` evicts the member of the last level with the smallest
 crowding distance; Fine evicts in batches once the size exceeds 1.2 × the expected size. Unlimited: `Long.MAX_VALUE`
 (CAS: `Integer.MAX_VALUE`).
