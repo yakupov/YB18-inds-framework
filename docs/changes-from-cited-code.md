@@ -48,5 +48,6 @@ this library keeps it.
 - 2D works on the library's `Individual`, ranked by the first two objectives, without the static comparison counter;
   points with equal coordinates share a level. On top of the cited insertion it is a full `ManagedPopulation`:
   crowding distances over the first two objectives, eviction by Level's rule, snapshots, `clone`, random solutions.
-- Not ported: the NSGA-II code (it depends on the LGPL MOEA Framework), the data-set generators, vendored third-party
-  code, unused experiments.
+- Not ported: the NSGA-II code (rewritten in
+  [YB18-inds-nsga2-experiments](https://github.com/yakupov/YB18-inds-nsga2-experiments)), the data-set generators,
+  vendored third-party code, unused experiments.

@@ -9,9 +9,9 @@ machine and JDK.
 | Thesis | Measures | In this repository |
 |---|---|---|
 | Ch. 2, synthetic 2D tests (CEC 2015) | insertion of N points from synthetic 2D sets | **yes**, recreated from the thesis text and figures: `SyntheticProblem`, `TwoDimSequenceBenchmark` ([below](#thesis-chapter-2-synthetic-tests-figures-1519)) |
-| Ch. 2, NSGA-II experiments | steady-state / generational NSGA-II with the 2D population | no: NSGA-II experiments live in a separate repository ([#14](https://github.com/yakupov/YB18-inds-framework/issues/14)) |
+| Ch. 2, NSGA-II experiments | steady-state / generational NSGA-II with the 2D population | in [YB18-inds-nsga2-experiments](https://github.com/yakupov/YB18-inds-nsga2-experiments) (preset `CH2_TWO_DIM`) |
 | **Ch. 3, Figures 21–24** | single-point insertion into NSGA-II populations of 10 000 points, generations 0, 10, …, 90 | **yes**: `InsertionBenchmark` / `TwoDimInsertionBenchmark` on `snapshots/generational/` |
-| Ch. 4, Figures 26 and later | wall-clock time of asynchronous NSGA-II runs | no: NSGA-II experiments ([#14](https://github.com/yakupov/YB18-inds-framework/issues/14)). `ConcurrentInsertionBenchmark` measures concurrent insertion on its own, with the 2018 benchmark data (`sequences/`) |
+| Ch. 4, Figures 26 and later | wall-clock time of asynchronous NSGA-II runs | in [YB18-inds-nsga2-experiments](https://github.com/yakupov/YB18-inds-nsga2-experiments) (presets `CH4_*`). Here, `ConcurrentInsertionBenchmark` measures concurrent insertion on its own, with the 2018 benchmark data (`sequences/`) |
 
 ## Thesis Chapter 2, synthetic tests (Figures 15–19)
 

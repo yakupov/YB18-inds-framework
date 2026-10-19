@@ -122,11 +122,10 @@ Benchmarks, parameters, more examples and how to get comparable numbers:
 - [Issues](https://github.com/yakupov/YB18-inds-framework/issues): open work (defects to fix, improvements, ideas);
   [releases](https://github.com/yakupov/YB18-inds-framework/releases): what changed in each version
 
-## NSGA-II experiments
+## NSGA-II
 
-The steady-state and asynchronous NSGA-II of the thesis (Chapters 2 and 4) depend on the MOEA Framework (LGPL) and
-will live in a separate repository that uses this library. Until then, see
-[ssNSGAII2018](https://github.com/yakupov/ssNSGAII2018/tree/r2018.9.1).
+A steady-state, asynchronous and generational NSGA-II built on this library:
+[YB18-inds-nsga2-experiments](https://github.com/yakupov/YB18-inds-nsga2-experiments).
 
 ## Origins
 
