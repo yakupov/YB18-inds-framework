@@ -56,7 +56,7 @@ remove the worst point. How they work: [architecture](docs/architecture.md).
 <dependency>
     <groupId>io.github.yakupov</groupId>
     <artifactId>inds-core</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
 </dependency>
 ```
 
