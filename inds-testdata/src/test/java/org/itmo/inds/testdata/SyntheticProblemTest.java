@@ -39,6 +39,49 @@ class SyntheticProblemTest {
     }
 
     @Test
+    void stripeStaysWithinTenOfTheDiagonal() {
+        for (final double[] point : SyntheticProblem.STRIPE.points(N, 0)) {
+            assertTrue(point[0] >= 0 && point[0] < N);
+            assertTrue(Math.abs(point[1] - point[0]) <= 10);
+        }
+    }
+
+    @Test
+    void parallelFrontsHaveTenFrontsOfEqualSize() {
+        final double[][] points = SyntheticProblem.PARALLEL_FRONTS.points(N, 0);
+        for (int i = 0; i < points.length; ++i) {
+            final int front = i / (N / 10);
+            assertEquals(front * (N / 10), points[i][0] + points[i][1]);
+        }
+        assertEquals(N, points.length);
+    }
+
+    @Test
+    void parallelFrontsDropTheRemainderOfN() {
+        assertEquals(1250 - 1250 % 10, SyntheticProblem.PARALLEL_FRONTS.points(1255, 0).length);
+        assertEquals(1250 - 1250 % 10, SyntheticProblem.HYPERBOLA_FRONTS.points(1255, 0).length);
+    }
+
+    @Test
+    void hyperbolaFrontsFollowTheFormulaAndUseZeroWhereUndefined() {
+        final double[][] points = SyntheticProblem.HYPERBOLA_FRONTS.points(N, 0);
+        int onAxisAfterFirstFront = 0;
+        for (int i = 0; i < points.length; ++i) {
+            final long radius = (long) (i / (N / 10)) * (N / 10);
+            final double x = points[i][0];
+            final double y = points[i][1];
+            assertTrue(x >= 0 && x < N);
+            if (x < radius) {
+                assertEquals(0, y);
+                ++onAxisAfterFirstFront;
+            } else {
+                assertEquals(Math.floor(Math.sqrt(x * x - (double) radius * radius)), y);
+            }
+        }
+        assertTrue(onAxisAfterFirstFront > 0);
+    }
+
+    @Test
     void diagonalsStartFromTheBiggestX() {
         final double[][] diag1 = SyntheticProblem.DIAG1.points(4, 0);
         assertArrayEquals(new double[]{3, 3}, diag1[0]);

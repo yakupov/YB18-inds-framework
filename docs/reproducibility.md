@@ -30,6 +30,11 @@ The shapes of the figures are reproduced: 2D is faster than ENLU on `SQUARE`, `P
 doubles, at N = 4 000). The order of `PARPER` matters: with the diagonals from the biggest x down ENLU is only
 quadratic.
 
+`SyntheticProblem` also has three problems that are not in the thesis, taken from the 2014–2015 prototype of the 2D
+algorithm (`STRIPE`, `PARALLEL_FRONTS`, `HYPERBOLA_FRONTS`; the last was called "circle fronts" there, but its formula
+describes a hyperbola, and the original gives ordinate 0 where the root is undefined). They are seeded, not the original
+`Math.random`, so the point sets differ from those of the 2015 runs; they run with the same benchmark.
+
 ## Thesis Chapter 3 (Figures 21–24)
 
 **Data:** `snapshots/generational/` of `inds-benchmark-data` (byte-identical to the files the thesis used). Each file

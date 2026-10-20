@@ -3,12 +3,13 @@ package org.itmo.inds.testdata;
 import java.util.Random;
 
 /**
- * The synthetic two-objective test problems of the thesis Chapter 2 (Section 2.3.1), recreated from its description:
- * each is a sequence of integer points (stored as doubles) to insert one by one into an empty population. Sizes are
- * given as {@code N}; where the description divides N, the division is rounded down.
+ * The synthetic two-objective test problems: the five of the thesis Chapter 2 (Section 2.3.1), recreated from its
+ * description, and three from the 2014–2015 prototype of the 2D algorithm ({@link #STRIPE}, {@link #PARALLEL_FRONTS},
+ * {@link #HYPERBOLA_FRONTS}). Each is a sequence of integer points (stored as doubles) to insert one by one into an
+ * empty population. Sizes are given as {@code N}; where the description divides N, the division is rounded down.
  * <p>
  * The thesis fixes the sets of points, not always their order; the order of {@link #PARPER} is a reconstruction (see
- * there). All coordinates are non-negative apart from the small offsets of the diagonals.
+ * there). Coordinates are non-negative apart from the small offsets of the diagonals and of {@link #PARALLEL_FRONTS}.
  */
 public enum SyntheticProblem {
     /**
@@ -99,7 +100,82 @@ public enum SyntheticProblem {
             }
             return points;
         }
+    },
+    /**
+     * N random points {@code (x, y)} from the N × N square with {@code |y − x| ≤ 10}: a diagonal stripe that holds
+     * many levels of short fronts. Random.
+     * <p>
+     * Not in the thesis: from the 2014–2015 prototype of the 2D algorithm ({@code Point2DUniStrireXPlusGen}).
+     */
+    STRIPE(true) {
+        @Override
+        public double[][] points(final int n, final long seed) {
+            final Random random = new Random(seed);
+            final double[][] points = new double[n][];
+            for (int i = 0; i < n; ++i) {
+                final int x = random.nextInt(n);
+                int y = random.nextInt(n);
+                while (y < x - STRIPE_RADIUS || y > x + STRIPE_RADIUS) {
+                    y = random.nextInt(n);
+                }
+                points[i] = point(x, y);
+            }
+            return points;
+        }
+    },
+    /**
+     * N random abscissas in the N × N square distributed over ten fronts {@code y = k·N/10 − x}, k = 0 … 9, in
+     * ascending order of k: N/10 points per front (N − N mod 10 in total), each on its own anti-diagonal. Random (the
+     * abscissas). Unlike {@link #PARALLEL}, which has two adjacent lines, the fronts are far apart and the points of
+     * a front have negative ordinates.
+     * <p>
+     * Not in the thesis: from the 2014–2015 prototype of the 2D algorithm ({@code Point2DParallelFrontsGenerator}).
+     */
+    PARALLEL_FRONTS(true) {
+        @Override
+        public double[][] points(final int n, final long seed) {
+            final Random random = new Random(seed);
+            final int step = n / FRONTS;
+            final int frontSize = n / FRONTS;
+            final double[][] points = new double[frontSize * FRONTS][];
+            for (int front = 0; front < FRONTS; ++front) {
+                for (int i = 0; i < frontSize; ++i) {
+                    final int x = random.nextInt(n);
+                    points[front * frontSize + i] = point(x, front * step - x);
+                }
+            }
+            return points;
+        }
+    },
+    /**
+     * Ten groups of N/10 random abscissas {@code x} in the N × N square, group k = 0 … 9 with {@code y = ⌊√(x² − r²)⌋},
+     * {@code r = k·N/10} (the points of a group lie on a hyperbola despite the original name; for {@code x < r} the
+     * root is undefined and the ordinate is 0, as in the original, so the later groups carry many points on the
+     * x-axis, among them equal ones). Groups are in ascending order of k. Random (the abscissas).
+     * <p>
+     * Not in the thesis: from the 2014–2015 prototype of the 2D algorithm ({@code Point2DCircleFrontsGenerator}).
+     */
+    HYPERBOLA_FRONTS(true) {
+        @Override
+        public double[][] points(final int n, final long seed) {
+            final Random random = new Random(seed);
+            final int step = n / FRONTS;
+            final int frontSize = n / FRONTS;
+            final double[][] points = new double[frontSize * FRONTS][];
+            for (int front = 0; front < FRONTS; ++front) {
+                final long radius = (long) front * step;
+                for (int i = 0; i < frontSize; ++i) {
+                    final int x = random.nextInt(n);
+                    final double root = Math.sqrt((double) x * x - (double) radius * radius);
+                    points[front * frontSize + i] = point(x, (int) root); // NaN becomes 0
+                }
+            }
+            return points;
+        }
     };
+
+    private static final int STRIPE_RADIUS = 10;
+    private static final int FRONTS = 10;
 
     private final boolean random;
 
