@@ -132,7 +132,7 @@ public class FineLockJfbyPopulation<T> implements ManagedPopulation<T> {
                             for (Individual<T> cdIndividual : lastLevel.getMembers()) {
                                 cd[i++] = cdIndividual.getCrowdingDistance();
                             }
-                            final double cdThreshold = new QuickSelect().getKthElement(cd, remaining);
+                            final double cdThreshold = new QuickSelect().getKthElement(cd, remaining - 1);
                             final List<Individual<T>> newMembers = new ArrayList<>();
                             final List<Individual<T>> removals = new ArrayList<>();
                             for (Individual<T> individual : lastLevel.getMembers()) {

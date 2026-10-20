@@ -4,3 +4,4 @@
 2 Level-clone,Coarse-clone,Fine-clone *
 17 Level,Level-clone,Coarse,Coarse-clone,Fine,Fine-clone,CAS,CAS-clone,CAS-oneByOne,CAS-oneByOne-clone,ENLU,ENLU-clone G-k3-n1000
 18 CAS,CAS-oneByOne *
+22 Fine *

@@ -22,6 +22,7 @@ Each fix is a commit of its own with a test that failed before it. The golden-ma
 | Fine, both versions | concurrent insertions with eviction: a point placed too deep because its rank, computed without locks, went stale; sometimes in the level of a point that dominates it (up to 7 % of the stress runs) | an eviction counter; if it changed, check under the lock that the level before the rank dominates the point | [#20](https://github.com/yakupov/YB18-inds-framework/issues/20) |
 | CAS, both modes | the same (up to 1.3 % of the stress runs), and eviction of a member from a level that already had a successor | levels are sealed before one is added behind them and only the unsealed last level is evicted; the same counter and check, points that fail it are inserted again | [#20](https://github.com/yakupov/YB18-inds-framework/issues/20) |
 | CAS | `clone()` threw a `NullPointerException` if another thread removed the last level meanwhile | skip the reference of a level being removed, as `getSnapshot()` does | [#19](https://github.com/yakupov/YB18-inds-framework/issues/19) |
+| Fine, both versions | batch eviction took the (*k* + 1)-th smallest crowding distance as its threshold, so it could evict a member and keep one with a smaller crowding distance (in most batch evictions of a steady-state NSGA-II run) | the *k*-th smallest | [#22](https://github.com/yakupov/YB18-inds-framework/issues/22) |
 
 ## Known limitations
 

@@ -41,7 +41,7 @@ public final class ReferencePopulation {
         /**
          * Fine: when the size exceeds 1.2 times the expected size, size minus expected size members are evicted:
          * whole last levels while they fit; then, if {@code k} members are still to go, the first {@code k} members of
-         * the last level whose crowding distance is at most the {@code k}-th smallest one (counted from 0).
+         * the last level whose crowding distance is at most the {@code k}-th smallest one (counted from 1).
          */
         BATCH
     }
@@ -172,7 +172,7 @@ public final class ReferencePopulation {
             return new EvictionOutcome(certain, candidates, (int) remaining);
         }
         final double threshold = crowdingDistances.stream().mapToDouble(OptionalDouble::getAsDouble).sorted()
-                .toArray()[(int) remaining];
+                .toArray()[(int) remaining - 1];
         for (int i = 0; i < lastLevel.size() && remaining > 0; ++i) {
             if (crowdingDistances.get(i).getAsDouble() <= threshold) {
                 certain.add(lastLevel.get(i).getPayload());
