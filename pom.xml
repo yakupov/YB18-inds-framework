@@ -6,7 +6,7 @@
 
     <groupId>io.github.yakupov</groupId>
     <artifactId>inds-parent</artifactId>
-    <version>0.2.2-SNAPSHOT</version>
+    <version>0.2.2</version>
     <packaging>pom</packaging>
 
     <name>YB18 INDS framework</name>
